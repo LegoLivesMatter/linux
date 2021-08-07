@@ -707,4 +707,13 @@ config MICROCHIP_PIT64B
 	  modes and high resolution. It is used as a clocksource
 	  and a clockevent.
 
+config SCX35_TIMER
+	bool "Spreadtrum SCX35 timer support"
+	select CLKSRC_MMIO
+	help
+		This option enables support for the Spreadtrum
+		SC9830 hardware timer. It supports the oneshot 
+		and periodic modes, It is used as a clocksource
+		and a clockevent device.
+
 endmenu
