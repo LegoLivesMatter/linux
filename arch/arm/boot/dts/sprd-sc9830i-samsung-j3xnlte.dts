@@ -1,0 +1,15 @@
+#include "sprd-sc9830i.dtsi"
+
+/ {
+	model = "Samsung Galaxy J3 6";
+	compatible = "samsung,j3xnlte", "sprd,sc9830i";
+
+	framebuffer@9eb74000 {
+		compatible = "simple-framebuffer";
+		reg = <0x9eb74000 (720 * 1280 * 4)>;
+		width = <720>;
+		height = <1280>;
+		stride = <2880>;
+		format = "a8r8g8b8";
+	};
+};
