@@ -1,0 +1,96 @@
+/dts-v1/;
+
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/ {
+	model = "Spreadtrum SC9830I";
+	compatible = "sprd,sc9830i";
+	sprd,sc-id = <9830 5 0x20000>;
+	#address-cells = <1>;
+	#size-cells = <1>;
+	#interrupt-parent = <&intc>;
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		smem@87800000 {
+			reg = <0x87800000 0x500000>;
+		};
+
+		lte_modem@89600000 {
+			reg = <0x89600000 0x4380000>;
+		};
+
+		carveout@9b23b000 {
+			reg = <0x9b23b000 0x3939000>;
+		};
+
+		framebuffer@9eb74000 {
+			reg = <0x9eb74000 0xa8c000>;
+		};
+
+		ion@9f600000 {
+			reg = <0x9f600000 0x708000>;
+		};
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@f00 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf00>;
+		};
+
+		cpu@f01 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf01>;
+		};
+
+		cpu@f02 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf02>;
+		};
+
+		cpu@f03 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf03>;
+		};
+	};
+
+	memory {
+		reg = <0x80000000 0x60000000>;
+		device_type = "memory";
+	};
+
+	intc: interrupt-controller@12001000 {
+		compatible = "arm,cortex-a15-gic", "arm,cortex-a7-gic";
+		reg = <0x12001000 0x1000>,
+			<0x12002000 0x1000>;
+		interrupt-controller;
+	};
+
+	timer {
+		compatible = "sprd,scx35-timer";
+		reg = <0x40230000 0x1000>,
+			<0x40050000 0x1000>,
+			<0x40220000 0x1000>,
+			<0x40320000 0x1000>,
+			<0x40330000 0x1000>;
+		interrupts = <GIC_SPI 118 IRQ_TYPE_NONE>,
+			<GIC_SPI 28 IRQ_TYPE_NONE>,
+			<GIC_SPI 29 IRQ_TYPE_NONE>,
+			<GIC_SPI 119 IRQ_TYPE_NONE>,
+			<GIC_SPI 121 IRQ_TYPE_NONE>,
+			<GIC_SPI 31 IRQ_TYPE_NONE>;
+		interrupt-parent = <&intc>;
+	};
+};

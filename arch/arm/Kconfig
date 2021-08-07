@@ -684,6 +684,8 @@ source "arch/arm/mach-s5pv210/Kconfig"
 
 source "arch/arm/mach-sa1100/Kconfig"
 
+source "arch/arm/mach-scx35/Kconfig"
+
 source "arch/arm/mach-shmobile/Kconfig"
 
 source "arch/arm/mach-socfpga/Kconfig"

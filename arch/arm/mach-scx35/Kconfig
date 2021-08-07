@@ -1,0 +1,6 @@
+menuconfig ARCH_SCX35
+	bool "Spreadtrum SCX35 Support"
+	depends on ARCH_MULTI_V7
+	select SCX35_TIMER
+	help
+		Support for the Spreadtrum SCxx30 family of SoCs.
