@@ -8,15 +8,12 @@ struct kvco_range {
 	u8 vrng;
 };
 
-struct div_map {
-	unsigned int div;
-	unsigned int hw_val;
-};
+/* Vendor driver uses a map which maps values 2^0-2^7 to their logarithms. */
 #define HELANX_DIVIDER_COUNT 8
 
 struct intpi_range {
-	int vco_min;
-	int vco_max;
+	int min;
+	int max;
 	u8 value;
 };
 
@@ -46,8 +43,8 @@ struct mmp_vco_freq_table {
 struct mmp_vco_params {
 	unsigned long vco_min;
 	unsigned long vco_max;
-	void __iomem *cr_reg;
-	void __iomem *pll_swcr;
+	void __iomem *cr; /* Control Register */
+	void __iomem *swcr; /* Software Control Register */
 	void __iomem *lock_reg;
 	u32 lock_enable_bit;
 	unsigned long default_rate;
@@ -60,7 +57,7 @@ struct mmp_vco_params {
 };
 
 struct mmp_pll_params {
-	void __iomem *pll_swcr;
+	void __iomem *swcr;
 	unsigned long default_rate;
 };
 
@@ -86,9 +83,9 @@ struct clk_pll {
 #define HELANX_VCO_SSC_FEAT		BIT(0)
 #define HELANX_VCO_SSC_AON		BIT(1)
 #define HELANX_VCO_28NM			BIT(2)
-#define HElANX_VCO_SKIP_DEF_RATE	BIT(3)
+#define HELANX_VCO_SKIP_DEF_RATE	BIT(3)
 
-extern struct clk *helanx_clk_register_vco(const char *name,
+extern struct clk *helanx_register_clk_vco(const char *name,
 		const char *parent_name, unsigned long flags, u32 vco_flags,
 		spinlock_t *lock, struct mmp_vco_params *params);
 
@@ -96,8 +93,8 @@ extern struct clk *helanx_clk_register_vco(const char *name,
 #define HELANX_PLLOUT			BIT(0)
 #define HELANX_PLLOUTP			BIT(1)
 
-extern struct clk *helanx_clk_register_pll(const char *name,
-		const char *parent_name, unsigned long flags, u32 vco_flags,
+extern struct clk *helanx_register_clk_pll(const char *name,
+		const char *parent_name, unsigned long flags, u32 pll_flags,
 		spinlock_t *lock, struct mmp_pll_params *params);
 
 #endif
