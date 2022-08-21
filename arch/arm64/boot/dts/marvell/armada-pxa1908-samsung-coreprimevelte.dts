@@ -56,16 +56,12 @@
 		format = "a8r8g8b8";
 	};
 
-	uart0_clk: uart0-clk {
-		compatible = "fixed-clock";
-		clock-frequency = <12500000>;
-		#clock-cells = <0>;
-	};
-
 	aliases {
+		serial0 = &uart0;
 	};
 
 	chosen {
+		stdout-path = "serial0:115200n8";
 	};
 };
 
@@ -79,9 +75,6 @@
 				    <&range 52 1 0>;
 };
 
-/*
 &uart0 {
 	status = "okay";
-	clocks = <&uart0_clk>;
 };
-*/
