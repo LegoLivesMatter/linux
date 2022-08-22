@@ -1,4 +1,5 @@
 #include "armada-pxa1908.dtsi"
+#include "pxa1908-pinfunc.h"
 
 / {
 	pxa,rev-id = <3928 2>;
@@ -73,8 +74,100 @@
 	pinctrl-single,gpio-range = <&range 55 55 0>,
 				    <&range 110 32 0>,
 				    <&range 52 1 0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&mfp_pins_group_1 &mfp_pins_group_2 &mfp_pins_group_3>;
+
+	mfp_pins_group_1: mfp_pins_group_1 {
+		pinctrl-single,pins = <
+			GPIO33 AF0
+			GPIO34 AF0
+			GPIO35 AF0
+			GPIO36 AF0
+		>;
+		DS_MEDIUM;PULL_FLOAT;EDGE_NONE;LPM_FLOAT;
+	};
+
+	mfp_pins_group_2: mfp_pins_group_2 {
+		pinctrl-single,pins = <
+			DF_nCS0_SM_nCS2 AF1				/* +No.09 */
+			DF_nCS1_SM_nCS3 AF1				/* -No.10 */
+			DF_IO8 AF1					/* +No.19 */
+			DF_IO10 AF1
+			DF_IO11 AF1
+			DF_IO12 AF1
+			DF_IO13 AF1
+			DF_IO14 AF1
+			DF_RDY0 AF1
+			DF_REn AF0
+			DF_WEn AF0
+			SM_ADVMUX AF0
+			SM_BE0 AF0
+			SM_BE1 AF0
+			SM_nCS0 AF1
+			SM_nCS1 AF1					/* -No.36 */
+			MMC1_CD AF0					/*  No.39 */
+			MMC1_DAT4 AF0
+			MMC1_DAT5 AF0
+			MMC1_DAT6 AF0
+			MMC1_DAT7 AF0
+			SLAVE_RESET_OUT AF0				/*  No.57 */
+			GPIO19 AF0					/*  No.64 */
+			GPIO45 AF0					/*  No.45 */
+			GPIO46 AF0					/*  No.90 */
+			GPIO49 AF0					/* +No.93 */
+			GPIO14 AF0
+			GPIO15 AF0					/* -No.102 */
+			GPIO75 AF0					/* +No.111 */
+			GPIO78 AF0					/*  No.114 */
+			GPIO3 AF0					/*  No.120 */
+			GPIO9 AF0					/*  No.126 */
+			GPIO86 AF0					/*  No.134 */
+			GPIO89 AF0					/* +No.137 */
+			GPIO91 AF0
+		>;
+		PULL_UP;LPM_FLOAT;
+	};
+
+	mfp_pins_group_3: mfp_pins_group_3 {
+		pinctrl-single,pins = <
+			USIM2_UCLK AF0					/* +No.01 */
+			USIM2_UIO AF0
+			USIM2_URSTn AF0
+			ANT_SW4 AF0
+			PA_MODE AF0
+			RF_CONF_4 AF0					/* -No.06 */
+			DF_RDY1 AF0					/*  No.28 */
+			SM_ADV AF0					/*  No.31 */
+			MMC1_WP AF1
+		>;
+		MFP_DEFAULT;
+	};
+
+	uart0_pins1: pinmux-uart0-pins1 {
+		pinctrl-single,pins = <
+			GPIO47 AF6
+		>;
+		MFP_DEFAULT;
+	};
+
+	uart0_pins1_sleep: pinmux-uart0-pins1-sleep {
+		pinctrl-single,pins = <
+			GPIO47 AF6
+		>;
+		DS_MEDIUM;PULL_NONE;EDGE_BOTH;LPM_NONE;
+	};
+
+	uart0_pins2: pinmux-uart0-pins2 {
+		pinctrl-single,pins = <
+			GPIO48 AF6
+		>;
+		MFP_DEFAULT;
+	};
 };
 
 &uart0 {
 	status = "okay";
+	pinctrl-0 = <&uart0_pins1 &uart0_pins2>;
+	pinctrl-1 = <&uart0_pins1_sleep &uart0_pins2>;
+	pinctrl-names = "default", "sleep";
 };
