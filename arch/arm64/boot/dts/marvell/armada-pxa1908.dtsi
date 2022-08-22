@@ -111,6 +111,17 @@
 				status = "disabled";
 			};
 
+			uart1: serial@18000 {
+				compatible = "mrvl,mmp-uart";
+				reg = <0x18000 0x1000>;
+				interrupts = <GIC_SPI 28 IRQ_TYPE_LEVEL_HIGH>;
+				dmas = <&pdma 23 1>,
+				       <&pdma 24 1>;
+				dma-names = "rx", "tx";
+				clocks = <&apbc PXA1908_CLK_UART1>;
+				status = "disabled";
+			};
+
 			pmx: pinmux@1e000 {
 				compatible = "pinconf-single";
 				reg = <0x1e000 0x330>;
@@ -126,6 +137,17 @@
 				range: gpio-range {
 					#pinctrl-single,gpio-range-cells = <3>;
 				};
+			};
+
+			uart2: serial@36000 {
+				compatible = "mrvl,mmp-uart";
+				reg = <0x36000 0x1000>;
+				interrupts = <GIC_SPI 59 IRQ_TYPE_LEVEL_HIGH>;
+				dmas = <&pdma 4 1>,
+				       <&pdma 5 1>;
+				dma-names = "rx", "tx";
+				clocks = <&apbc PXA1908_CLK_UART2>;
+				status = "disabled";
 			};
 
 			mpmu: clock-controller@50000 {
