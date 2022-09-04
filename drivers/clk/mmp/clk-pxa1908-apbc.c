@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
+#include <asm/io.h>
 #include <linux/clk-provider.h>
 #include <linux/device.h>
 #include <linux/module.h>
@@ -29,6 +30,8 @@
 #define APBC_TWSI3		0x70
 
 #define APBC_NR_CLKS		19
+
+#define APBC_COUNTER_CLK_SEL	0x64
 
 struct pxa1908_clk_unit {
 	struct mmp_clk_unit unit;
@@ -108,6 +111,21 @@ static int pxa1908_apbc_probe(struct platform_device *pdev)
 
 	pxa1908_apb_periph_clk_init(pxa_unit);
 
+	/* Assign a 26MHz clock to the ARM architected timer. */
+	int tmp = readl(pxa_unit->base + APBC_COUNTER_CLK_SEL);
+	if ((tmp >> 16) == 0x319) {
+		writel(tmp | 1, pxa_unit->base + APBC_COUNTER_CLK_SEL);
+	}
+
+	/* Enable the ARM architected timer. */
+	void __iomem *cnt_base = ioremap(0xd4101000, 0x1000);
+	if (!cnt_base)
+		pr_err("failed to map cnt register\n");
+	else {
+		writel(BIT(0) | BIT(1), cnt_base);
+		iounmap(cnt_base);
+	}
+
 	return 0;
 }
 
@@ -124,7 +142,18 @@ static struct platform_driver pxa1908_apbc_driver = {
 		.of_match_table = pxa1908_apbc_match_table
 	}
 };
-module_platform_driver(pxa1908_apbc_driver);
+
+static int __init pxa1908_apbc_init(void)
+{
+	return platform_driver_register(&pxa1908_apbc_driver);
+}
+core_initcall(pxa1908_apbc_init);
+
+static void __exit pxa1908_apbc_exit(void)
+{
+	platform_driver_unregister(&pxa1908_apbc_driver);
+}
+module_exit(pxa1908_apbc_exit);
 
 MODULE_AUTHOR("Duje Mihanović <duje.mihanovic@skole.hr>");
 MODULE_DESCRIPTION("Marvell PXA1908 APBC Clock Driver");
