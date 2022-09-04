@@ -6,6 +6,8 @@
 #include "clk.h"
 #include "clk-pll-helanx.h"
 
+#define APBC_INDEX_TO_OFFSET(n)	((n - 1) * 4)
+
 #define APMU_CLK_GATE_CTRL	0x40
 #define MPMU_UART_PLL		0x14
 #define APBS_PLL1_CTRL		0x100
@@ -220,26 +222,26 @@ static const char *uart_parent_names[] = {"pll1_117", "uart_pll"};
 static const char *ssp_parent_names[] = {"pll1_d16", "pll1_d48", "pll1_d24", "pll1_d12"};
 
 static struct mmp_param_gate_clk apbc_gate_clks[] = {
-	{PXA1908_CLK_TWSI0, "twsi0_clk", "pll1_32", CLK_SET_RATE_PARENT, PXA1908_CLK_TWSI0 * 4, 0x7, 3, 0, 0, NULL},
-	{PXA1908_CLK_TWSI1, "twsi1_clk", "pll1_32", CLK_SET_RATE_PARENT, PXA1908_CLK_TWSI1 * 4, 0x7, 3, 0, 0, NULL},
-	{PXA1908_CLK_TWSI3, "twsi3_clk", "pll1_32", CLK_SET_RATE_PARENT, PXA1908_CLK_TWSI3 * 4, 0x7, 3, 0, 0, NULL},
-	{PXA1908_CLK_GPIO, "gpio_clk", "vctcxo", CLK_SET_RATE_PARENT, PXA1908_CLK_GPIO * 4, 0x7, 3, 0, 0, NULL},
-	{PXA1908_CLK_KPC, "kpc_clk", "clk32", CLK_SET_RATE_PARENT, PXA1908_CLK_KPC * 4, 0x7, 3, 0, MMP_CLK_GATE_NEED_DELAY, NULL},
-	{PXA1908_CLK_RTC, "rtc_clk", "clk32", CLK_SET_RATE_PARENT, PXA1908_CLK_RTC * 4, 0x87, 0x83, 0, MMP_CLK_GATE_NEED_DELAY, NULL},
-	{PXA1908_CLK_PWM0, "pwm0_clk", "pwm01_apb_share", CLK_SET_RATE_PARENT, PXA1908_CLK_PWM0 * 4, 0x2, 2, 0, 0, &pwm0_lock},
-	{PXA1908_CLK_PWM1, "pwm1_clk", "pwm01_apb_share", CLK_SET_RATE_PARENT, PXA1908_CLK_PWM1 * 4, 0x6, 2, 0, 0, NULL},
-	{PXA1908_CLK_PWM2, "pwm2_clk", "pwm23_apb_share", CLK_SET_RATE_PARENT, PXA1908_CLK_PWM2 * 4, 0x2, 2, 0, 0, NULL},
-	{PXA1908_CLK_PWM3, "pwm3_clk", "pwm23_apb_share", CLK_SET_RATE_PARENT, PXA1908_CLK_PWM3 * 4, 0x6, 2, 0, 0, NULL},
-	{PXA1908_CLK_UART0, "uart0_clk", "uart0_mux", CLK_SET_RATE_PARENT, PXA1908_CLK_UART0 * 4, 0x7, 3, 0, 0, &uart0_lock},
-	{PXA1908_CLK_UART1, "uart1_clk", "uart1_mux", CLK_SET_RATE_PARENT, PXA1908_CLK_UART1 * 4, 0x7, 3, 0, 0, &uart1_lock},
+	{PXA1908_CLK_TWSI0, "twsi0_clk", "pll1_32", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_TWSI0), 0x7, 3, 0, 0, NULL},
+	{PXA1908_CLK_TWSI1, "twsi1_clk", "pll1_32", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_TWSI1), 0x7, 3, 0, 0, NULL},
+	{PXA1908_CLK_TWSI3, "twsi3_clk", "pll1_32", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_TWSI3), 0x7, 3, 0, 0, NULL},
+	{PXA1908_CLK_GPIO, "gpio_clk", "vctcxo", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_GPIO), 0x7, 3, 0, 0, NULL},
+	{PXA1908_CLK_KPC, "kpc_clk", "clk32", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_KPC), 0x7, 3, 0, MMP_CLK_GATE_NEED_DELAY, NULL},
+	{PXA1908_CLK_RTC, "rtc_clk", "clk32", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_RTC), 0x87, 0x83, 0, MMP_CLK_GATE_NEED_DELAY, NULL},
+	{PXA1908_CLK_PWM0, "pwm0_clk", "pwm01_apb_share", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_PWM0), 0x2, 2, 0, 0, &pwm0_lock},
+	{PXA1908_CLK_PWM1, "pwm1_clk", "pwm01_apb_share", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_PWM1), 0x6, 2, 0, 0, NULL},
+	{PXA1908_CLK_PWM2, "pwm2_clk", "pwm23_apb_share", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_PWM2), 0x2, 2, 0, 0, NULL},
+	{PXA1908_CLK_PWM3, "pwm3_clk", "pwm23_apb_share", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_PWM3), 0x6, 2, 0, 0, NULL},
+	{PXA1908_CLK_UART0, "uart0_clk", "uart0_mux", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_UART0), 0x7, 3, 0, 0, &uart0_lock},
+	{PXA1908_CLK_UART1, "uart1_clk", "uart1_mux", CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_UART1), 0x7, 3, 0, 0, &uart1_lock},
 };
 
 static struct mmp_param_mux_clk apbc_mux_clks[] = {
-	{0, "uart0_mux", uart_parent_names, ARRAY_SIZE(uart_parent_names), CLK_SET_RATE_PARENT, PXA1908_CLK_UART0 * 4, 4, 3, 0, &uart0_lock},
-	{0, "uart1_mux", uart_parent_names, ARRAY_SIZE(uart_parent_names), CLK_SET_RATE_PARENT, PXA1908_CLK_UART1 * 4, 4, 3, 0, &uart1_lock},
-	{0, "uart2_mux", uart_parent_names, ARRAY_SIZE(uart_parent_names), CLK_SET_RATE_PARENT, PXA1908_CLK_UART2 * 4, 4, 3, 0, &uart2_lock},
-	{0, "ssp0_mux", ssp_parent_names, ARRAY_SIZE(ssp_parent_names), 0, PXA1908_CLK_SSP0 * 4, 4, 3, 0, NULL},
-	{0, "ssp2_mux", ssp_parent_names, ARRAY_SIZE(ssp_parent_names), 0, PXA1908_CLK_SSP2 * 4, 4, 3, 0, NULL},
+	{0, "uart0_mux", uart_parent_names, ARRAY_SIZE(uart_parent_names), CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_UART0), 4, 3, 0, &uart0_lock},
+	{0, "uart1_mux", uart_parent_names, ARRAY_SIZE(uart_parent_names), CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_UART1), 4, 3, 0, &uart1_lock},
+	{0, "uart2_mux", uart_parent_names, ARRAY_SIZE(uart_parent_names), CLK_SET_RATE_PARENT, APBC_INDEX_TO_OFFSET(PXA1908_CLK_UART2), 4, 3, 0, &uart2_lock},
+	{0, "ssp0_mux", ssp_parent_names, ARRAY_SIZE(ssp_parent_names), 0, APBC_INDEX_TO_OFFSET(PXA1908_CLK_SSP0), 4, 3, 0, NULL},
+	{0, "ssp2_mux", ssp_parent_names, ARRAY_SIZE(ssp_parent_names), 0, APBC_INDEX_TO_OFFSET(PXA1908_CLK_SSP2), 4, 3, 0, NULL},
 };
 
 static void pxa1908_apb_periph_clk_init(struct pxa1908_clk_unit *pxa_unit)
@@ -259,6 +261,12 @@ static void pxa1908_apb_periph_clk_init(struct pxa1908_clk_unit *pxa_unit)
 	mmp_register_gate_clks(unit, apbc_gate_clks, pxa_unit->apbc_base,
 			ARRAY_SIZE(apbc_gate_clks));
 }
+
+/*
+static struct mmp_param_gate_clk apmu_gate_clks[] = {
+	{PXA1908_CLK_
+};
+*/
 
 static void __init pxa1908_apbc_clk_init(struct device_node *np)
 {
