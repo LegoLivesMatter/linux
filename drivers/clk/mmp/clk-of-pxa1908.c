@@ -33,6 +33,7 @@
 #define APBC_TWSI1		0x60
 #define APBC_THERMAL		0x6c
 #define APBC_TWSI3		0x70
+#define APBC_COUNTER_CLK_SEL	0x64
 
 #define APBCP_UART2		0x1c
 #define APBCP_TWSI2		0x28
@@ -255,6 +256,21 @@ static int pxa1908_apbc_clk_init(struct platform_device *pdev)
 	mmp_clk_init(pdev->dev.of_node, &pxa_unit->unit, APBC_NR_CLKS);
 
 	pxa1908_apb_periph_clk_init(pxa_unit);
+
+	/* Assign a 26MHz clock to the ARM architected timer. */
+	int tmp = readl(pxa_unit->base + APBC_COUNTER_CLK_SEL);
+	if ((tmp >> 16) == 0x319) {
+		writel(tmp | 1, pxa_unit->base + APBC_COUNTER_CLK_SEL);
+	}
+
+	/* Enable the ARM architected timer. */
+	void __iomem *cnt_base = ioremap(0xd4101000, 0x1000);
+	if (!cnt_base)
+		pr_err("failed to map cnt register\n");
+	else {
+		writel(BIT(0) | BIT(1), cnt_base);
+		iounmap(cnt_base);
+	}
 
 	return 0;
 }
