@@ -206,9 +206,6 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 			&uart_factor_masks, uart_factor_tbl,
 			ARRAY_SIZE(uart_factor_tbl), NULL);
 
-	/*mmp_register_general_gate_clks(unit, pll1_gate_clks,
-			pxa_unit->apmu_base, ARRAY_SIZE(pll1_gate_clks));
-			*/
 }
 
 static DEFINE_SPINLOCK(pwm0_lock);
@@ -262,11 +259,20 @@ static void pxa1908_apb_periph_clk_init(struct pxa1908_clk_unit *pxa_unit)
 			ARRAY_SIZE(apbc_gate_clks));
 }
 
-/*
 static struct mmp_param_gate_clk apmu_gate_clks[] = {
-	{PXA1908_CLK_
+	{PXA1908_CLK_USB, "usb_clk", NULL, 0, PXA1908_CLK_USB * 4, 0x9, 0x9, 0x1, 0, NULL},
 };
-*/
+
+static void pxa1908_axi_periph_clk_init(struct pxa1908_clk_unit *pxa_unit)
+{
+	struct mmp_clk_unit *unit = &pxa_unit->unit;
+
+	mmp_register_general_gate_clks(unit, pll1_gate_clks,
+			pxa_unit->apmu_base, ARRAY_SIZE(pll1_gate_clks));
+
+	mmp_register_gate_clks(unit, apmu_gate_clks, pxa_unit->apmu_base,
+			ARRAY_SIZE(apmu_gate_clks));
+}
 
 static void __init pxa1908_apbc_clk_init(struct device_node *np)
 {
@@ -328,3 +334,26 @@ static void __init pxa1908_mpmu_clk_init(struct device_node *np)
 	pr_notice("mpmu ready\n");
 }
 CLK_OF_DECLARE(pxa1908_mpmu, "marvell,pxa1908-mpmu", pxa1908_mpmu_clk_init);
+
+static void __init pxa1908_apmu_clk_init(struct device_node *np)
+{
+	struct pxa1908_clk_unit *pxa_unit;
+
+	pxa_unit = kzalloc(sizeof(*pxa_unit), GFP_KERNEL);
+	if (!pxa_unit)
+		return;
+
+	pxa_unit->apmu_base = of_iomap(np, 0);
+	if (!pxa_unit->apmu_base) {
+		pr_err("failed to map apmu registers\n");
+		kfree(pxa_unit);
+		return;
+	}
+
+	mmp_clk_init(np, &pxa_unit->unit, PXA1908_APMU_NR_CLKS);
+
+	pxa1908_axi_periph_clk_init(pxa_unit);
+
+	pr_notice("apmu ready\n");
+}
+CLK_OF_DECLARE(pxa1908_apmu, "marvell,pxa1908-apmu", pxa1908_apmu_clk_init);
