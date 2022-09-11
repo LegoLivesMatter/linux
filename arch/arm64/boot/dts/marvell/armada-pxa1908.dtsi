@@ -146,8 +146,14 @@
 				dmas = <&pdma 4 1>,
 				       <&pdma 5 1>;
 				dma-names = "rx", "tx";
-				clocks = <&apbc PXA1908_CLK_UART2>;
+				clocks = <&apbcp PXA1908_CLK_UART2>;
 				status = "disabled";
+			};
+
+			apbcp: clock-controller@3b000 {
+				compatible = "marvell,pxa1908-apbcp";
+				reg = <0x3b000 0x1000>;
+				#clock-cells = <1>;
 			};
 
 			mpmu: clock-controller@50000 {

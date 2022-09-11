@@ -67,6 +67,7 @@
 #define PXA1908_CLK_UART2		0x7
 #define PXA1908_CLK_TWSI2		0xa
 #define PXA1908_CLK_AICER		0xe
+#define PXA1908_APBCP_NR_CLKS		0xe
 
 /* axi (apmu) peripherals */
 #define PXA1908_CLK_CCIC1		0x9
