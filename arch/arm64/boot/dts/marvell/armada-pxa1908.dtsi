@@ -108,7 +108,6 @@
 				       <&pdma 22 1>;
 				dma-names = "rx", "tx";
 				clocks = <&apbc PXA1908_CLK_UART0>;
-				status = "disabled";
 			};
 
 			uart1: serial@18000 {
@@ -119,7 +118,6 @@
 				       <&pdma 24 1>;
 				dma-names = "rx", "tx";
 				clocks = <&apbc PXA1908_CLK_UART1>;
-				status = "disabled";
 			};
 
 			pmx: pinmux@1e000 {
@@ -147,7 +145,6 @@
 				       <&pdma 5 1>;
 				dma-names = "rx", "tx";
 				clocks = <&apbcp PXA1908_CLK_UART2>;
-				status = "disabled";
 			};
 
 			apbcp: clock-controller@3b000 {

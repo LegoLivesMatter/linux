@@ -166,7 +166,6 @@
 };
 
 &uart0 {
-	status = "okay";
 	pinctrl-0 = <&uart0_pins1 &uart0_pins2>;
 	pinctrl-1 = <&uart0_pins1_sleep &uart0_pins2>;
 	pinctrl-names = "default", "sleep";
