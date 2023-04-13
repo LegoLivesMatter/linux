@@ -57,16 +57,26 @@
 		format = "a8r8g8b8";
 	};
 
-	aliases {
-		serial0 = &uart0;
-	};
-
-	chosen {
-		stdout-path = "serial0:115200n8";
-	};
+	chosen {};
 };
 
 &smmu {
+	status = "okay";
+};
+
+&twsi0 {
+	status = "okay";
+};
+
+&twsi1 {
+	status = "okay";
+};
+
+&twsi2 {
+	status = "okay";
+};
+
+&twsi3 {
 	status = "okay";
 };
 
@@ -79,89 +89,118 @@
 
 	mfp_pins_group_1: mfp_pins_group_1 {
 		pinctrl-single,pins = <
-			GPIO33 AF0
-			GPIO34 AF0
-			GPIO35 AF0
-			GPIO36 AF0
+			GPIO33 0
+			GPIO34 0
+			GPIO35 0
+			GPIO36 0
 		>;
 		DS_MEDIUM;PULL_FLOAT;EDGE_NONE;LPM_FLOAT;
 	};
 
 	mfp_pins_group_2: mfp_pins_group_2 {
 		pinctrl-single,pins = <
-			DF_nCS0_SM_nCS2 AF1				/* +No.09 */
-			DF_nCS1_SM_nCS3 AF1				/* -No.10 */
-			DF_IO8 AF1					/* +No.19 */
-			DF_IO10 AF1
-			DF_IO11 AF1
-			DF_IO12 AF1
-			DF_IO13 AF1
-			DF_IO14 AF1
-			DF_RDY0 AF1
-			DF_REn AF0
-			DF_WEn AF0
-			SM_ADVMUX AF0
-			SM_BE0 AF0
-			SM_BE1 AF0
-			SM_nCS0 AF1
-			SM_nCS1 AF1					/* -No.36 */
-			MMC1_CD AF0					/*  No.39 */
-			MMC1_DAT4 AF0
-			MMC1_DAT5 AF0
-			MMC1_DAT6 AF0
-			MMC1_DAT7 AF0
-			SLAVE_RESET_OUT AF0				/*  No.57 */
-			GPIO19 AF0					/*  No.64 */
-			GPIO45 AF0					/*  No.45 */
-			GPIO46 AF0					/*  No.90 */
-			GPIO49 AF0					/* +No.93 */
-			GPIO14 AF0
-			GPIO15 AF0					/* -No.102 */
-			GPIO75 AF0					/* +No.111 */
-			GPIO78 AF0					/*  No.114 */
-			GPIO3 AF0					/*  No.120 */
-			GPIO9 AF0					/*  No.126 */
-			GPIO86 AF0					/*  No.134 */
-			GPIO89 AF0					/* +No.137 */
-			GPIO91 AF0
+			DF_nCS0_SM_nCS2 1				/* +No.09 */
+			DF_nCS1_SM_nCS3 1				/* -No.10 */
+			DF_IO8 1					/* +No.19 */
+			DF_IO10 1
+			DF_IO11 1
+			DF_IO12 1
+			DF_IO13 1
+			DF_IO14 1
+			DF_RDY0 1
+			DF_REn 0
+			DF_WEn 0
+			SM_ADVMUX 0
+			SM_BE0 0
+			SM_BE1 0
+			SM_nCS0 1
+			SM_nCS1 1					/* -No.36 */
+			MMC1_CD 0					/*  No.39 */
+			MMC1_DAT4 0
+			MMC1_DAT5 0
+			MMC1_DAT6 0
+			MMC1_DAT7 0
+			SLAVE_RESET_OUT 0				/*  No.57 */
+			GPIO19 0					/*  No.64 */
+			GPIO45 0					/*  No.45 */
+			GPIO46 0					/*  No.90 */
+			GPIO49 0					/* +No.93 */
+			GPIO14 0
+			GPIO15 0					/* -No.102 */
+			GPIO75 0					/* +No.111 */
+			GPIO78 0					/*  No.114 */
+			GPIO3 0					/*  No.120 */
+			GPIO9 0					/*  No.126 */
+			GPIO86 0					/*  No.134 */
+			GPIO89 0					/* +No.137 */
+			GPIO91 0
 		>;
 		PULL_UP;LPM_FLOAT;
 	};
 
 	mfp_pins_group_3: mfp_pins_group_3 {
 		pinctrl-single,pins = <
-			USIM2_UCLK AF0					/* +No.01 */
-			USIM2_UIO AF0
-			USIM2_URSTn AF0
-			ANT_SW4 AF0
-			PA_MODE AF0
-			RF_CONF_4 AF0					/* -No.06 */
-			DF_RDY1 AF0					/*  No.28 */
-			SM_ADV AF0					/*  No.31 */
-			MMC1_WP AF1
+			USIM2_UCLK 0					/* +No.01 */
+			USIM2_UIO 0
+			USIM2_URSTn 0
+			ANT_SW4 0
+			PA_MODE 0
+			RF_CONF_4 0					/* -No.06 */
+			DF_RDY1 0					/*  No.28 */
+			SM_ADV 0					/*  No.31 */
+			MMC1_WP 1
 		>;
 		MFP_DEFAULT;
 	};
 
 	uart0_pins1: pinmux-uart0-pins1 {
 		pinctrl-single,pins = <
-			GPIO47 AF6
+			GPIO47 6
 		>;
 		MFP_DEFAULT;
 	};
 
 	uart0_pins1_sleep: pinmux-uart0-pins1-sleep {
 		pinctrl-single,pins = <
-			GPIO47 AF6
+			GPIO47 6
 		>;
 		DS_MEDIUM;PULL_NONE;EDGE_BOTH;LPM_NONE;
 	};
 
 	uart0_pins2: pinmux-uart0-pins2 {
 		pinctrl-single,pins = <
-			GPIO48 AF6
+			GPIO48 6
 		>;
 		MFP_DEFAULT;
+	};
+
+	/* no pull, no LPM */
+	sdh2_pmx_func1: sdh2_pmx_func1 {
+		pinctrl-single,pins = <
+			ND_IO7 1
+			ND_IO6 1
+			ND_IO5 1
+			ND_IO4 1
+			ND_IO3 1
+			ND_IO2 1
+			ND_IO1 1
+			ND_IO0 1
+		>;
+		MFP_PULL_UP;
+	};
+
+	sdh2_pmx_func2: sdh2_pmx_func2 {
+		pinctrl-single,pins = <
+			SM_SCLK 1
+		>;
+		MFP_LPM_DRIVE_LOW;
+	};
+
+	sdh2_pmx_func3: sdh2_pmx_func3 {
+		pinctrl-single,pins = <
+			ND_CLE_SM_OEN 1
+		>;
+		PULL_UP;LPM_FLOAT;
 	};
 };
 
@@ -169,4 +208,12 @@
 	pinctrl-0 = <&uart0_pins1 &uart0_pins2>;
 	pinctrl-1 = <&uart0_pins1_sleep &uart0_pins2>;
 	pinctrl-names = "default", "sleep";
+};
+
+&sdh2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdh2_pmx_func1 &sdh2_pmx_func2 &sdh2_pmx_func3>;
+	//pinctrl-1 = <&sdh2_pmx_func1_fast &sdh2_pmx_func2_fast &sdh2_pmx_func3_fast>;
+	bus-width = <8>;
+	non-removable;
 };
