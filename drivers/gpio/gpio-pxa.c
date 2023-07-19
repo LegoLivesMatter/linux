@@ -351,6 +351,7 @@ static int pxa_init_gpio_chip(struct pxa_gpio_chip *pchip, int ngpio, void __iom
 
 	pchip->chip.parent = pchip->dev;
 	pchip->chip.label = "gpio-pxa";
+	pchip->chip.base = -1;
 	pchip->chip.direction_input  = pxa_gpio_direction_input;
 	pchip->chip.direction_output = pxa_gpio_direction_output;
 	pchip->chip.get = pxa_gpio_get;
