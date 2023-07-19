@@ -1,5 +1,4 @@
 #include "armada-pxa1908.dtsi"
-#include "pxa1908-pinfunc.h"
 
 / {
 	pxa,rev-id = <3928 2>;
@@ -84,136 +83,135 @@
 	pinctrl-single,gpio-range = <&range 55 55 0>,
 				    <&range 110 32 0>,
 				    <&range 52 1 0>;
+	
 	pinctrl-names = "default";
-	pinctrl-0 = <&mfp_pins_group_1 &mfp_pins_group_2 &mfp_pins_group_3>;
+	pinctrl-0 = <&board_pins_1 &board_pins_2 &board_pins_3>;
 
-	mfp_pins_group_1: mfp_pins_group_1 {
+	board_pins_1: pinmux_board_1 {
 		pinctrl-single,pins = <
-			GPIO33 0
-			GPIO34 0
-			GPIO35 0
-			GPIO36 0
+			0x160 0
+			0x164 0
+			0x168 0
+			0x16c 0
 		>;
-		DS_MEDIUM;PULL_FLOAT;EDGE_NONE;LPM_FLOAT;
+		pinctrl-single,drive-strength = <0x1000 0x1800>;
+		pinctrl-single,bias-pullup = <0x8000 0x8000 0 0xc000>;
+		pinctrl-single,bias-pulldown = <0x8000 0x8000 0 0xa000>;
+		pinctrl-single,input-schmitt = <0 0x30>;
+		pinctrl-single,input-schmitt-enable = <0x40 0 0x40 0x40>;
+		pinctrl-single,low-power-mode = <0x288 0x388>;
+	};
+	
+	board_pins_2: pinmux_board_2 {
+		pinctrl-single,pins = <
+			0x44 1
+			0x48 1
+			0x20 1
+			0x18 1
+			0x14 1
+			0x10 1
+			0xc 1
+			0x8 1
+			0x68 1
+			0x58 0
+			0x54 0
+			0x7c 0
+			0x6c 0
+			0x70 0
+			0x4c 1
+			0x50 1
+			0xac 0
+			0x90 0
+			0x8c 0
+			0x88 0
+			0x84 0
+			0xc8 0
+			0x128 0
+			0x190 0
+			0x194 0
+			0x1a0 0
+			0x114 0
+			0x118 0
+			0x1d8 0
+			0x1e4 0
+			0xe8 0
+			0x100 0
+			0x204 0
+			0x210 0
+			0x218 0
+		>;
+		pinctrl-single,bias-pullup = <0xc000 0xc000 0 0xc000>;
+		pinctrl-single,bias-pulldown = <0x8000 0xa000 0x8000 0xc000>;
+		pinctrl-single,low-power-mode = <0x288 0x388>;
 	};
 
-	mfp_pins_group_2: mfp_pins_group_2 {
+	board_pins_3: pinmux_board_3 {
 		pinctrl-single,pins = <
-			DF_nCS0_SM_nCS2 1				/* +No.09 */
-			DF_nCS1_SM_nCS3 1				/* -No.10 */
-			DF_IO8 1					/* +No.19 */
-			DF_IO10 1
-			DF_IO11 1
-			DF_IO12 1
-			DF_IO13 1
-			DF_IO14 1
-			DF_RDY0 1
-			DF_REn 0
-			DF_WEn 0
-			SM_ADVMUX 0
-			SM_BE0 0
-			SM_BE1 0
-			SM_nCS0 1
-			SM_nCS1 1					/* -No.36 */
-			MMC1_CD 0					/*  No.39 */
-			MMC1_DAT4 0
-			MMC1_DAT5 0
-			MMC1_DAT6 0
-			MMC1_DAT7 0
-			SLAVE_RESET_OUT 0				/*  No.57 */
-			GPIO19 0					/*  No.64 */
-			GPIO45 0					/*  No.45 */
-			GPIO46 0					/*  No.90 */
-			GPIO49 0					/* +No.93 */
-			GPIO14 0
-			GPIO15 0					/* -No.102 */
-			GPIO75 0					/* +No.111 */
-			GPIO78 0					/*  No.114 */
-			GPIO3 0					/*  No.120 */
-			GPIO9 0					/*  No.126 */
-			GPIO86 0					/*  No.134 */
-			GPIO89 0					/* +No.137 */
-			GPIO91 0
+			0x260 0
+			0x264 0
+			0x268 0
+			0x26c 0
+			0x270 0
+			0x274 0
+			0x78 0
+			0x74 0
+			0xb0 1
 		>;
-		PULL_UP;LPM_FLOAT;
+		pinctrl-single,drive-strength = <0x1000 0x1800>;
+		pinctrl-single,bias-pullup = <0 0xc000 0 0xc000>;
+		pinctrl-single,bias-pulldown = <0 0xa000 0 0xa000>;
+		pinctrl-single,input-schmitt = <0 0x30>;
+		pinctrl-single,input-schmitt-enable = <0x40 0 0x40 0x40>;
+		pinctrl-single,low-power-mode = <0 0x388>;
 	};
 
-	mfp_pins_group_3: mfp_pins_group_3 {
+	uart0_pins: pinmux_uart0 {
 		pinctrl-single,pins = <
-			USIM2_UCLK 0					/* +No.01 */
-			USIM2_UIO 0
-			USIM2_URSTn 0
-			ANT_SW4 0
-			PA_MODE 0
-			RF_CONF_4 0					/* -No.06 */
-			DF_RDY1 0					/*  No.28 */
-			SM_ADV 0					/*  No.31 */
-			MMC1_WP 1
+			0x198 6
+			0x19c 6
 		>;
-		MFP_DEFAULT;
+		pinctrl-single,drive-strength = <0x1000 0x1800>;
+		pinctrl-single,bias-pullup = <0 0xc000 0 0xc000>;
+		pinctrl-single,bias-pulldown = <0 0xa000 0 0xa000>;
+		pinctrl-single,input-schmitt = <0 0x30>;
+		pinctrl-single,input-schmitt-enable = <0x40 0 0x40 0x40>;
+		pinctrl-single,low-power-mode = <0 0x388>;
 	};
 
-	uart0_pins1: pinmux-uart0-pins1 {
+	gpio_keys_pins: pinmux_gpio_keys {
 		pinctrl-single,pins = <
-			GPIO47 6
+			0x11c 0
+			0x120 0
+			0x1a4 0
 		>;
-		MFP_DEFAULT;
+		pinctrl-single,drive-strength = <0x1000 0x1800>;
+		pinctrl-single,bias-pullup = <0xc000 0xc000 0 0xc000>;
+		pinctrl-single,bias-pulldown = <0x8000 0xa0000 0x8000 0xa000>;
+		pinctrl-single,input-schmitt = <0 0x30>;
+		pinctrl-single,input-schmitt-enable = <0x40 0 0x40 0x40>;
+		pinctrl-single,low-power-mode = <0 0x388>;
 	};
 
-	uart0_pins1_sleep: pinmux-uart0-pins1-sleep {
+	muic_i2c_pins: pinmux_muic_i2c {
 		pinctrl-single,pins = <
-			GPIO47 6
+			0x154 0
+			0x150 0
 		>;
-		DS_MEDIUM;PULL_NONE;EDGE_BOTH;LPM_NONE;
-	};
-
-	uart0_pins2: pinmux-uart0-pins2 {
-		pinctrl-single,pins = <
-			GPIO48 6
-		>;
-		MFP_DEFAULT;
-	};
-
-	/* no pull, no LPM */
-	sdh2_pmx_func1: sdh2_pmx_func1 {
-		pinctrl-single,pins = <
-			ND_IO7 1
-			ND_IO6 1
-			ND_IO5 1
-			ND_IO4 1
-			ND_IO3 1
-			ND_IO2 1
-			ND_IO1 1
-			ND_IO0 1
-		>;
-		MFP_PULL_UP;
-	};
-
-	sdh2_pmx_func2: sdh2_pmx_func2 {
-		pinctrl-single,pins = <
-			SM_SCLK 1
-		>;
-		MFP_LPM_DRIVE_LOW;
-	};
-
-	sdh2_pmx_func3: sdh2_pmx_func3 {
-		pinctrl-single,pins = <
-			ND_CLE_SM_OEN 1
-		>;
-		PULL_UP;LPM_FLOAT;
+		pinctrl-single,drive-strength = <0x1000 0x1800>;
+		pinctrl-single,bias-pullup = <0 0xc000 0 0xc000>;
+		pinctrl-single,bias-pulldown = <0 0xa000 0 0xa000>;
+		pinctrl-single,input-schmitt = <0 0x30>;
+		pinctrl-single,input-schmitt-enable = <0x40 0 0x40 0x40>;
+		pinctrl-single,low-power-mode = <0x288 0x388>;
 	};
 };
 
 &uart0 {
-	pinctrl-0 = <&uart0_pins1 &uart0_pins2>;
-	pinctrl-1 = <&uart0_pins1_sleep &uart0_pins2>;
-	pinctrl-names = "default", "sleep";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_pins>;
 };
 
 &sdh2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&sdh2_pmx_func1 &sdh2_pmx_func2 &sdh2_pmx_func3>;
-	//pinctrl-1 = <&sdh2_pmx_func1_fast &sdh2_pmx_func2_fast &sdh2_pmx_func3_fast>;
 	bus-width = <8>;
 	non-removable;
 };
