@@ -69,7 +69,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&muic_i2c_pins>;
 
-		extcon@14 {
+		muic: extcon@14 {
 			compatible = "siliconmitus,sm5504-muic";
 			reg = <0x14>;
 			interrupt-parent = <&gpio>;
@@ -255,6 +255,10 @@
 &uart0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart0_pins>;
+};
+
+&usb {
+	extcon = <&muic>, <&muic>;
 };
 
 &sdh2 {

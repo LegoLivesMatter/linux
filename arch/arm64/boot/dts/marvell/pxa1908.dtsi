@@ -251,7 +251,7 @@
 				#phy-cells = <0>;
 			};
 
-			usb@8000 {
+			usb: usb@8000 {
 				compatible = "chipidea,usb2";
 				reg = <0x8000 0x200>;
 				interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
