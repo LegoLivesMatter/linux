@@ -1,4 +1,4 @@
-#include "armada-pxa1908.dtsi"
+#include "pxa1908.dtsi"
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/linux-event-codes.h>
 
