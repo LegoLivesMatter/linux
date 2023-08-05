@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
 %YAML 1.2
 ---
 $id: http://devicetree.org/schemas/clock/marvell,pxa1908.yaml#
@@ -11,14 +11,11 @@ maintainers:
 
 description: |
   The PXA1908 clock subsystem generates and supplies clock to various
-  controllers within the PXA1908 SoC. The PXA1908 contains contains numerous
-  clock controller blocks, with the ones currently supported being APBC, APBCP,
-  MPMU and APMU roughly corresponding to internal buses.
+  controllers within the PXA1908 SoC. The PXA1908 contains numerous clock
+  controller blocks, with the ones currently supported being APBC, APBCP, MPMU
+  and APMU roughly corresponding to internal buses.
 
-  Each clock is assigned an identifier and client nodes use this identifier to
-  specify the clock which they consume.
-
-  All these identifiers could be found in <include/dt-bindings/marvell,pxa1908.h>.
+  All these clock identifiers could be found in <include/dt-bindings/marvell,pxa1908.h>.
 
 properties:
   compatible:
@@ -27,11 +24,9 @@ properties:
       - marvell,pxa1908-apbcp
       - marvell,pxa1908-mpmu
       - marvell,pxa1908-apmu
+
   reg:
     maxItems: 1
-    description: |
-      Physical address of the clock controller and length of the memory mapped
-      region.
 
   '#clock-cells':
     const: 1

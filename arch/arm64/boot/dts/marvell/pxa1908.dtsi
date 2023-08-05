@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /dts-v1/;
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
@@ -16,28 +17,28 @@
 
 		cpu@0 {
 			device_type = "cpu";
-			compatible = "arm,cortex-a53", "arm,armv8";
+			compatible = "arm,cortex-a53";
 			reg = <0 0>;
 			enable-method = "psci";
 		};
 
 		cpu@1 {
 			device_type = "cpu";
-			compatible = "arm,cortex-a53", "arm,armv8";
+			compatible = "arm,cortex-a53";
 			reg = <0 1>;
 			enable-method = "psci";
 		};
 
 		cpu@2 {
 			device_type = "cpu";
-			compatible = "arm,cortex-a53", "arm,armv8";
+			compatible = "arm,cortex-a53";
 			reg = <0 2>;
 			enable-method = "psci";
 		};
 
 		cpu@3 {
 			device_type = "cpu";
-			compatible = "arm,cortex-a53", "arm,armv8";
+			compatible = "arm,cortex-a53";
 			reg = <0 3>;
 			enable-method = "psci";
 		};
@@ -51,9 +52,9 @@
 	timer {
 		compatible = "arm,armv8-timer";
 		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
-		             <GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
-			     <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
-			     <GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>;
+			<GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
+			<GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
+			<GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>;
 	};
 
 	soc {
@@ -68,14 +69,14 @@
 			#global-interrupts = <1>;
 			#iommu-cells = <1>;
 			interrupts = <GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>,
-				     <GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>;
+				<GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>;
 			status = "disabled";
 		};
 
 		gic: interrupt-controller@d1df9000 {
 			compatible = "arm,gic-400";
 			reg = <0 0xd1df9000 0 0x1000>,
-			      <0 0xd1dfa000 0 0x2000>;
+				<0 0xd1dfa000 0 0x2000>;
 			interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>;
 			interrupt-controller;
 			#interrupt-cells = <3>;
@@ -136,23 +137,19 @@
 			};
 
 			uart0: serial@17000 {
-				compatible = "mrvl,mmp-uart";
+				compatible = "mrvl,mmp-uart", "intel,xscale-uart";
 				reg = <0x17000 0x1000>;
 				interrupts = <GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>;
-				dmas = <&pdma 21 1>,
-				       <&pdma 22 1>;
-				dma-names = "rx", "tx";
 				clocks = <&apbc PXA1908_CLK_UART0>;
+				reg-shift = <2>;
 			};
 
 			uart1: serial@18000 {
-				compatible = "mrvl,mmp-uart";
+				compatible = "mrvl,mmp-uart", "intel,xscale-uart";
 				reg = <0x18000 0x1000>;
 				interrupts = <GIC_SPI 28 IRQ_TYPE_LEVEL_HIGH>;
-				dmas = <&pdma 23 1>,
-				       <&pdma 24 1>;
-				dma-names = "rx", "tx";
 				clocks = <&apbc PXA1908_CLK_UART1>;
+				reg-shift = <2>;
 			};
 
 			gpio: gpio@19000 {
@@ -204,13 +201,11 @@
 			};
 
 			uart2: serial@36000 {
-				compatible = "mrvl,mmp-uart";
+				compatible = "mrvl,mmp-uart", "intel,xscale-uart";
 				reg = <0x36000 0x1000>;
 				interrupts = <GIC_SPI 59 IRQ_TYPE_LEVEL_HIGH>;
-				dmas = <&pdma 4 1>,
-				       <&pdma 5 1>;
-				dma-names = "rx", "tx";
 				clocks = <&apbcp PXA1908_CLK_UART2>;
+				reg-shift = <2>;
 			};
 
 			twsi2: i2c@37000 {
