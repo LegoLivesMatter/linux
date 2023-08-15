@@ -354,6 +354,7 @@
 		interrupts = <72 0x00000002>;
 		touchscreen-size-x = <480>;
 		touchscreen-size-y = <800>;
+		vdd-supply = <&ldo2>;
 	};
 };
 
