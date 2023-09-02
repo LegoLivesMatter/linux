@@ -348,7 +348,7 @@
 	status = "okay";
 
 	touchscreen@50 {
-		compatible = "imagis,ist3038c";
+		compatible = "imagis,ist30xxc";
 		reg = <0x50>;
 		interrupt-parent = <&gpio>;
 		interrupts = <72 0x00000002>;

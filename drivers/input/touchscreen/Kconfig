@@ -1399,4 +1399,15 @@ config TOUCHSCREEN_HIMAX_HX83112B
 	  To compile this driver as a module, choose M here: the
 	  module will be called himax_hx83112b.
 
+config TOUCHSCREEN_IST30XXC
+	tristate "Imagis IST30XXC series touchscreen"
+	depends on I2C
+	help
+		Say Y here if you have a touchscreen using the IST30XXC series.
+
+		If unsure, say N.
+
+		To compile this driver as a module, choose M here: the
+		module will be called ist30xxc.
+
 endif
