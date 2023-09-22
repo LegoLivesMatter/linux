@@ -1137,212 +1137,6 @@ update_bin:   // TSP is not ready / FW update
 #endif // IST30XX_INTERNAL_BIN
 
 #define MAX_FILE_PATH   255
-/* sysfs: /sys/class/touch/firmware/firmware */
-ssize_t ist30xx_fw_store(struct device *dev, struct device_attribute *attr,
-			 const char *buf, size_t size)
-{
-	int ret;
-	int fw_size = 0;
-	u8 *fw = NULL;
-	const u8 *buff = 0;
-	mm_segment_t old_fs = { 0 };
-	struct file *fp = NULL;
-	long fsize = 0, nread = 0;
-	char fw_path[MAX_FILE_PATH];
-	const struct firmware *request_fw = NULL;
-	int mode = 0;
-	int calib = 1;
-	struct ist30xx_data *data = dev_get_drvdata(dev);
-
-	sscanf(buf, "%d %d", &mode, &calib);
-
-	switch (mode) {
-	case MASK_UPDATE_INTERNAL:
-#if IST30XX_INTERNAL_BIN
-		fw = data->fw.buf;
-		fw_size = data->fw.buf_size;
-#else
-		tsp_warn("Not support internal bin!!\n");
-		return size;
-#endif
-		break;
-
-	case MASK_UPDATE_FW:
-		ret = request_firmware(&request_fw, IST30XX_FW_NAME,
-				       &data->client->dev);
-		if (ret) {
-			tsp_warn("File not found, %s\n", IST30XX_FW_NAME);
-			return size;
-		}
-
-		fw = (u8 *)request_fw->data;
-		fw_size = (u32)request_fw->size;
-		tsp_info("firmware is loaded!!\n");
-		break;
-
-        case MASK_UPDATE_SDCARD:
-		old_fs = get_fs();
-		set_fs(get_ds());
-
-		snprintf(fw_path, MAX_FILE_PATH, "/sdcard/%s",
-			 IST30XX_FW_NAME);
-		fp = filp_open(fw_path, O_RDONLY, 0);
-		if (IS_ERR(fp)) {
-			tsp_info("file %s open error:%d\n", fw_path, (s32)fp);
-			goto err_file_open;
-		}
-
-		fsize = fp->f_path.dentry->d_inode->i_size;
-
-		buff = kzalloc((size_t)fsize, GFP_KERNEL);
-		if (!buff) {
-			tsp_info("fail to alloc buffer\n");
-			goto err_alloc;
-		}
-
-		nread = vfs_read(fp, (char __user *)buff, fsize, &fp->f_pos);
-		if (nread != fsize) {
-			tsp_info("mismatch fw size\n");
-			goto err_fw_size;
-		}
-
-		fw = (u8 *)buff;
-		fw_size = (u32)fsize;
-
-		filp_close(fp, current->files);
-		tsp_info("firmware is loaded!!\n");
-		break;
-
-	case MASK_UPDATE_ERASE:
-		tsp_info("EEPROM all erase!!\n");
-
-		mutex_lock(&ist30xx_mutex);
-		ist30xx_disable_irq(data);
-		ist30xx_reset(data, true);
-		ist30xxc_isp_enable(data->client, true);
-		ist30xxc_isp_erase(data->client, IST30XX_ISP_ERASE_BLOCK, 0);
-
-		if (data->pdata->chip_code < IMAGIS_IST3038C)
-			ist30xxc_isp_erase(data->client, IST30XX_ISP_ERASE_INFO, 0);
-
-		ist30xxc_isp_enable(data->client, false);
-		ist30xx_reset(data, false);
-		ist30xx_start(data);
-		ist30xx_enable_irq(data);
-		mutex_unlock(&ist30xx_mutex);
-
-	default:
-		return size;
-	}
-
-	ret = ist30xx_get_update_info(data, fw, fw_size);
-	if (ret)
-		goto err_get_info;
-
-	data->fw.bin.main_ver = ist30xx_parse_ver(data, FLAG_MAIN, fw);
-	data->fw.bin.fw_ver = ist30xx_parse_ver(data, FLAG_FW, fw);
-	data->fw.bin.test_ver = ist30xx_parse_ver(data, FLAG_TEST, fw);
-	data->fw.bin.core_ver = ist30xx_parse_ver(data, FLAG_CORE, fw);
-
-	mutex_lock(&ist30xx_mutex);
-	ist30xx_fw_update(data, fw, fw_size);
-
-	if (calib)
-		ist30xx_calibrate(data, 1);
-	mutex_unlock(&ist30xx_mutex);
-
-	ist30xx_start(data);
-
-err_get_info:
-	if (request_fw != NULL)
-		release_firmware(request_fw);
-
-	if (fp != NULL) {
-err_fw_size:
-		kfree(buff);
-err_alloc:
-		filp_close(fp, NULL);
-err_file_open:
-		set_fs(old_fs);
-	}
-
-	return size;
-}
-
-/* sysfs: /sys/class/touch/firmware/fw_sdcard */
-ssize_t ist30xx_fw_sdcard_show(struct device *dev,
-			       struct device_attribute *attr, char *buf)
-{
-	int ret = 0;
-	int fw_size = 0;
-	u8 *fw = NULL;
-	const u8 *buff = 0;
-	mm_segment_t old_fs = { 0 };
-	struct file *fp = NULL;
-	long fsize = 0, nread = 0;
-	char fw_path[MAX_FILE_PATH];
-	struct ist30xx_data *data = dev_get_drvdata(dev);
-
-	old_fs = get_fs();
-	set_fs(get_ds());
-
-	snprintf(fw_path, MAX_FILE_PATH, "/sdcard/%s",
-		 IST30XX_FW_NAME);
-	fp = filp_open(fw_path, O_RDONLY, 0);
-	if (IS_ERR(fp)) {
-		tsp_info("file %s open error:%d\n", fw_path, (s32)fp);
-		goto err_file_open;
-	}
-
-	fsize = fp->f_path.dentry->d_inode->i_size;
-
-	buff = kzalloc((size_t)fsize, GFP_KERNEL);
-	if (!buff) {
-		tsp_info("fail to alloc buffer\n");
-		goto err_alloc;
-	}
-
-	nread = vfs_read(fp, (char __user *)buff, fsize, &fp->f_pos);
-	if (nread != fsize) {
-		tsp_info("mismatch fw size\n");
-		goto err_fw_size;
-	}
-
-	fw = (u8 *)buff;
-	fw_size = (u32)fsize;
-
-	filp_close(fp, current->files);
-	fp = NULL;
-
-	tsp_info("firmware is loaded!!\n");
-
-	ret = ist30xx_get_update_info(data, fw, fw_size);
-	if (ret)
-		goto err_get_info;
-
-	data->fw.bin.main_ver = ist30xx_parse_ver(data, FLAG_MAIN, fw);
-	data->fw.bin.fw_ver = ist30xx_parse_ver(data, FLAG_FW, fw);
-	data->fw.bin.test_ver = ist30xx_parse_ver(data, FLAG_TEST, fw);
-	data->fw.bin.core_ver = ist30xx_parse_ver(data, FLAG_CORE, fw);
-
-	mutex_lock(&ist30xx_mutex);
-	ist30xx_fw_update(data, fw, fw_size);
-	mutex_unlock(&ist30xx_mutex);
-
-	ist30xx_start(data);
-
-err_get_info:
-err_fw_size:
-	if (buff)
-		kfree(buff);
-err_alloc:
-	if (fp)
-		filp_close(fp, NULL);
-err_file_open:
-	set_fs(old_fs);
-
-	return 0;
-}
 
 /* sysfs: /sys/class/touch/firmware/firmware */
 ssize_t ist30xx_fw_status_show(struct device *dev,
@@ -1374,62 +1168,6 @@ ssize_t ist30xx_fw_status_show(struct device *dev,
 	}
 
 	return count;
-}
-
-/* sysfs: /sys/class/touch/firmware/fw_read */
-u32 *buf32_flash;
-ssize_t ist30xx_fw_read_show(struct device *dev, struct device_attribute *attr,
-			     char *buf)
-{
-	int i;
-	mm_segment_t old_fs = { 0 };
-	struct file *fp = NULL;
-	char fw_path[MAX_FILE_PATH];
-	u8 *buf8 = (u8 *)buf32_flash;
-	u32 total_size;
-	struct ist30xx_data *data = dev_get_drvdata(dev);
-
-	if (data->pdata->chip_code < IMAGIS_IST3038C)
-		total_size = IST30XX_FLASH_32K_SIZE;
-	else
-		total_size = IST30XX_FLASH_64K_SIZE;
-
-	mutex_lock(&ist30xx_mutex);
-	ist30xx_disable_irq(data);
-
-	ist30xxc_isp_fw_read(data, buf32_flash);
-	for (i = 0; i < total_size; i += 16) {
-		tsp_debug("%07x: %02x%02x %02x%02x %02x%02x %02x%02x "
-				"%02x%02x %02x%02x %02x%02x %02x%02x\n", i,
-				buf8[i], buf8[i + 1], buf8[i + 2], buf8[i + 3],
-				buf8[i + 4], buf8[i + 5], buf8[i + 6], buf8[i + 7],
-				buf8[i + 8], buf8[i + 9], buf8[i + 10], buf8[i + 11],
-				buf8[i + 12], buf8[i + 13], buf8[i + 14], buf8[i + 15]);
-	}
-
-	old_fs = get_fs();
-	set_fs(get_ds());
-
-	snprintf(fw_path, MAX_FILE_PATH, "/sdcard/%s", IST30XX_BIN_NAME);
-	fp = filp_open(fw_path, O_CREAT|O_WRONLY|O_TRUNC, 0);
-	if (IS_ERR(fp)) {
-		tsp_info("file %s open error:%d\n", fw_path, (s32)fp);
-		goto err_file_open;
-	}
-
-	fp->f_op->write(fp, buf8, total_size, &fp->f_pos);
-	fput(fp);
-
-	filp_close(fp, NULL);
-	set_fs(old_fs);
-
-err_file_open:
-	ist30xx_enable_irq(data);
-	mutex_unlock(&ist30xx_mutex);
-
-	ist30xx_start(data);
-
-	return 0;
 }
 
 /* sysfs: /sys/class/touch/firmware/version */
@@ -1468,19 +1206,12 @@ ssize_t ist30xx_fw_version_show(struct device *dev,
 
 
 /* sysfs  */
-static DEVICE_ATTR(fw_read, S_IWUSR | S_IWGRP, ist30xx_fw_read_show, NULL);
-static DEVICE_ATTR(firmware, S_IWUSR | S_IWGRP, ist30xx_fw_status_show,
-		   ist30xx_fw_store);
-static DEVICE_ATTR(fw_sdcard, S_IWUSR | S_IWGRP, ist30xx_fw_sdcard_show, NULL);
 static DEVICE_ATTR(version, S_IWUSR | S_IWGRP, ist30xx_fw_version_show, NULL);
 
 struct class *ist30xx_class;
 struct device *ist30xx_fw_dev;
 
 static struct attribute *fw_attributes[] = {
-	&dev_attr_fw_read.attr,
-	&dev_attr_firmware.attr,
-	&dev_attr_fw_sdcard.attr,
 	&dev_attr_version.attr,
 	NULL,
 };
@@ -1494,7 +1225,7 @@ int ist30xx_init_update_sysfs(struct ist30xx_data *data)
 	u32 total_size;
 
 	/* /sys/class/touch */
-	ist30xx_class = class_create(THIS_MODULE, "touch");
+	ist30xx_class = class_create("touch");
 
 	/* /sys/class/touch/firmware */
 	ist30xx_fw_dev = device_create(ist30xx_class, NULL, 0, data, "firmware");
@@ -1507,8 +1238,6 @@ int ist30xx_init_update_sysfs(struct ist30xx_data *data)
 		total_size = IST30XX_FLASH_32K_SIZE;
 	else
 		total_size = IST30XX_FLASH_64K_SIZE;
-
-	buf32_flash = kmalloc(total_size / IST30XX_DATA_LEN, GFP_KERNEL);
 
 	data->status.update = 0;
 	data->status.calib = 0;
