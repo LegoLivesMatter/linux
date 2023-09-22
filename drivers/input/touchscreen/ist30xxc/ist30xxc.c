@@ -71,6 +71,7 @@ u32 event_ms = 0, timer_ms = 0;
 static struct timespec64 t_current;	// ns
 int timer_period_ms = 500;		// 0.5sec
 
+#define KEY_RECENT 254 // TODO: resolve properly
 #if IST30XX_USE_KEY
 int ist30xx_key_code[IST30XX_MAX_KEYS + 1] = { 0, KEY_RECENT, KEY_BACK };
 #endif
