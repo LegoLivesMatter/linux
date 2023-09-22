@@ -120,7 +120,7 @@ int ist30xx_put_track_ms(u32 ms)
 	return ist30xx_put_track(&ms, 1);
 }
 
-static struct timespec t_track;
+static struct timespec64 t_track;
 int ist30xx_tracking(u32 status)
 {
 	u32 ms;
@@ -128,7 +128,7 @@ int ist30xx_tracking(u32 status)
 	if (!tracking_initialize)
 		ist30xx_tracking_init();
 
-	ktime_get_ts(&t_track);
+	ktime_get_ts64(&t_track);
 	ms = t_track.tv_sec * 1000 + t_track.tv_nsec / 1000000;
 
 	ist30xx_put_track_ms(ms);
