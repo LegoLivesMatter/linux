@@ -199,8 +199,8 @@ ssize_t ist30xx_track_cnt_show(struct device *dev,
 
 
 /* sysfs  */
-static DEVICE_ATTR(track_frame, S_IRWXUGO, ist30xx_track_frame_show, NULL);
-static DEVICE_ATTR(track_cnt, S_IRWXUGO, ist30xx_track_cnt_show, NULL);
+static DEVICE_ATTR(track_frame, S_IWUSR | S_IWGRP, ist30xx_track_frame_show, NULL);
+static DEVICE_ATTR(track_cnt, S_IWUSR | S_IWGRP, ist30xx_track_cnt_show, NULL);
 
 static struct attribute *tracking_attributes[] = {
 	&dev_attr_track_frame.attr,

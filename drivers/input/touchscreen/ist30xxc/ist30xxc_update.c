@@ -1468,11 +1468,11 @@ ssize_t ist30xx_fw_version_show(struct device *dev,
 
 
 /* sysfs  */
-static DEVICE_ATTR(fw_read, S_IRWXUGO, ist30xx_fw_read_show, NULL);
-static DEVICE_ATTR(firmware, S_IRWXUGO, ist30xx_fw_status_show,
+static DEVICE_ATTR(fw_read, S_IWUSR | S_IWGRP, ist30xx_fw_read_show, NULL);
+static DEVICE_ATTR(firmware, S_IWUSR | S_IWGRP, ist30xx_fw_status_show,
 		   ist30xx_fw_store);
-static DEVICE_ATTR(fw_sdcard, S_IRWXUGO, ist30xx_fw_sdcard_show, NULL);
-static DEVICE_ATTR(version, S_IRWXUGO, ist30xx_fw_version_show, NULL);
+static DEVICE_ATTR(fw_sdcard, S_IWUSR | S_IWGRP, ist30xx_fw_sdcard_show, NULL);
+static DEVICE_ATTR(version, S_IWUSR | S_IWGRP, ist30xx_fw_version_show, NULL);
 
 struct class *ist30xx_class;
 struct device *ist30xx_fw_dev;
