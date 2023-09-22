@@ -69,7 +69,7 @@ int ist30xx_batt_chk_max_cnt = IST30XX_MAX_CHK_CNT;
 #define EVENT_TIMER_INTERVAL		(HZ * timer_period_ms / 1000)
 u32 event_ms = 0, timer_ms = 0;
 static struct timer_list event_timer;
-static struct timespec t_current;	// ns
+static struct timespec64 t_current;	// ns
 int timer_period_ms = 500;		// 0.5sec
 
 #if IST30XX_USE_KEY
@@ -101,7 +101,7 @@ void tsp_printk(int level, const char *fmt, ...)
 
 long get_milli_second(void)
 {
-	ktime_get_ts(&t_current);
+	ktime_get_ts64(&t_current);
 
 	return t_current.tv_sec * 1000 + t_current.tv_nsec / 1000000;
 }
