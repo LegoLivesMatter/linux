@@ -1450,7 +1450,6 @@ static int ist30xx_probe(struct i2c_client *client,
 		ist30xx_reset(data, false);
 	}
 
-#if CONFIG_MACH_COREPRIMEVELTE
 	ret = gpio_request(TSP_TA_PIN,"tsp_ta_pin");
 	if (ret < 0)
 		pr_err("%s, gpio request failed (%d)\n",
@@ -1459,7 +1458,6 @@ static int ist30xx_probe(struct i2c_client *client,
 	if (ret)
 		dev_err(&data->client, "%s: Error, fail gpio_direction_output (%d)\n",
 		__func__, ret);
-#endif
 
 	if (pdata->chip_code < IMAGIS_IST3038C) {
 		retry = 3;

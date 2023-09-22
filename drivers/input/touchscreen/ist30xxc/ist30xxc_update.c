@@ -30,13 +30,7 @@
 #include "ist30xxc_tracking.h"
 
 #if IST30XX_INTERNAL_BIN
-#if CONFIG_MACH_COREPRIMEVELTE
 #include "./firmware/coreprimevelte_fw.h"
-#elif CONFIG_MACH_J7MLTE
-#include "./firmware/j7mlte_fw.h"
-#elif CONFIG_MACH_J7M3G
-#include "./firmware/j7m3g_fw.h"
-#endif
 #if (IMAGIS_TSP_IC < IMAGIS_IST3038C)
 #if IST30XX_MULTIPLE_TSP
 //#include "./firmware/ist30xxc_fw_tsp_Ver0000_porting.h"

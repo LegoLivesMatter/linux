@@ -28,11 +28,7 @@
 #include "ist30xxc_cmcs.h"
 
 #if IST30XX_INTERNAL_CMCS_BIN
-#if CONFIG_MACH_COREPRIMEVELTE
 #include "coreprimevelte_ist30xxc_cmcs_bin.h"
-#elif CONFIG_MACH_J7MLTE || CONFIG_MACH_J7M3G
-#include "j7m_ist30xxc_cmcs_bin.h"
-#endif
 #endif
 
 #define TSP_CH_UNUSED			(0)
