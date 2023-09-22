@@ -1318,8 +1318,7 @@ out:
 	return NULL;
 }
 
-static int ist30xx_probe(struct i2c_client *client,
-			const struct i2c_device_id *id)
+static int ist30xx_probe(struct i2c_client *client)
 {
 	int ret;
 	int retry = 3;
@@ -1456,7 +1455,7 @@ static int ist30xx_probe(struct i2c_client *client,
 			__func__, ret);
 	ret = gpio_direction_output(TSP_TA_PIN, 0);
 	if (ret)
-		dev_err(&data->client, "%s: Error, fail gpio_direction_output (%d)\n",
+		dev_err(&data->client->dev, "%s: Error, fail gpio_direction_output (%d)\n",
 		__func__, ret);
 
 	if (pdata->chip_code < IMAGIS_IST3038C) {
@@ -1582,7 +1581,7 @@ err_alloc_dev:
 }
 
 
-static int ist30xx_remove(struct i2c_client *client)
+static void ist30xx_remove(struct i2c_client *client)
 {
 	struct ist30xx_data *data = i2c_get_clientdata(client);
 
@@ -1596,8 +1595,6 @@ static int ist30xx_remove(struct i2c_client *client)
 
 	input_unregister_device(data->input_dev);
 	kfree(data);
-
-	return 0;
 }
 
 static void ist30xx_shutdown(struct i2c_client *client)
