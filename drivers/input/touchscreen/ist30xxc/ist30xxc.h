@@ -77,7 +77,7 @@
 #endif
 #define IST30XX_CHECK_BATT_TEMP (0)
 
-#define SEC_FACTORY_MODE		(1)
+#define SEC_FACTORY_MODE		(0)
 /* IST30XX FUNCTION ENABLE & DISABLE */
 
 #define IST30XX_ADDR_LEN			(4)
@@ -388,10 +388,6 @@ typedef struct _TKEY_INFO {
 	struct CH_NUM ch_num[IST30XX_MAX_KEYS];
 	u16 baseline;
 } TKEY_INFO;
-
-#if SEC_FACTORY_MODE
-#include "ist30xxc_sec.h"
-#endif
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
