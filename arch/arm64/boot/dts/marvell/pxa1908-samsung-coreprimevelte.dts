@@ -350,11 +350,20 @@
 	touchscreen@50 {
 		compatible = "imagis,ist30xxc";
 		reg = <0x50>;
+		pinctrl-names = "default";
 		interrupt-parent = <&gpio>;
 		interrupts = <72 0x00000002>;
-		touchscreen-size-x = <480>;
-		touchscreen-size-y = <800>;
-		vdd-supply = <&ldo2>;
+		avdd-supply = <&ldo2>;
+		imagis,max-x = <480>;
+		imagis,max-y = <800>;
+		imagis,max-w = <15>;
+		imagis,avdd-volt = <3100000>;
+		imagis,chip-id = <0x032C>;
+		imagis,chip-name = "IST3032C";
+		imagis,chip-code = <2>;
+		imagis,max-node = <256>;
+		imagis,irq-flag = <0x00002000>;
+		imagis,irq-gpio = <&gpio 72 GPIO_ACTIVE_LOW>;
 	};
 };
 
