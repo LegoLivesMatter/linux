@@ -1641,15 +1641,10 @@ static struct i2c_driver ist30xx_i2c_driver = {
 	},
 };
 
-extern unsigned int lpcharge;
-
 static int __init ist30xx_init(void)
 {
 	pr_info("[ TSP ]: %s\n", __func__);
-	if (!lpcharge)
-		return i2c_add_driver(&ist30xx_i2c_driver);
-	else
-		return 0;
+	return i2c_add_driver(&ist30xx_i2c_driver);
 }
 
 
