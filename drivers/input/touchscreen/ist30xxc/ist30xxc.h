@@ -25,6 +25,7 @@
 #define IMAGIS_DD_VERSION		("2.0.0.0")
 
 #define IMAGIS_IST3032C			(2) /* 3032C */
+#define IMAGIS_IST3038C			(3) /* 3038C */
 
 #define IMAGIS_TSP_IC			IMAGIS_IST3032C
 #define TSP_TA_PIN			(71)
