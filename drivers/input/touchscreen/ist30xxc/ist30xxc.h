@@ -67,7 +67,7 @@
 #define IST30XX_TA_RESET			(1)
 #define IST30XX_USE_KEY			(1)
 #define IST30XX_DEBUG			(1)
-#define IST30XX_CMCS_TEST		(1)
+#define IST30XX_CMCS_TEST		(0)
 #define IST30XX_GESTURE			(0)
 #define IST30XX_STATUS_DEBUG		(0)
 #ifdef CONFIG_SEC_FACTORY

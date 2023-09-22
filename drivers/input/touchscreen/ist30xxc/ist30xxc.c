@@ -45,10 +45,6 @@
 #include "ist30xxc_misc.h"
 #endif
 
-#if IST30XX_CMCS_TEST
-#include "ist30xxc_cmcs.h"
-#endif
-
 #ifdef CONFIG_INPUT_BOOSTER
 #include <linux/input/input_booster.h>
 #endif
