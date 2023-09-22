@@ -398,6 +398,7 @@ typedef struct _TKEY_INFO {
 #endif
 struct ist30xx_data {
 	struct i2c_client *client;
+	struct timer_list timer;
 	struct input_dev *input_dev;
 	struct ist30xx_platform_data *pdata;
 	TSP_INFO tsp_info;

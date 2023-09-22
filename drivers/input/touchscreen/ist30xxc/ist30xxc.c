@@ -68,7 +68,6 @@ int ist30xx_batt_chk_max_cnt = IST30XX_MAX_CHK_CNT;
 #define MAX_ERR_CNT			(100)
 #define EVENT_TIMER_INTERVAL		(HZ * timer_period_ms / 1000)
 u32 event_ms = 0, timer_ms = 0;
-static struct timer_list event_timer;
 static struct timespec64 t_current;	// ns
 int timer_period_ms = 500;		// 0.5sec
 
@@ -174,7 +173,7 @@ void ist30xx_start(struct ist30xx_data *data)
 	if (data->initialized) {
 		data->scan_count = 0;
 		data->scan_retry = 0;
-		mod_timer(&event_timer, get_jiffies_64() + EVENT_TIMER_INTERVAL * 2);
+		mod_timer(&data->timer, get_jiffies_64() + EVENT_TIMER_INTERVAL * 2);
 	}
 
 	ist30xx_write_cmd(data->client, IST30XX_HIB_CMD,
@@ -908,7 +907,7 @@ static int ist30xx_suspend(struct device *dev)
 	struct i2c_client *client = to_i2c_client(dev);
 	struct ist30xx_data *data = i2c_get_clientdata(client);
 
-	del_timer(&event_timer);
+	del_timer(&data->timer);
 	cancel_delayed_work_sync(&data->work_noise_protect);
 	cancel_delayed_work_sync(&data->work_reset_check);
 	cancel_delayed_work_sync(&data->work_debug_algorithm);
@@ -1208,9 +1207,9 @@ static void debug_work_func(struct work_struct *work)
 #endif
 }
 
-void timer_handler(unsigned long timer_data)
+void timer_handler(struct timer_list *t)
 {
-	struct ist30xx_data *data = (struct ist30xx_data *)timer_data;
+	struct ist30xx_data *data = from_timer(data, t, timer);
 	struct ist30xx_status *status = &data->status;
 
 	if (data->irq_working)
@@ -1248,7 +1247,7 @@ restart_timer:
 #if IST30XX_CHECK_BATT_TEMP
     ist30xx_batt_chk_cnt++;
 #endif
-	mod_timer(&event_timer, get_jiffies_64() + EVENT_TIMER_INTERVAL);
+	mod_timer(&data->timer, get_jiffies_64() + EVENT_TIMER_INTERVAL);
 }
 
 extern struct class *ist30xx_class;
@@ -1543,11 +1542,8 @@ static int ist30xx_probe(struct i2c_client *client)
 	INIT_DELAYED_WORK(&data->work_noise_protect, noise_work_func);
 	INIT_DELAYED_WORK(&data->work_debug_algorithm, debug_work_func);
 
-	init_timer(&event_timer);
-	event_timer.data = (unsigned long)data;
-	event_timer.function = timer_handler;
-	event_timer.expires = jiffies_64 + (EVENT_TIMER_INTERVAL);
-	mod_timer(&event_timer, get_jiffies_64() + EVENT_TIMER_INTERVAL * 2);
+	timer_setup(&data->timer, timer_handler, 0);
+	mod_timer(&data->timer, get_jiffies_64() + EVENT_TIMER_INTERVAL * 2);
 
 	ret = ist30xx_get_info(data);
 	tsp_info("Get info: %s\n", (ret == 0 ? "success" : "fail"));
@@ -1601,7 +1597,7 @@ static void ist30xx_shutdown(struct i2c_client *client)
 {
 	struct ist30xx_data *data = i2c_get_clientdata(client);
 
-	del_timer(&event_timer);
+	del_timer(&data->timer);
 	cancel_delayed_work_sync(&data->work_noise_protect);
 	cancel_delayed_work_sync(&data->work_reset_check);
 	cancel_delayed_work_sync(&data->work_debug_algorithm);
