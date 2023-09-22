@@ -1189,7 +1189,7 @@ static void debug_work_func(struct work_struct *work)
 	buf32 = kzalloc(ist30xx_algr_size, GFP_KERNEL);
 	if (!buf32) {
 		dev_err(&data->client->dev, "Failed to allocate buffer\n");
-		return NULL;
+		return;
 	}
 	for (i = 0; i < ist30xx_algr_size; i++) {
 		ret = ist30xx_read_buf(data->client,
