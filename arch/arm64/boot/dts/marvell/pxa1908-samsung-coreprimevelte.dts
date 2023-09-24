@@ -119,6 +119,10 @@
 			gpios = <&gpio 17 GPIO_ACTIVE_LOW>;
 		};
 	};
+
+	sd8777-wlan {
+		compatible = "marvell,sd8777";
+	};
 };
 
 &smmu {
