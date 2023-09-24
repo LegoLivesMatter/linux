@@ -1220,6 +1220,7 @@ static struct attribute_group fw_attr_group = {
 	.attrs	= fw_attributes,
 };
 
+u32 *buf32_flash;
 int ist30xx_init_update_sysfs(struct ist30xx_data *data)
 {
 	u32 total_size;
@@ -1238,6 +1239,9 @@ int ist30xx_init_update_sysfs(struct ist30xx_data *data)
 		total_size = IST30XX_FLASH_32K_SIZE;
 	else
 		total_size = IST30XX_FLASH_64K_SIZE;
+
+	buf32_flash = kmalloc(total_size / IST30XX_DATA_LEN, GFP_KERNEL);
+
 
 	data->status.update = 0;
 	data->status.calib = 0;
