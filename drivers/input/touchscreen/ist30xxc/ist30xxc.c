@@ -659,15 +659,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 		goto irq_end;
 	}
 
-#if IST30XX_CMCS_TEST
-	if (unlikely(*msg == IST30XX_CMCS_MSG_VALID)) {
-		data->status.cmcs = 1;
-		tsp_info("cmcs status: 0x%08x\n", *msg);
-
-		goto irq_end;
-	}
-#endif
-
 #if IST30XX_GESTURE
 	ret = PARSE_GESTURE_MESSAGE(*msg);
 	if (unlikely(ret > 0)) {
@@ -1068,11 +1059,6 @@ restart_timer:
 }
 
 extern struct class *ist30xx_class;
-#if SEC_FACTORY_MODE
-extern struct class *sec_class;
-extern int sec_touch_sysfs(struct ist30xx_data *data);
-extern int sec_fac_cmd_init(struct ist30xx_data *data);
-#endif
 
 static struct ist30xx_platform_data *ist30xx_parse_dt(struct device *dev)
 {
@@ -1274,22 +1260,6 @@ static int ist30xx_probe(struct i2c_client *client)
 		tsp_info("TSP IC: %x\n", data->chip_id);
 	}
 	data->status.event_mode = false;
-
-#if IST30XX_CMCS_TEST
-	ret = ist30xx_init_cmcs_sysfs(data);
-	if (unlikely(ret))
-		goto err_sysfs;
-#endif
-
-#if SEC_FACTORY_MODE
-	ret = sec_fac_cmd_init(data);
-	if (unlikely(ret))
-		goto err_sysfs;
-
-	ret = sec_touch_sysfs(data);
-	if (unlikely(ret))
-		goto err_sysfs;
-#endif
 
     // INIT VARIABLE (DEFAULT)
 #if IST30XX_GESTURE
