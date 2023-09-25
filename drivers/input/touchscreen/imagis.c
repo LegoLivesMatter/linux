@@ -30,6 +30,7 @@
 #define IST3038C_FINGER_COUNT_SHIFT	12
 #define IST3038C_FINGER_STATUS_MASK	GENMASK(9, 0)
 
+#define IST3032C_WHOAMI			0x32c
 #define IST3038C_WHOAMI			0x38c
 
 struct imagis_ts {
@@ -348,6 +349,7 @@ static DEFINE_SIMPLE_DEV_PM_OPS(imagis_pm_ops, imagis_suspend, imagis_resume);
 
 #ifdef CONFIG_OF
 static const struct of_device_id imagis_of_match[] = {
+	{ .compatible = "imagis,ist3032c", .data = (void *) IST3032C_WHOAMI, },
 	{ .compatible = "imagis,ist3038c", .data = (void *) IST3038C_WHOAMI, },
 	{ },
 };
@@ -355,6 +357,7 @@ MODULE_DEVICE_TABLE(of, imagis_of_match);
 #endif
 
 static const struct i2c_device_id imagis_ts_i2c_id[] = {
+	{ "ist3032c", IST3032C_WHOAMI, },
 	{ "ist3038c", IST3038C_WHOAMI, },
 	{ }
 };
