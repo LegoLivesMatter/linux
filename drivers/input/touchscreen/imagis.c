@@ -166,6 +166,7 @@ static int imagis_power_on(struct imagis_ts *ts)
 	int error;
 
 	error = regulator_bulk_enable(ARRAY_SIZE(ts->supplies), ts->supplies);
+	error |= regulator_set_voltage(ts->supplies[0].consumer, 3100000, 3100000);
 	if (error)
 		return error;
 
