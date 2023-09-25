@@ -829,34 +829,6 @@ int ist30xx_get_tsp_info(struct ist30xx_data *data)
 	return ret;
 }
 
-void ist30xx_print_info(struct ist30xx_data *data)
-{
-	TSP_INFO *tsp = &data->tsp_info;
-	TKEY_INFO *tkey = &data->tkey_info;
-
-	tsp_info("*** TSP/TKEY info ***\n");
-	tsp_info("TSP info: \n");
-	tsp_info(" finger num: %d\n", tsp->finger_num);
-	tsp_info(" dir swap: %d, flip x: %d, y: %d\n",
-			tsp->dir.swap_xy, tsp->dir.flip_x, tsp->dir.flip_y);
-	tsp_info(" baseline: %d\n", tsp->baseline);
-	tsp_info(" ch_num tx: %d, rx: %d\n", tsp->ch_num.tx, tsp->ch_num.rx);
-	tsp_info(" screen tx: %d, rx: %d\n", tsp->screen.tx, tsp->screen.rx);
-	tsp_info(" width: %d, height: %d\n", tsp->width, tsp->height);
-	tsp_info(" gtx num: %d, ch [1]: %d, [2]: %d, [3]: %d, [4]: %d\n",
-			tsp->gtx.num, tsp->gtx.ch_num[0], tsp->gtx.ch_num[1],
-			tsp->gtx.ch_num[2], tsp->gtx.ch_num[3]);
-	tsp_info(" node len: %d\n", tsp->node->len);
-	tsp_info("TKEY info: \n");
-	tsp_info(" enable: %d, key num: %d\n", tkey->enable, tkey->key_num);
-	tsp_info(" ch [0]: %d,%d [1]: %d,%d [2]: %d,%d [3]: %d,%d [4]: %d,%d\n",
-			tkey->ch_num[0].tx, tkey->ch_num[0].rx, tkey->ch_num[1].tx,
-			tkey->ch_num[1].rx, tkey->ch_num[2].tx, tkey->ch_num[2].rx,
-			tkey->ch_num[3].tx, tkey->ch_num[3].rx, tkey->ch_num[4].tx,
-			tkey->ch_num[4].rx);
-	tsp_info(" baseline : %d\n", tkey->baseline);
-}
-
 #define update_next_step(ret)   { if (unlikely(ret)) goto end; }
 int ist30xx_fw_update(struct ist30xx_data *data, const u8 *buf, int size)
 {

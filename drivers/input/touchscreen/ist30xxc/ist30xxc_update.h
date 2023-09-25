@@ -80,7 +80,6 @@ int ist30xx_read_chksum_all(struct i2c_client *client, u32 *chksum);
 int ist30xx_get_update_info(struct ist30xx_data *data, const u8 *buf,
 			     const u32 size);
 int ist30xx_get_tsp_info(struct ist30xx_data *data);
-void ist30xx_print_info(struct ist30xx_data *data);
 u32 ist30xx_parse_ver(struct ist30xx_data *data, int flag, const u8 *buf);
 
 int ist30xx_fw_update(struct ist30xx_data *data, const u8 *buf, int size);

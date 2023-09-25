@@ -41,10 +41,6 @@
 #include <linux/of_device.h>
 #endif
 
-#if IST30XX_DEBUG
-#include "ist30xxc_misc.h"
-#endif
-
 #ifdef CONFIG_INPUT_BOOSTER
 #include <linux/input/input_booster.h>
 #endif
@@ -282,23 +278,6 @@ int ist30xx_get_info(struct ist30xx_data *data)
 	mutex_lock(&ist30xx_mutex);
 	ist30xx_disable_irq(data);
 
-#if IST30XX_INTERNAL_BIN
-#if IST30XX_UPDATE_BY_WORKQUEUE
-	ist30xx_get_update_info(data, data->fw.buf, data->fw.buf_size);
-#endif
-	ist30xx_get_tsp_info(data);
-#else
-	ret = ist30xx_get_ver_info(data);
-	if (unlikely(ret))
-		goto get_info_end;
-
-	ret = ist30xx_get_tsp_info(data);
-	if (unlikely(ret))
-		goto get_info_end;
-#endif  // IST30XX_INTERNAL_BIN
-
-	ist30xx_print_info(data);
-
 	ret = ist30xx_read_cmd(data, eHCOM_GET_CAL_RESULT, &calib_msg);
 	if (likely(ret == 0)) {
 		tsp_info("calib status: 0x%08x\n", calib_msg);
@@ -324,10 +303,6 @@ int ist30xx_get_info(struct ist30xx_data *data)
 	}
 #else
 	ist30xx_start(data);
-#endif
-
-#if !(IST30XX_INTERNAL_BIN)
-get_info_end:
 #endif
 
 	ist30xx_enable_irq(data);
@@ -1076,25 +1051,6 @@ static void reset_work_func(struct work_struct *work)
 	}
 }
 
-#if IST30XX_INTERNAL_BIN
-#if IST30XX_UPDATE_BY_WORKQUEUE
-static void fw_update_func(struct work_struct *work)
-{
-	struct delayed_work *delayed_work = to_delayed_work(work);
-	struct ist30xx_data *data = container_of(delayed_work,
-	struct ist30xx_data, work_fw_update);
-
-	if (unlikely((data == NULL) || (data->client == NULL)))
-		return;
-
-	tsp_info("FW update function\n");
-
-	if (likely(ist30xx_auto_bin_update(data)))
-		ist30xx_disable_irq(data);
-}
-#endif // IST30XX_UPDATE_BY_WORKQUEUE
-#endif // IST30XX_INTERNAL_BIN
-
 #define TOUCH_STATUS_MAGIC	(0x00000075)
 #define TOUCH_STATUS_MASK	(0x000000FF)
 #define FINGER_ENABLE_MASK	(0x00100000)
@@ -1173,35 +1129,6 @@ retry_timer:
 
 static void debug_work_func(struct work_struct *work)
 {
-#if IST30XX_ALGORITHM_MODE
-	int ret = -EPERM;
-	int i;
-	u32 *buf32;
-
-	struct delayed_work *delayed_work = to_delayed_work(work);
-	struct ist30xx_data *data = container_of(delayed_work,
-	struct ist30xx_data, work_debug_algorithm);
-
-	buf32 = kzalloc(ist30xx_algr_size, GFP_KERNEL);
-	if (!buf32) {
-		dev_err(&data->client->dev, "Failed to allocate buffer\n");
-		return;
-	}
-	for (i = 0; i < ist30xx_algr_size; i++) {
-		ret = ist30xx_read_buf(data->client,
-		ist30xx_algr_addr + IST30XX_DATA_LEN * i, &buf32[i], 1);
-		if (ret) {
-			tsp_warn("Algorithm mem addr read fail!\n");
-			return;
-		}
-	}
-
-	ist30xx_put_track(buf32, ist30xx_algr_size);
-
-	tsp_debug(" 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
-			buf32[0], buf32[1], buf32[2], buf32[3], buf32[4]);
-	kfree(buf32);
-#endif
 }
 
 void timer_handler(struct timer_list *t)
@@ -1230,13 +1157,6 @@ void timer_handler(struct timer_list *t)
 					schedule_delayed_work(&data->work_noise_protect, 0);
 			}
 
-#if IST30XX_ALGORITHM_MODE
-			if ((ist30xx_algr_addr >= IST30XX_DIRECT_ACCESS) &&
-				(ist30xx_algr_size > 0)) {
-				if (timer_ms - event_ms > 100) // 100ms after last interrupt
-					schedule_delayed_work(&data->work_debug_algorithm, 0);
-			}
-#endif
 		}
 	}
 
@@ -1475,35 +1395,12 @@ static int ist30xx_probe(struct i2c_client *client)
 	}
 	data->status.event_mode = false;
 
-#if IST30XX_INTERNAL_BIN
-#if IST30XX_UPDATE_BY_WORKQUEUE
-	INIT_DELAYED_WORK(&data->work_fw_update, fw_update_func);
-	schedule_delayed_work(&data->work_fw_update, IST30XX_UPDATE_DELAY);
-#else
-	ret = ist30xx_auto_bin_update(data);
-	if (unlikely(ret != 0))
-		goto err_irq;
-#endif  // IST30XX_UPDATE_BY_WORKQUEUE
-#endif  // IST30XX_INTERNAL_BIN
-
 	ret = ist30xx_init_update_sysfs(data);
 	if (unlikely(ret))
 		goto err_sysfs;
 
-#if IST30XX_DEBUG
-	ret = ist30xx_init_misc_sysfs(data);
-	if (unlikely(ret))
-		goto err_sysfs;
-#endif
-
 #if IST30XX_CMCS_TEST
 	ret = ist30xx_init_cmcs_sysfs(data);
-	if (unlikely(ret))
-		goto err_sysfs;
-#endif
-
-#if IST30XX_TRACKING_MODE
-	ret = ist30xx_init_tracking_sysfs();
 	if (unlikely(ret))
 		goto err_sysfs;
 #endif
