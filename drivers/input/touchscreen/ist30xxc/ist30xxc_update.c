@@ -1191,33 +1191,3 @@ static struct attribute *fw_attributes[] = {
 static struct attribute_group fw_attr_group = {
 	.attrs	= fw_attributes,
 };
-
-u32 *buf32_flash;
-int ist30xx_init_update_sysfs(struct ist30xx_data *data)
-{
-	u32 total_size;
-
-	/* /sys/class/touch */
-	ist30xx_class = class_create("touch");
-
-	/* /sys/class/touch/firmware */
-	ist30xx_fw_dev = device_create(ist30xx_class, NULL, 0, data, "firmware");
-
-	/* /sys/class/touch/firmware/... */
-	if (unlikely(sysfs_create_group(&ist30xx_fw_dev->kobj, &fw_attr_group)))
-		tsp_err("Failed to create sysfs group(%s)!\n", "firmware");
-
-	if (data->pdata->chip_code < IMAGIS_IST3038C)
-		total_size = IST30XX_FLASH_32K_SIZE;
-	else
-		total_size = IST30XX_FLASH_64K_SIZE;
-
-	buf32_flash = kmalloc(total_size / IST30XX_DATA_LEN, GFP_KERNEL);
-
-
-	data->status.update = 0;
-	data->status.calib = 0;
-	data->status.update_result = 0;
-
-	return 0;
-}

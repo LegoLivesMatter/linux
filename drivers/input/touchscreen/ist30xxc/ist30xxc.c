@@ -1275,10 +1275,6 @@ static int ist30xx_probe(struct i2c_client *client)
 	}
 	data->status.event_mode = false;
 
-	ret = ist30xx_init_update_sysfs(data);
-	if (unlikely(ret))
-		goto err_sysfs;
-
 #if IST30XX_CMCS_TEST
 	ret = ist30xx_init_cmcs_sysfs(data);
 	if (unlikely(ret))

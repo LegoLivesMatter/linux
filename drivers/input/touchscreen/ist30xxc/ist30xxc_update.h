@@ -89,6 +89,4 @@ int ist30xx_auto_bin_update(struct ist30xx_data *data);
 
 int ist30xx_calibrate(struct ist30xx_data *data, int wait_cnt);
 
-int ist30xx_init_update_sysfs(struct ist30xx_data *data);
-
 #endif  // __IST30XXC_UPDATE_H__
