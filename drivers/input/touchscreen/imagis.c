@@ -38,6 +38,7 @@
 #define IST30XXA_WHOAMI			0x300a300a
 #define IST30XXB_WHOAMI			0x300b300b
 #define IST3038_WHOAMI			0x30383038
+#define IST3032C_WHOAMI			0x32c
 
 struct imagis_properties {
 	unsigned int interrupt_msg_cmd;
@@ -394,7 +395,7 @@ static const struct imagis_properties imagis_3032c_data = {
 	.interrupt_msg_cmd = IST3038C_REG_INTR_MESSAGE,
 	.touch_coord_cmd = IST3038C_REG_TOUCH_COORD,
 	.chipid_base = IST3038C_REG_CHIPID_BASE,
-	.whoami_val = IST3038C_WHOAMI,
+	.whoami_val = IST3032C_WHOAMI,
 };
 
 #ifdef CONFIG_OF
