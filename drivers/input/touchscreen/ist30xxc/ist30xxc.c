@@ -28,10 +28,6 @@
 #include <linux/input/mt.h>
 #include <linux/pm_runtime.h>
 
-#if (CONFIG_EXTCON_S2MM001B || CONFIG_EXTCON_SM5504)
-#include <linux/extcon.h>
-#endif
-
 #include "ist30xxc.h"
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -1308,43 +1304,6 @@ static void __exit ist30xx_exit(void)
 
 module_init(ist30xx_init);
 module_exit(ist30xx_exit);
-
-#if (CONFIG_EXTCON_S2MM001B || CONFIG_EXTCON_SM5504)
-static int extcon_notifier(struct notifier_block *nb,
-	unsigned long state, void *edev)
-{
-	ist30xx_set_ta_mode(extcon_get_state(edev));
-
-	return NOTIFY_OK;
-}
-
-static int ta_init_detect(void)
-{
-	struct extcon_dev *edev = NULL;
-	static struct notifier_block nb;
-
-	if (!ts_data)
-		return -EPERM;
-
-#if CONFIG_EXTCON_S2MM001B
-	edev = extcon_get_extcon_dev("s2mm001b");
-#elif CONFIG_EXTCON_SM5504
-	edev = extcon_get_extcon_dev("sm5504");
-#endif
-
-	if (!edev) {
-		pr_err("Failed to get extcon dev\n");
-		return -ENXIO;
-	}
-
-	nb.notifier_call = extcon_notifier;
-
-	extcon_register_notifier(edev, &nb);
-
-	return 0;
-}
-late_initcall(ta_init_detect);
-#endif
 
 MODULE_DESCRIPTION("Imagis IST30XX touch driver");
 MODULE_LICENSE("GPL");
