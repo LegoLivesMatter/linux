@@ -459,7 +459,6 @@ void ist30xx_set_ta_mode(bool charging);
 void ist30xx_set_cover_mode(int mode);
 void ist30xx_set_edge_mode(int mode);
 void ist30xx_start(struct ist30xx_data *data);
-int ist30xx_get_ver_info(struct ist30xx_data *data);
 
 int ist30xx_read_reg(struct i2c_client *client, u32 reg, u32 *buf);
 int ist30xx_read_cmd(struct ist30xx_data *data, u32 cmd, u32 *buf);

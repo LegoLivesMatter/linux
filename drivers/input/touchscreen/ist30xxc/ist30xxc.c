@@ -252,63 +252,8 @@ void ist30xx_start(struct ist30xx_data *data)
 }
 
 
-int ist30xx_get_ver_info(struct ist30xx_data *data)
-{
-	int ret;
-
-	data->fw.prev.main_ver = data->fw.cur.main_ver;
-	data->fw.prev.fw_ver = data->fw.cur.fw_ver;
-	data->fw.prev.core_ver = data->fw.cur.core_ver;
-	data->fw.prev.test_ver = data->fw.cur.test_ver;
-	data->fw.cur.main_ver = 0;
-	data->fw.cur.fw_ver = 0;
-	data->fw.cur.core_ver = 0;
-	data->fw.cur.test_ver = 0;
-
-	ret = ist30xx_cmd_hold(data->client, 1);
-	if (unlikely(ret))
-		return ret;
-
-	ret = ist30xx_read_reg(data->client,
-		IST30XX_DA_ADDR(eHCOM_GET_VER_MAIN), &data->fw.cur.main_ver);
-	if (unlikely(ret))
-		goto err_get_ver;
-
-	ret = ist30xx_read_reg(data->client,
-		IST30XX_DA_ADDR(eHCOM_GET_VER_FW), &data->fw.cur.fw_ver);
-	if (unlikely(ret))
-		goto err_get_ver;
-
-	ret = ist30xx_read_reg(data->client,
-		IST30XX_DA_ADDR(eHCOM_GET_VER_CORE), &data->fw.cur.core_ver);
-	if (unlikely(ret))
-		goto err_get_ver;
-
-	ret = ist30xx_read_reg(data->client,
-		IST30XX_DA_ADDR(eHCOM_GET_VER_TEST), &data->fw.cur.test_ver);
-	if (unlikely(ret))
-		goto err_get_ver;
-
-	ret = ist30xx_cmd_hold(data->client, 0);
-	if (unlikely(ret))
-		goto err_get_ver;
-
-	tsp_info("IC version main: %x, fw: %x, test: %x, core: %x\n",
-		data->fw.cur.main_ver, data->fw.cur.fw_ver, data->fw.cur.test_ver,
-		data->fw.cur.core_ver);
-
-	return 0;
-
-err_get_ver:
-	ist30xx_reset(data, false);
-
-	return ret;
-}
-
 #define CALIB_MSG_MASK		(0xF0000FFF)
 #define CALIB_MSG_VALID		(0x80000CAB)
-#define TRACKING_INTR_VALID	(0x127EA597)
-u32 tracking_intr_value = TRACKING_INTR_VALID;
 int ist30xx_get_info(struct ist30xx_data *data)
 {
 	int ret;
