@@ -33,7 +33,6 @@
 #endif
 
 #include "ist30xxc.h"
-#include "ist30xxc_tracking.h"
 #ifdef CONFIG_OF
 #include <linux/of.h>
 #include <linux/of_gpio.h>
@@ -169,7 +168,6 @@ int ist30xx_intr_wait(struct ist30xx_data *data, long ms)
 void ist30xx_disable_irq(struct ist30xx_data *data)
 {
 	if (likely(data->irq_enabled)) {
-		ist30xx_tracking(TRACK_INTR_DISABLE);
 		disable_irq(data->client->irq);
 		data->irq_enabled = 0;
 		data->status.event_mode = false;
@@ -179,7 +177,6 @@ void ist30xx_disable_irq(struct ist30xx_data *data)
 void ist30xx_enable_irq(struct ist30xx_data *data)
 {
 	if (likely(!data->irq_enabled)) {
-		ist30xx_tracking(TRACK_INTR_ENABLE);
 		enable_irq(data->client->irq);
 		msleep(10);
 		data->irq_enabled = 1;
@@ -329,9 +326,6 @@ int ist30xx_get_info(struct ist30xx_data *data)
 	if (likely(ret == 0)) {
 		tsp_info("calib status: 0x%08x\n", calib_msg);
 		ms = get_milli_second();
-		ist30xx_put_track_ms(ms);
-		ist30xx_put_track(&tracking_intr_value, 1);
-		ist30xx_put_track(&calib_msg, 1);
 		if ((calib_msg & CALIB_MSG_MASK) != CALIB_MSG_VALID ||
 			CALIB_TO_STATUS(calib_msg) > 0) {
 			ist30xx_calibrate(data, IST30XX_MAX_RETRY_CNT);
@@ -403,7 +397,6 @@ static void release_finger(struct ist30xx_data *data, int id)
 	input_mt_slot(data->input_dev, id - 1);
 	input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, false);
 
-	ist30xx_tracking(TRACK_POS_FINGER + id);
 	tsp_info("%s() %d\n", __func__, id);
 
 	tsp_touched[id - 1] = false;
@@ -445,7 +438,6 @@ static int check_report_fingers(struct ist30xx_data *data, int finger_counts)
 				fingers[i].bit_field.y,
 				fingers[i].full_field);
 			fingers[i].bit_field.id = 0;
-			ist30xx_tracking(TRACK_POS_UNKNOWN);
 			return -EPERM;
 		}
 	}
@@ -566,9 +558,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 		}
 
 		tracking_intr_debug_value = TRACKING_INTR_DEBUG1_VALID;
-		ist30xx_put_track_ms(ms);
-		ist30xx_put_track(&tracking_intr_debug_value, 1);
-		ist30xx_put_track(msg, intr_debug_size);
 	}
 
 	if (intr_debug2_size > 0) {
@@ -581,9 +570,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 		}
 
 		tracking_intr_debug_value = TRACKING_INTR_DEBUG2_VALID;
-		ist30xx_put_track_ms(ms);
-		ist30xx_put_track(&tracking_intr_debug_value, 1);
-		ist30xx_put_track(msg, intr_debug2_size);
 	}
 
 	memset(msg, 0, sizeof(msg));
@@ -618,9 +604,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 		goto irq_err;
 
 	event_ms = ms;
-	ist30xx_put_track_ms(event_ms);
-	ist30xx_put_track(&tracking_intr_value, 1);
-	ist30xx_put_track(msg, 1);
 
 	if (unlikely((*msg & CALIB_MSG_MASK) == CALIB_MSG_VALID)) {
 		data->status.calib_msg = *msg;
@@ -683,7 +666,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 				data->z_values, finger_cnt, true);
 		}
 #endif
-		ist30xx_put_track(msg + offset, finger_cnt);
 		for (i = 0; i < finger_cnt; i++) {
 #if IST30XX_JIG_MODE
 			if (data->jig_mode)
@@ -718,9 +700,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 		}
 
 		tracking_intr_debug_value = TRACKING_INTR_DEBUG3_VALID;
-		ist30xx_put_track_ms(ms);
-		ist30xx_put_track(&tracking_intr_debug_value, 1);
-		ist30xx_put_track(msg, intr_debug3_size);
 	}
 
 	goto irq_end;
@@ -811,7 +790,6 @@ void ist30xx_set_ta_mode(bool mode)
 		((eHCOM_SET_MODE_SPECIAL << 16) | (ts_data->noise_mode & 0xFFFF)));
 #endif
 
-	ist30xx_tracking(mode ? TRACK_CMD_TACON : TRACK_CMD_TADISCON);
 }
 EXPORT_SYMBOL(ist30xx_set_ta_mode);
 
@@ -835,7 +813,6 @@ void ist30xx_set_call_mode(int mode)
 		((eHCOM_SET_MODE_SPECIAL << 16) | (ts_data->noise_mode & 0xFFFF)));
 #endif
 
-	ist30xx_tracking(mode ? TRACK_CMD_CALL : TRACK_CMD_NOTCALL);
 }
 EXPORT_SYMBOL(ist30xx_set_call_mode);
 
@@ -859,7 +836,6 @@ void ist30xx_set_cover_mode(int mode)
 		((eHCOM_SET_MODE_SPECIAL << 16) | (ts_data->noise_mode & 0xFFFF)));
 #endif
 
-	ist30xx_tracking(mode ? TRACK_CMD_COVER : TRACK_CMD_NOTCOVER);
 }
 EXPORT_SYMBOL(ist30xx_set_cover_mode);
 
@@ -924,8 +900,6 @@ static void noise_work_func(struct work_struct *work)
 		goto retry_timer;
 	}
 
-	ist30xx_put_track_ms(timer_ms);
-	ist30xx_put_track(&touch_status, 1);
 
 	tsp_verb("Touch Info: 0x%08x\n", touch_status);
 

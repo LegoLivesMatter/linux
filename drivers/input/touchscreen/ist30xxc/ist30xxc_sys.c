@@ -25,7 +25,6 @@
 #include <linux/regulator/machine.h>
 
 #include "ist30xxc.h"
-#include "ist30xxc_tracking.h"
 
 /******************************************************************************
  * Return value of Error
@@ -54,7 +53,6 @@ int ist30xx_cmd_start_scan(struct ist30xx_data *data)
 	int ret = ist30xx_write_cmd(data->client, IST30XX_HIB_CMD,
 			(eHCOM_FW_START << 16) | (IST30XX_ENABLE & 0xFFFF));
 
-	ist30xx_tracking(TRACK_CMD_SCAN);
 
 	data->status.noise_mode = true;
 
@@ -66,7 +64,6 @@ int ist30xx_cmd_calibrate(struct i2c_client *client)
 	int ret = ist30xx_write_cmd(client,
 			IST30XX_HIB_CMD, (eHCOM_RUN_CAL_AUTO << 16));
 
-	ist30xx_tracking(TRACK_CMD_CALIB);
 
 	tsp_info("%s\n", __func__);
 
@@ -78,7 +75,6 @@ int ist30xx_cmd_check_calib(struct i2c_client *client)
 	int ret = ist30xx_write_cmd(client, IST30XX_HIB_CMD,
 			(eHCOM_RUN_CAL_PARAM << 16) | (IST30XX_ENABLE & 0xFFFF));
 
-	ist30xx_tracking(TRACK_CMD_CHECK_CALIB);
 
 	tsp_info("*** Check Calibration cmd ***\n");
 
@@ -91,11 +87,6 @@ int ist30xx_cmd_hold(struct i2c_client *client, int enable)
 			IST30XX_HIB_CMD, (eHCOM_FW_HOLD << 16) | (enable & 0xFFFF));
 
 	msleep(40);
-
-	if (enable)
-		ist30xx_tracking(TRACK_CMD_ENTER_REG);
-	else
-		ist30xx_tracking(TRACK_CMD_EXIT_REG);
 
 	return ret;
 }
@@ -423,7 +414,6 @@ int ist30xx_power_on(struct ist30xx_data *data, bool download)
 {
 	if (data->status.power != 1) {
 		tsp_info("%s()\n", __func__);
-		ist30xx_tracking(TRACK_PWR_ON);
 		/* VDD enable */
 		ts_power_enable(data, 1);
 		if (download)
@@ -441,7 +431,6 @@ int ist30xx_power_off(struct ist30xx_data *data)
 {
 	if (data->status.power != 0) {
 		tsp_info("%s()\n", __func__);
-		ist30xx_tracking(TRACK_PWR_OFF);
 		/* VDD disable */
 		ts_power_enable(data, 0);
 		msleep(50);
