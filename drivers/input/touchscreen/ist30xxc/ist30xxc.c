@@ -63,11 +63,6 @@ u32 event_ms = 0, timer_ms = 0;
 static struct timespec64 t_current;	// ns
 int timer_period_ms = 500;		// 0.5sec
 
-#define KEY_RECENT 254 // TODO: resolve properly
-#if IST30XX_USE_KEY
-int ist30xx_key_code[IST30XX_MAX_KEYS + 1] = { 0, KEY_RECENT, KEY_BACK };
-#endif
-
 struct ist30xx_data *ts_data;
 
 DEFINE_MUTEX(ist30xx_mutex);
@@ -444,27 +439,6 @@ void print_tsp_event(struct ist30xx_data *data, finger_info *finger)
 		}
 	}
 }
-#if IST30XX_USE_KEY
-#define PRESS_MSG_KEY		(0x06)
-bool tkey_pressed[IST30XX_MAX_KEYS] = { false, };
-void print_tkey_event(struct ist30xx_data *data, int id)
-{
-	int idx = id - 1;
-	bool press = PRESSED_KEY(data->t_status, id);
-
-	if (press) {
-		if (tkey_pressed[idx] == false) { // tkey down
-			tsp_noti("k %s%d\n", TOUCH_DOWN_MESSAGE, id);
-			tkey_pressed[idx] = true;
-		}
-	} else {
-		if (tkey_pressed[idx] == true) { // tkey up
-			tsp_noti("k %s%d\n", TOUCH_UP_MESSAGE, id);
-			tkey_pressed[idx] = false;
-		}
-	}
-}
-#endif
 static void release_finger(struct ist30xx_data *data, int id)
 {
 	input_mt_slot(data->input_dev, id - 1);
@@ -478,21 +452,6 @@ static void release_finger(struct ist30xx_data *data, int id)
 	input_sync(data->input_dev);
 }
 
-#if IST30XX_USE_KEY
-#define CANCEL_KEY		(0xFF)
-#define RELEASE_KEY		(0)
-static void release_key(struct ist30xx_data *data, int id, u8 key_status)
-{
-	input_report_key(data->input_dev, ist30xx_key_code[id], key_status);
-
-	ist30xx_tracking(TRACK_POS_KEY + id);
-	tsp_info("%s() key%d, status: %d\n", __func__, id, key_status);
-
-	tkey_pressed[id - 1] = false;
-
-	input_sync(data->input_dev);
-}
-#endif
 static void clear_input_data(struct ist30xx_data *data)
 {
 	int id = 1;
@@ -505,16 +464,6 @@ static void clear_input_data(struct ist30xx_data *data)
 		status >>= 1;
 		id++;
 	}
-#if IST30XX_USE_KEY
-	id = 1;
-	status = PARSE_KEY_STATUS(data->t_status);
-	while (status) {
-		if (status & 1)
-			release_key(data, id, RELEASE_KEY);
-		status >>= 1;
-		id++;
-	}
-#endif
 	data->t_status = 0;
 #ifdef CONFIG_INPUT_BOOSTER
 	data->finger_cnt = 0;
@@ -606,17 +555,6 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
 #endif
 		idx++;
 	}
-
-#if IST30XX_USE_KEY
-	status = PARSE_KEY_STATUS(data->t_status);
-	for (id = 0; id < IST30XX_MAX_KEYS; id++) {
-		press = (status & (1 << id)) ? true : false;
-
-		input_report_key(data->input_dev, ist30xx_key_code[id + 1], press);
-
-		print_tkey_event(data, id + 1);
-	}
-#endif  // IST30XX_USE_KEY
 
 	data->irq_err_cnt = 0;
 	data->scan_retry = 0;
@@ -1298,26 +1236,6 @@ static int ist30xx_probe(struct i2c_client *client)
 			0, data->pdata->max_w, 0, 0);
 #if IST30XX_JIG_MODE
 	input_set_abs_params(input_dev, ABS_MT_PRESSURE, 0, 0, 0, 0);
-#endif
-
-#if IST30XX_USE_KEY
-	{
-		int i;
-		set_bit(EV_KEY, input_dev->evbit);
-		set_bit(EV_SYN, input_dev->evbit);
-		for (i = 1; i < ARRAY_SIZE(ist30xx_key_code); i++)
-			set_bit(ist30xx_key_code[i], input_dev->keybit);
-	}
-
-#if IST30XX_GESTURE
-	input_set_capability(input_dev, EV_KEY, KEY_POWER);
-	input_set_capability(input_dev, EV_KEY, KEY_PLAYPAUSE);
-	input_set_capability(input_dev, EV_KEY, KEY_NEXTSONG);
-	input_set_capability(input_dev, EV_KEY, KEY_PREVIOUSSONG);
-	input_set_capability(input_dev, EV_KEY, KEY_VOLUMEUP);
-	input_set_capability(input_dev, EV_KEY, KEY_VOLUMEDOWN);
-	input_set_capability(input_dev, EV_KEY, KEY_MUTE);
-#endif
 #endif
 
 	input_set_drvdata(input_dev, data);

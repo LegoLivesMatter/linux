@@ -65,7 +65,7 @@
 #endif
 
 #define IST30XX_TA_RESET			(1)
-#define IST30XX_USE_KEY			(1)
+#define IST30XX_USE_KEY			(0)
 #define IST30XX_DEBUG			(0)
 #define IST30XX_CMCS_TEST		(0)
 #define IST30XX_GESTURE			(0)
