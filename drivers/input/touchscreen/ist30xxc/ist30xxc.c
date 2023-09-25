@@ -295,87 +295,6 @@ int ist30xx_get_info(struct ist30xx_data *data)
 	return ret;
 }
 
-#if IST30XX_GESTURE
-#define GESTURE_MAGIC_STRING		(0x4170CF00)
-#define GESTURE_MAGIC_MASK		(0xFFFFFF00)
-#define GESTURE_MESSAGE_MASK		(~GESTURE_MAGIC_MASK)
-#define PARSE_GESTURE_MESSAGE(n) \
-	((n & GESTURE_MAGIC_MASK) == GESTURE_MAGIC_STRING ? \
-	(n & GESTURE_MESSAGE_MASK) : -EINVAL)
-void ist30xx_gesture_cmd(struct ist30xx_data *data, int cmd)
-{
-	tsp_info("Gesture cmd: %d\n", cmd);
-
-	switch (cmd) {
-	case 0x01:
-		input_report_key(data->input_dev, KEY_VOLUMEUP, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_VOLUMEUP, 0);
-		input_sync(data->input_dev);
-	break;
-
-	case 0x02:
-		input_report_key(data->input_dev, KEY_VOLUMEDOWN, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_VOLUMEDOWN, 0);
-		input_sync(data->input_dev);
-	break;
-
-	case 0x03:
-		input_report_key(data->input_dev, KEY_PREVIOUSSONG, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_PREVIOUSSONG, 0);
-		input_sync(data->input_dev);
-	break;
-
-	case 0x04:
-		input_report_key(data->input_dev, KEY_NEXTSONG, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_NEXTSONG, 0);
-		input_sync(data->input_dev);
-	break;
-
-	case 0x11:
-		input_report_key(data->input_dev, KEY_PLAYPAUSE, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_PLAYPAUSE, 0);
-		input_sync(data->input_dev);
-	break;
-
-	case 0x12:
-		input_report_key(data->input_dev, KEY_SCREENLOCK, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_SCREENLOCK, 0);
-		input_sync(data->input_dev);
-	break;
-
-	case 0x13:
-		input_report_key(data->input_dev, KEY_PLAYPAUSE, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_PLAYPAUSE, 0);
-		input_sync(data->input_dev);
-	break;
-
-	case 0x14:
-		input_report_key(data->input_dev, KEY_PLAYPAUSE, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_PLAYPAUSE, 0);
-		input_sync(data->input_dev);
-	break;
-
-	case 0x21:
-		input_report_key(data->input_dev, KEY_MUTE, 1);
-		input_sync(data->input_dev);
-		input_report_key(data->input_dev, KEY_MUTE, 0);
-		input_sync(data->input_dev);
-	break;
-
-	default:
-		break;
-	}
-}
-#endif
-
 #define PRESS_MSG_MASK		(0x01)
 #define MULTI_MSG_MASK		(0x02)
 #define TOUCH_DOWN_MESSAGE	("p")
@@ -659,16 +578,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 		goto irq_end;
 	}
 
-#if IST30XX_GESTURE
-	ret = PARSE_GESTURE_MESSAGE(*msg);
-	if (unlikely(ret > 0)) {
-		tsp_info("Gesture ID: %d (0x%08x)\n", ret, *msg);
-		ist30xx_gesture_cmd(data, ret);
-
-		goto irq_end;
-	}
-#endif
-
 #if IST30XX_STATUS_DEBUG
 	ret = ist30xx_read_reg(data->client,
 		IST30XX_HIB_TOUCH_STATUS, &touch_status);
@@ -793,13 +702,6 @@ static int ist30xx_suspend(struct device *dev)
 	ist30xx_disable_irq(data);
 	ist30xx_internal_suspend(data);
 	clear_input_data(data);
-#if IST30XX_GESTURE
-	if (data->gesture) {
-		ist30xx_start(data);
-		data->status.noise_mode = false;
-		ist30xx_enable_irq(data);
-	}
-#endif
 	mutex_unlock(&ist30xx_mutex);
 
 	return 0;
@@ -939,19 +841,10 @@ static void reset_work_func(struct work_struct *work)
 		(data->status.update != 1) && (data->status.calib != 1))) {
 		mutex_lock(&ist30xx_mutex);
 		ist30xx_disable_irq(data);
-#if IST30XX_GESTURE
-		if (data->suspend)
-			ist30xx_internal_suspend(data);
-		else
-#endif
 			ist30xx_reset(data, false);
 
 		clear_input_data(data);
 		ist30xx_start(data);
-#if IST30XX_GESTURE
-		if (data->gesture && data->suspend)
-			data->status.noise_mode = false;
-#endif
 		ist30xx_enable_irq(data);
 		mutex_unlock(&ist30xx_mutex);
 	}
@@ -1262,10 +1155,6 @@ static int ist30xx_probe(struct i2c_client *client)
 	data->status.event_mode = false;
 
     // INIT VARIABLE (DEFAULT)
-#if IST30XX_GESTURE
-	data->suspend = false;
-	data->gesture = false;
-#endif
 	data->irq_working = false;
 	data->max_scan_retry = 2;
 	data->max_irq_err_cnt = MAX_ERR_CNT;
