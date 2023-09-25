@@ -211,21 +211,3 @@ static struct attribute *tracking_attributes[] = {
 static struct attribute_group tracking_attr_group = {
 	.attrs	= tracking_attributes,
 };
-
-extern struct class *ist30xx_class;
-struct device *ist30xx_tracking_dev;
-
-int ist30xx_init_tracking_sysfs(void)
-{
-	/* /sys/class/touch/tracking */
-	ist30xx_tracking_dev = device_create(ist30xx_class, NULL, 0, NULL,
-						"tracking");
-
-	/* /sys/class/touch/tracking/... */
-	if (sysfs_create_group(&ist30xx_tracking_dev->kobj, &tracking_attr_group))
-		tsp_err("[ TSP ] Failed to create sysfs group(%s)!\n", "tracking");
-
-	ist30xx_tracking_init();
-
-	return 0;
-}

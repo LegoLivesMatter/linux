@@ -33,7 +33,6 @@
 #endif
 
 #include "ist30xxc.h"
-#include "ist30xxc_update.h"
 #include "ist30xxc_tracking.h"
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -56,6 +55,36 @@ struct ist30xx_data *ts_data;
 
 DEFINE_MUTEX(ist30xx_mutex);
 
+#define CALIB_WAIT_TIME			(50) /* unit : 100msec */
+#define CALIB_TO_STATUS(n)		((n >> 12) & 0xF)
+#define CALIB_TO_GAP(n)			((n >> 16) & 0xFFF)
+#define IST30XX_PARSE_TSPTYPE(n)	((n >> 1) & 0xF)
+#define TSP_TYPE_UNKNOWN		(0xF0)
+int calib_ms_delay = CALIB_WAIT_TIME;
+int ist30xx_calib_wait(struct ist30xx_data *data)
+{
+	int cnt = calib_ms_delay;
+
+	data->status.calib_msg = 0;
+	while (cnt-- > 0) {
+		msleep(100);
+
+		if (data->status.calib_msg) {
+			tsp_info("Calibration status : %d, Max raw gap : %d - (%08x)\n",
+				 CALIB_TO_STATUS(data->status.calib_msg),
+				 CALIB_TO_GAP(data->status.calib_msg),
+				 data->status.calib_msg);
+			if (CALIB_TO_STATUS(data->status.calib_msg) == 0)
+				return 0;  // Calibrate success
+			else
+				return -EAGAIN;
+		}
+	}
+	tsp_warn("Calibration time out\n");
+
+	return -EPERM;
+}
+
 int ist30xx_dbg_level = IST30XX_DEBUG_LEVEL;
 void tsp_printk(int level, const char *fmt, ...)
 {
@@ -73,6 +102,40 @@ void tsp_printk(int level, const char *fmt, ...)
 	printk("%s %pV", IST30XX_DEBUG_TAG, &vaf);
 
 	va_end(args);
+}
+
+int ist30xx_calibrate(struct ist30xx_data *data, int wait_cnt)
+{
+	int ret = -ENOEXEC;
+
+	tsp_info("*** Calibrate %ds ***\n", calib_ms_delay / 10);
+
+	data->status.update = 1;
+	ist30xx_disable_irq(data);
+	while (1) {
+		ret = ist30xx_cmd_calibrate(data->client);
+		if (unlikely(ret))
+			continue;
+
+		ist30xx_enable_irq(data);
+		ret = ist30xx_calib_wait(data);
+		if (likely(!ret))
+			break;
+
+		ist30xx_disable_irq(data);
+
+		if (--wait_cnt == 0)
+			break;
+
+		ist30xx_reset(data, false);
+	}
+
+	ist30xx_disable_irq(data);
+	ist30xx_reset(data, false);
+	data->status.update = 2;
+	ist30xx_enable_irq(data);
+
+	return ret;
 }
 
 long get_milli_second(void)
@@ -939,8 +1002,6 @@ restart_timer:
 	mod_timer(&data->timer, get_jiffies_64() + EVENT_TIMER_INTERVAL);
 }
 
-extern struct class *ist30xx_class;
-
 static struct ist30xx_platform_data *ist30xx_parse_dt(struct device *dev)
 {
 	struct ist30xx_platform_data *pdata;
@@ -1173,8 +1234,6 @@ static int ist30xx_probe(struct i2c_client *client)
 
 	return 0;
 
-err_sysfs:
-	class_destroy(ist30xx_class);
 err_irq:
 	tsp_info("ChipID: %x\n", data->chip_id);
 	ist30xx_disable_irq(data);
