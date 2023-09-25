@@ -45,17 +45,6 @@
 #include <linux/input/input_booster.h>
 #endif
 
-#if IST30XX_CHECK_BATT_TEMP
-#include <linux/battery/sec_battery.h>
-
-#define BATTERY_TEMP_MAGIC      (0x7E000039)
-#define IST30XX_MAX_CHK_CNT     2   // 500msec unit
-union power_supply_propval temperature;
-int bat_temp;
-s16 ist30xx_batt_temp = 0;
-int ist30xx_batt_chk_cnt = 0;
-int ist30xx_batt_chk_max_cnt = IST30XX_MAX_CHK_CNT;
-#endif
 
 #define MAX_ERR_CNT			(100)
 #define EVENT_TIMER_INTERVAL		(HZ * timer_period_ms / 1000)
@@ -594,18 +583,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 	if (unlikely(!data->irq_enabled))
 		goto irq_end;
 
-#if IST30XX_CHECK_BATT_TEMP
-    if (ist30xx_batt_chk_cnt >= ist30xx_batt_chk_max_cnt) {
-    	psy_do_property("sec-fuelgauge", get,
-		POWER_SUPPLY_PROP_TEMP, temperature);
-        ist30xx_batt_temp = temperature.intval / 10;
-        ist30xx_write_reg(data->client, IST30XX_HIB_BATT_TEMP ,
-                (((u32)ist30xx_batt_temp & 0xFFFF) << 8) | BATTERY_TEMP_MAGIC);
-	pr_info("[ TSP ] battery temperature: %d\n", ist30xx_batt_temp);
-        tsp_verb("battery temperature: %d\n", ist30xx_batt_temp);
-        ist30xx_batt_chk_cnt = 0;
-    }
-#endif
 
 	ms = get_milli_second();
 
@@ -1041,18 +1018,6 @@ static void noise_work_func(struct work_struct *work)
 	data->scan_retry = 0;
 	data->scan_count = scan_count;
 
-#if IST30XX_CHECK_BATT_TEMP
-    if (ist30xx_batt_chk_cnt >= ist30xx_batt_chk_max_cnt) {
-    	psy_do_property("sec-fuelgauge", get,
-		POWER_SUPPLY_PROP_TEMP, temperature);
-        ist30xx_batt_temp = temperature.intval /10;
-        ist30xx_write_reg(data->client, IST30XX_HIB_BATT_TEMP ,
-                (((u32)ist30xx_batt_temp & 0xFFFF) << 8) | BATTERY_TEMP_MAGIC);
-
-        tsp_verb("battery temperature: %d\n", ist30xx_batt_temp);
-        ist30xx_batt_chk_cnt = 0;
-    }
-#endif
 	return;
 
 retry_timer:
@@ -1099,9 +1064,6 @@ void timer_handler(struct timer_list *t)
 	}
 
 restart_timer:
-#if IST30XX_CHECK_BATT_TEMP
-    ist30xx_batt_chk_cnt++;
-#endif
 	mod_timer(&data->timer, get_jiffies_64() + EVENT_TIMER_INTERVAL);
 }
 
