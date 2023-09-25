@@ -119,10 +119,6 @@
 			gpios = <&gpio 17 GPIO_ACTIVE_LOW>;
 		};
 	};
-
-	sd8777-wlan {
-		compatible = "marvell,sd8777";
-	};
 };
 
 &smmu {
@@ -382,6 +378,18 @@
 	cd-inverted;
 	bus-width = <4>;
 	wp-inverted;
+};
+
+&sdh1 {
+	status = "okay";
+
+	mwifiex: wifi@1 {
+		compatible = "marvell,sd8777";
+		reg = <1>;
+		pinctrl-names = "default";
+		interrupt-parent = <&gpio>;
+		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
+	};
 };
 #include "88pm886.dtsi"
 #include "88pm88x.dtsi"
