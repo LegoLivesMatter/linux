@@ -275,19 +275,7 @@ int ist30xx_get_info(struct ist30xx_data *data)
 		}
 	}
 
-#if IST30XX_CHECK_CALIB
-	if (likely(!data->status.update)) {
-		ret = ist30xx_cmd_check_calib(data->client);
-		if (likely(!ret)) {
-			data->status.calib = 1;
-			data->status.calib_msg = 0;
-			event_ms = (u32)get_milli_second();
-			data->status.event_mode = true;
-		}
-	}
-#else
 	ist30xx_start(data);
-#endif
 
 	ist30xx_enable_irq(data);
 	mutex_unlock(&ist30xx_mutex);
