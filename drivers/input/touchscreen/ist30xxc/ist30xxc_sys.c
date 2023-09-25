@@ -453,31 +453,13 @@ int ist30xx_reset(struct ist30xx_data *data, bool download)
 
 int ist30xx_internal_suspend(struct ist30xx_data *data)
 {
-#if IST30XX_GESTURE
-	data->suspend = true;
-	if (data->gesture) {
-		ist30xx_reset(data, false);
-		ist30xx_cmd_gesture(data->client, 3);
-	} else {
-		ist30xx_power_off(data);
-	}
-#else
 	ist30xx_power_off(data);
-#endif
 	return 0;
 }
 
 int ist30xx_internal_resume(struct ist30xx_data *data)
 {
-#if IST30XX_GESTURE
-	data->suspend = false;
-	if (data->gesture)
-		ist30xx_reset(data, false);
-	else
-		ist30xx_power_on(data, false);
-#else
 	ist30xx_power_on(data, false);
-#endif
 
 	return 0;
 }
