@@ -39,6 +39,10 @@
 #define SDCFG_GEN_PAD_CLK_CNT_MASK	0xFF
 #define SDCFG_GEN_PAD_CLK_CNT_SHIFT	24
 
+#define SD_FIFO_PARAM			0x104
+#define  INTERNAL_CLK_GATE_CTRL		BIT(8)
+#define  INTERNAL_CLK_GATE_ON		BIT(9)
+
 #define SD_SPI_MODE          0x108
 #define SD_CE_ATA_1          0x10C
 
@@ -47,6 +51,9 @@
 #define SDCE_MISC_INT_EN	(1<<1)
 
 #define SD_RX_CFG_REG			0x114
+
+#define TX_CFG_REG			0x118
+#define  TX_INTERNAL_SEL_BUS_CLK	BIT(30)
 
 /* IO Power control */
 #define IO_PWR_AKEY_ASFAR		0xbaba
@@ -59,6 +66,9 @@ struct sdhci_pxa_data {
 	u8 sdclk_delay_shift;
 	u8 sdclk_sel_mask;
 	u8 sdclk_sel_shift;
+
+	/* set this if platform needs separate clock configuration */
+	bool set_pltfrm_clk;
 	/*
 	 * We have few more differences, add them along with their
 	 * respective feature support
@@ -81,6 +91,7 @@ static struct sdhci_pxa_data pxav3_data_v1 = {
 	.sdclk_delay_shift	= 9,
 	.sdclk_sel_mask		= 0x1,
 	.sdclk_sel_shift	= 8,
+	.set_pltfrm_clk		= false,
 };
 
 static struct sdhci_pxa_data pxav3_data_v2 = {
@@ -90,6 +101,7 @@ static struct sdhci_pxa_data pxav3_data_v2 = {
 	/* Only set SDCLK_SEL1, as driver uses default value of SDCLK_SEL0 */
 	.sdclk_sel_mask		= 0x3,
 	.sdclk_sel_shift	= 2,	/* SDCLK_SEL1 */
+	.set_pltfrm_clk		= true,
 };
 
 /*
@@ -355,9 +367,41 @@ static void pxav3_set_power(struct sdhci_host *host, unsigned char mode,
 	if (!IS_ERR(mmc->supply.vmmc))
 		mmc_regulator_set_ocr(mmc, mmc->supply.vmmc, vdd);
 }
+ 
+static void pxav3_set_tx_clock(struct sdhci_host *host)
+{
+	u32 val;
+
+	val = sdhci_readl(host, TX_CFG_REG);
+	val |= TX_INTERNAL_SEL_BUS_CLK;
+	sdhci_writel(host, val, TX_CFG_REG);
+}
+
+static void pxav3_set_clock(struct sdhci_host *host, unsigned int clock)
+{
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct sdhci_pxa *pxa = pltfm_host->priv;
+
+	/* We still use common sdhci_set_clock() */
+	sdhci_set_clock(host, clock);
+
+	/* platform/controller specific clock configuration */
+	if (pxa->data->set_pltfrm_clk && clock != 0) {
+		u32 val;
+
+		val = sdhci_readw(host, SD_FIFO_PARAM);
+		/* Internal clock gate ON and CTRL = 0b11 */
+		val |= INTERNAL_CLK_GATE_CTRL | INTERNAL_CLK_GATE_ON;
+		sdhci_writew(host, val, SD_FIFO_PARAM);
+
+		/* TX internal clock selection */
+		pxav3_set_tx_clock(host);
+	}
+
+}
 
 static const struct sdhci_ops pxav3_sdhci_ops = {
-	.set_clock = sdhci_set_clock,
+	.set_clock = pxav3_set_clock,
 	.set_power = pxav3_set_power,
 	.platform_send_init_74_clocks = pxav3_gen_init_74_clocks,
 	.get_max_clock = sdhci_pltfm_clk_get_max_clock,
