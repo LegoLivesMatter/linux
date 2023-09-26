@@ -48,6 +48,8 @@
 #define SD_CE_ATA_1          0x10C
 
 #define SD_CE_ATA_2          0x10E
+#define  SD_CE_ATA2_HS200_EN		BIT(10)
+#define  SD_CE_ATA2_MMC_MODE		BIT(12)
 #define SDCE_MISC_INT		(1<<2)
 #define SDCE_MISC_INT_EN	(1<<1)
 
@@ -322,6 +324,17 @@ static int pxav3_select_pinstate(struct sdhci_host *host, unsigned int uhs)
 	return pinctrl_select_state(pxa->pinctrl, pinctrl);
 }
 
+static int pxav3_select_hs200(struct sdhci_host *host)
+{
+	u16 reg = 0;
+
+	reg = sdhci_readw(host, SD_CE_ATA_2);
+	reg |= SD_CE_ATA2_HS200_EN | SD_CE_ATA2_MMC_MODE;
+	sdhci_writew(host, reg, SD_CE_ATA_2);
+
+	return 0;
+}
+
 static void pxav3_set_uhs_signaling(struct sdhci_host *host, unsigned int uhs)
 {
 	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
@@ -352,6 +365,10 @@ static void pxav3_set_uhs_signaling(struct sdhci_host *host, unsigned int uhs)
 	case MMC_TIMING_MMC_DDR52:
 	case MMC_TIMING_UHS_DDR50:
 		ctrl_2 |= SDHCI_CTRL_UHS_DDR50 | SDHCI_CTRL_VDD_180;
+		break;
+	case MMC_TIMING_MMC_HS200:
+		ctrl_2 |= SDHCI_CTRL_UHS_SDR104 | SDHCI_CTRL_VDD_180;
+		pxav3_select_hs200(host);
 		break;
 	}
 
