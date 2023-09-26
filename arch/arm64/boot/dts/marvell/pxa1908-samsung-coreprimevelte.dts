@@ -389,8 +389,9 @@
 &sdh1 {
 	status = "okay";
 	pinctrl-names = "default", "state_uhs";
-	//pinctrl-0 = <&mmc3_pins_default>;
-	//pinctrl-1 = <&mmc3_pins_uhs>;
+	pinctrl-0 = <&sdh1_pmx_func1 &sdh1_pmx_func2 &sdh1_pmx_func3>;
+	pinctrl-1 = <&sdh1_pmx_func1_fast &sdh1_pmx_func2_fast &sdh1_pmx_func3>;
+	pinctrl-2 = <&sdh1_pmx_edge_wakeup>;
 	bus-width = <4>;
 	max-frequency = <200000000>;
 	cap-sd-highspeed;

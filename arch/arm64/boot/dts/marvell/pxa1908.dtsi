@@ -3,6 +3,7 @@
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/clock/marvell,pxa1908.h>
+#include "pxa1908-pinfunc.h"
 
 / {
 	model = "Marvell Armada PXA1908";
@@ -200,6 +201,44 @@
 
 				range: gpio-range {
 					#pinctrl-single,gpio-range-cells = <3>;
+				};
+
+				sdh1_pmx_func1: sdh1_pmx_func1 {
+						pinctrl-single,pins = <GPIO37 AF1 GPIO38 AF1 GPIO39 AF1 GPIO40 AF1 GPIO41 AF1>;
+						MFP_DEFAULT;
+				};
+
+				sdh1_pmx_func2: sdh1_pmx_func2 {
+						pinctrl-single,pins = <GPIO42 AF1>;
+						DS_SLOW0;PULL_NONE;EDGE_NONE;LPM_DRIVE_LOW;
+				};
+
+				sdh1_pmx_func3: sdh1_pmx_func3 {
+						pinctrl-single,pins = <GPIO4 AF0>;
+						DS_MEDIUM;PULL_FLOAT;EDGE_NONE;LPM_NONE;
+				};
+
+				sdh1_pmx_edge_wakeup: sdh1_pmx_edge_wakeup {
+						pinctrl-single,pins = <GPIO39 AF1>;
+						DS_MEDIUM;PULL_NONE;EDGE_BOTH;LPM_NONE;
+				};
+
+				sdh1_pmx_func1_fast: sdh1_pmx_func1_fast {
+						pinctrl-single,pins = <
+							GPIO37 AF1
+							GPIO38 AF1
+							GPIO39 AF1
+							GPIO40 AF1
+							GPIO41 AF1
+						>;
+						DS_FAST;PULL_NONE;EDGE_NONE;LPM_NONE;
+				};
+
+				sdh1_pmx_func2_fast: sdh1_pmx_func2_fast {
+						pinctrl-single,pins = <
+							GPIO42 AF1
+						>;
+						DS_FAST;PULL_NONE;EDGE_NONE;LPM_DRIVE_LOW;
 				};
 			};
 
