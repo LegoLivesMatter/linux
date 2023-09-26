@@ -385,7 +385,6 @@
 
 	mwifiex: wifi@1 {
 		compatible = "marvell,sd8777";
-		reg = <1>;
 		pinctrl-names = "default";
 		interrupt-parent = <&gpio>;
 		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
