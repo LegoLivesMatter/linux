@@ -119,6 +119,12 @@
 			gpios = <&gpio 17 GPIO_ACTIVE_LOW>;
 		};
 	};
+
+	wlan_pwrseq: pwrseq0 {
+		compatible = "mmc-pwrseq-sd8787";
+		powerdown-gpios = <&gpio 57 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio 58 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &smmu {
@@ -382,6 +388,8 @@
 
 &sdh1 {
 	status = "okay";
+	mmc-pwrseq = <&wlan_pwrseq>;
+	vmmc-supply = <&ldo15>;
 
 	mwifiex: wifi@1 {
 		compatible = "marvell,sd8777";
