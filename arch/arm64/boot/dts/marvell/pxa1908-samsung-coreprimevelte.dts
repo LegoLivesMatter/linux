@@ -388,14 +388,31 @@
 
 &sdh1 {
 	status = "okay";
-	mmc-pwrseq = <&wlan_pwrseq>;
+	pinctrl-names = "default", "state_uhs";
+	//pinctrl-0 = <&mmc3_pins_default>;
+	//pinctrl-1 = <&mmc3_pins_uhs>;
+	bus-width = <4>;
+	max-frequency = <200000000>;
+	cap-sd-highspeed;
+	sd-uhs-sdr50;
+	sd-uhs-sdr104;
+	keep-power-in-suspend;
+	wakeup-source;
+	cap-sdio-irq;
 	vmmc-supply = <&ldo15>;
+	mmc-pwrseq = <&wlan_pwrseq>;
+	non-removable;
+	cap-power-off-card;
 
-	mwifiex: wifi@1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	mwifiex: mwifiex@1 {
 		compatible = "marvell,sd8777";
-		pinctrl-names = "default";
+		reg = <1>;
 		interrupt-parent = <&gpio>;
-		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
+		interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
+		marvell,wakeup-pin = <3>;
 	};
 };
 #include "88pm886.dtsi"
