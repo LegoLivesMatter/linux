@@ -30,9 +30,6 @@
 #define PXAV3_RPM_DELAY_MS     50
 
 #define SD_CLOCK_BURST_SIZE_SETUP		0x10A
-#define SDCLK_SEL	0x100
-#define SDCLK_DELAY_SHIFT	9
-#define SDCLK_DELAY_MASK	0x1f
 
 #define SD_CFG_FIFO_PARAM       0x100
 #define SDCFG_GEN_PAD_CLK_ON	(1<<6)
@@ -46,11 +43,43 @@
 #define SDCE_MISC_INT		(1<<2)
 #define SDCE_MISC_INT_EN	(1<<1)
 
+#define SD_RX_CFG_REG			0x114
+
+struct sdhci_pxa_data {
+	u32 sdclk_delay_reg;
+	u32 sdclk_delay_mask;
+	u8 sdclk_delay_shift;
+	u8 sdclk_sel_mask;
+	u8 sdclk_sel_shift;
+	/*
+	 * We have few more differences, add them along with their
+	 * respective feature support
+	 */
+};
+
 struct sdhci_pxa {
 	struct clk *clk_core;
 	struct clk *clk_io;
 	u8	power_mode;
 	void __iomem *sdio3_conf_reg;
+	struct sdhci_pxa_data *data;
+};
+
+static struct sdhci_pxa_data pxav3_data_v1 = {
+	.sdclk_delay_reg	= SD_CLOCK_BURST_SIZE_SETUP,
+	.sdclk_delay_mask	= 0x1F,
+	.sdclk_delay_shift	= 9,
+	.sdclk_sel_mask		= 0x1,
+	.sdclk_sel_shift	= 8,
+};
+
+static struct sdhci_pxa_data pxav3_data_v2 = {
+	.sdclk_delay_reg	= SD_RX_CFG_REG,
+	.sdclk_delay_mask	= 0x3FF,
+	.sdclk_delay_shift	= 8,
+	/* Only set SDCLK_SEL1, as driver uses default value of SDCLK_SEL0 */
+	.sdclk_sel_mask		= 0x3,
+	.sdclk_sel_shift	= 2,	/* SDCLK_SEL1 */
 };
 
 /*
@@ -165,6 +194,8 @@ static void pxav3_reset(struct sdhci_host *host, u8 mask)
 {
 	struct platform_device *pdev = to_platform_device(mmc_dev(host->mmc));
 	struct sdhci_pxa_platdata *pdata = pdev->dev.platform_data;
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct sdhci_pxa *pxa = pltfm_host->priv;
 
 	sdhci_reset(host, mask);
 
@@ -175,12 +206,14 @@ static void pxav3_reset(struct sdhci_host *host, u8 mask)
 		 */
 		if (pdata && 0 != pdata->clk_delay_cycles) {
 			u16 tmp;
+			struct sdhci_pxa_data *data = pxa->data;
 
-			tmp = readw(host->ioaddr + SD_CLOCK_BURST_SIZE_SETUP);
-			tmp |= (pdata->clk_delay_cycles & SDCLK_DELAY_MASK)
-				<< SDCLK_DELAY_SHIFT;
-			tmp |= SDCLK_SEL;
-			writew(tmp, host->ioaddr + SD_CLOCK_BURST_SIZE_SETUP);
+			tmp = readw(host->ioaddr + data->sdclk_delay_reg);
+			tmp |= (pdata->clk_delay_cycles & data->sdclk_delay_mask)
+				<< data->sdclk_delay_shift;
+			tmp &= ~(data->sdclk_sel_mask << data->sdclk_sel_shift);
+			tmp |= 1 << data->sdclk_sel_shift;
+			writew(tmp, host->ioaddr + data->sdclk_delay_reg);
 		}
 	}
 }
@@ -334,10 +367,16 @@ static const struct sdhci_pltfm_data sdhci_pxav3_pdata = {
 #ifdef CONFIG_OF
 static const struct of_device_id sdhci_pxav3_of_match[] = {
 	{
-		.compatible = "mrvl,pxav3-mmc",
+		.compatible	= "mrvl,pxav3-mmc",
+		.data		= (void *)&pxav3_data_v1,
 	},
 	{
-		.compatible = "marvell,armada-380-sdhci",
+		.compatible	= "marvell,armada-380-sdhci",
+		.data		= (void *)&pxav3_data_v1,
+	},
+	{
+		.compatible	= "marvell,pxav3-1928-sdhci",
+		.data		= (void *)&pxav3_data_v2,
 	},
 	{},
 };
@@ -418,6 +457,7 @@ static int sdhci_pxav3_probe(struct platform_device *pdev)
 			goto err_of_parse;
 		sdhci_get_of_property(pdev);
 		pdata = pxav3_get_mmc_pdata(dev);
+		pxa->data = (struct sdhci_pxa_data *)match->data;
 		pdev->dev.platform_data = pdata;
 	} else if (pdata) {
 		/* on-chip device */
