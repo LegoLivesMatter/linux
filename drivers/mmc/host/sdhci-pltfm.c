@@ -70,6 +70,8 @@ static void sdhci_get_compatibility(struct platform_device *pdev)
 	    of_device_is_compatible(np, "fsl,t4240-esdhc") ||
 	    of_device_is_compatible(np, "fsl,mpc8536-esdhc"))
 		host->quirks |= SDHCI_QUIRK_BROKEN_TIMEOUT_VAL;
+	if (of_device_is_compatible(np, "marvell,pxav3-1928-sdhci"))
+		host->quirks2 |= SDHCI_QUIRK2_MUST_SET_SDHCI_BUS_POWER;
 }
 
 void sdhci_get_property(struct platform_device *pdev)
