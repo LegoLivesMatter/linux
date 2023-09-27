@@ -18,6 +18,7 @@
 #define IST3038C_REG_TOUCH_STATUS	(IST3038C_REG_HIB_BASE | IST3038C_HIB_ACCESS)
 #define IST3038C_REG_TOUCH_COORD	(IST3038C_REG_HIB_BASE | IST3038C_HIB_ACCESS | 0x8)
 #define IST3038C_REG_INTR_MESSAGE	(IST3038C_REG_HIB_BASE | IST3038C_HIB_ACCESS | 0x4)
+#define IST3032C_WHOAMI			0x32c
 #define IST3038C_WHOAMI			0x38c
 #define IST3038C_CHIP_ON_DELAY_MS	60
 #define IST3038C_I2C_RETRY_COUNT	3
@@ -253,13 +254,15 @@ static int imagis_probe(struct i2c_client *i2c)
 {
 	struct device *dev = &i2c->dev;
 	struct imagis_ts *ts;
-	int chip_id, error;
+	int chip_id, dt_chip_id, error;
 
 	ts = devm_kzalloc(dev, sizeof(*ts), GFP_KERNEL);
 	if (!ts)
 		return -ENOMEM;
 
 	ts->client = i2c;
+
+	dt_chip_id = (int)(uintptr_t)device_get_match_data(&i2c->dev);
 
 	error = imagis_init_regulators(ts);
 	if (error) {
@@ -287,8 +290,8 @@ static int imagis_probe(struct i2c_client *i2c)
 		return error;
 	}
 
-	if (chip_id != IST3038C_WHOAMI) {
-		dev_err(dev, "unknown chip ID: 0x%x\n", chip_id);
+	if (chip_id != dt_chip_id) {
+		dev_err(dev, "unknown or misconfigured chip ID: 0x%x\n", chip_id);
 		return -EINVAL;
 	}
 
@@ -345,11 +348,19 @@ static DEFINE_SIMPLE_DEV_PM_OPS(imagis_pm_ops, imagis_suspend, imagis_resume);
 
 #ifdef CONFIG_OF
 static const struct of_device_id imagis_of_match[] = {
-	{ .compatible = "imagis,ist3038c", },
+	{ .compatible = "imagis,ist3032c", .data = (void *)IST3032C_WHOAMI, },
+	{ .compatible = "imagis,ist3038c", .data = (void *)IST3038C_WHOAMI, },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, imagis_of_match);
 #endif
+
+static const struct i2c_device_id imagis_ts_i2c_id[] = {
+	{ "ist3032c", IST3032C_WHOAMI, },
+	{ "ist3038c", IST3038C_WHOAMI, },
+	{ },
+};
+MODULE_DEVICE_TABLE(i2c, imagis_ts_i2c_id);
 
 static struct i2c_driver imagis_ts_driver = {
 	.driver = {
@@ -358,6 +369,7 @@ static struct i2c_driver imagis_ts_driver = {
 		.of_match_table = of_match_ptr(imagis_of_match),
 	},
 	.probe = imagis_probe,
+	.id_table = imagis_ts_i2c_id,
 };
 
 module_i2c_driver(imagis_ts_driver);
