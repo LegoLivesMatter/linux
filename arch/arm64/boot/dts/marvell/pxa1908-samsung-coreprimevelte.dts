@@ -316,8 +316,6 @@
 };
 
 &sdh2 {
-	/* Disabled for now because initialization fails with -ETIMEDOUT. */
-	status = "disabled";
 	bus-width = <8>;
 	non-removable;
 	broken-cd;
