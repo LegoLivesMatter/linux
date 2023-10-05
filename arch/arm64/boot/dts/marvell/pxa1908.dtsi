@@ -259,7 +259,7 @@
 			};
 
 			sdh0: mmc@80000 {
-				compatible = "mrvl,pxav3-mmc";
+				compatible = "marvell,pxav3-1928-sdhci";
 				reg = <0x80000 0x120>;
 				interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>;
 				clocks = <&apmu PXA1908_CLK_SDH0>;
@@ -268,7 +268,7 @@
 			};
 
 			sdh1: mmc@80800 {
-				compatible = "mrvl,pxav3-mmc";
+				compatible = "marvell,pxav3-1928-sdhci";
 				reg = <0x80800 0x120>;
 				interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>;
 				clocks = <&apmu PXA1908_CLK_SDH1>;
@@ -277,7 +277,7 @@
 			};
 
 			sdh2: mmc@81000 {
-				compatible = "mrvl,pxav3-mmc";
+				compatible = "marvell,pxav3-1928-sdhci";
 				reg = <0x81000 0x120>;
 				interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>;
 				clocks = <&apmu PXA1908_CLK_SDH2>;
