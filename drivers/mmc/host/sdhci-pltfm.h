@@ -25,8 +25,6 @@ struct sdhci_pltfm_host {
 	unsigned int clock;
 	u16 xfer_mode_shadow;
 
-	void *priv;
-
 	unsigned long private[] ____cacheline_aligned;
 };
 
