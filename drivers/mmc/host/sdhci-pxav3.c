@@ -12,6 +12,7 @@
 #include <linux/platform_device.h>
 #include <linux/clk.h>
 #include <linux/io.h>
+#include <linux/mmc/mmc.h>
 #include <linux/mmc/card.h>
 #include <linux/mmc/host.h>
 #include <linux/platform_data/pxa_sdhci.h>
@@ -338,6 +339,66 @@ static void pxav3_prepare_tuning(struct sdhci_host *host, u32 val, bool done) {
 	// leave out dtr_data intentionally and see what happens
 
 	sdhci_writel(host, reg, SD_RX_CFG_REG);
+}
+
+static int pxav3_send_tuning_cmd_pio(struct sdhci_host *host, u32 opcode,
+		int point, unsigned long flags) {
+	struct mmc_command cmd = {0};
+	struct mmc_request mrq = {NULL};
+	int err = 0;
+
+	cmd.opcode = opcode;
+	cmd.arg = 0;
+	cmd.flags = MMC_RSP_R1 | MMC_CMD_ADTC;
+	cmd.retries = 0;
+	cmd.data = NULL;
+	cmd.error = 0;
+
+	mrq.cmd = &cmd;
+	host->mrq = &mrq;
+
+	if (cmd.opcode == MMC_SEND_TUNING_BLOCK_HS200) {
+		if (host->mmc->ios.bus_width == MMC_BUS_WIDTH_8)
+			sdhci_writew(host, SDHCI_MAKE_BLKSZ(7, 128),
+					SDHCI_BLOCK_SIZE);
+		else if (host->mmc->ios.bus_width == MMC_BUS_WIDTH_4)
+			sdhci_writew(host, SDHCI_MAKE_BLKSZ(7, 64),
+					SDHCI_BLOCK_SIZE);
+	} else {
+		sdhci_writew(host, SDHCI_MAKE_BLKSZ(7, 64),
+				SDHCI_BLOCK_SIZE);
+	}
+
+	sdhci_writew(host, SDHCI_TRNS_READ, SDHCI_TRANSFER_MODE);
+
+	// TODO: downstream has sdhci_send_command here which is static:
+	// make sure we can swap them one to one (probably we will be able (/have) to
+	// get rid of `host->mrq = &mrq` and thus sdhci_host.mrq altogether and maybe the
+	// irqrestore below, because it seems to get called from sdhci_request_atomic)
+	sdhci_request_atomic(host->mmc, &mrq);
+
+	host->cmd = NULL;
+	host->mrq = NULL;
+
+	spin_unlock_irqrestore(&host->lock, flags);
+	wait_event_interruptible_timeout(host->buf_ready_int,
+			(host->tuning_done == 1),
+			msecs_to_jiffies(50));
+	spin_lock_irqsave(&host->lock, flags);
+	if (!host->tuning_done) {
+		err = -EIO;
+	} else
+		err = pxav3_tuning_pio_check(host, point);
+
+	host->tuning_done = 0;
+
+	return err;
+}
+
+static int pxav3_send_tuning_cmd(struct sdhci_host *host, u32 opcode,
+		int point, unsigned long flags) {
+	// assume ADMA_BROKEN
+	return pxav3_send_tuning_cmd_pio(host, opcode, point, flags);
 }
 
 static void pxav3_execute_tuning_cycle(struct sdhci_host *host,
