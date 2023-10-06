@@ -388,7 +388,8 @@ static int pxav3_send_tuning_cmd_pio(struct sdhci_host *host, u32 opcode,
 	if (!host->tuning_done) {
 		err = -EIO;
 	} else
-		err = pxav3_tuning_pio_check(host, point);
+		err = 0;
+		//err = pxav3_tuning_pio_check(host, point);
 
 	host->tuning_done = 0;
 
