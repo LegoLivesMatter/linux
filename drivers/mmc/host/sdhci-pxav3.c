@@ -313,6 +313,32 @@ static void pxav3_set_power(struct sdhci_host *host, unsigned char mode,
 		mmc_regulator_set_ocr(mmc, mmc->supply.vmmc, vdd);
 }
 
+static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	// assume no pretuned: the downstream driver checks this
+	// get bitmap
+	// lock mutex for dvfs
+	// set dvfs level
+	// execute tuning cycle -->
+	return 0;
+}
+
+#define VL_TO_RATE(level) (1000000*((level)+1))
+static int pxa_sdh_request_dvfs_level(struct sdhci_host *host, int level) {
+	struct platform_device *pdev = to_platform_device(mmc_dev(host->mmc));
+	struct sdhci_pxa_platdata *pdata = pdev->dev.platform_data;
+
+	if (!pdata || !pdata->fakeclk_tuned)
+		return -ENODEV;
+
+	clk_set_rate(pdata->fakeclk_tuned, VL_TO_RATE(level));
+	return 0;
+}
+
+static int pxav3_execute_tuning(struct sdhci_host *host, u32 opcode) {
+	return pxav3_execute_tuning_dvfs(host, opcode);
+}
+
 static const struct sdhci_ops pxav3_sdhci_ops = {
 	.set_clock = sdhci_set_clock,
 	.set_power = pxav3_set_power,
@@ -321,6 +347,7 @@ static const struct sdhci_ops pxav3_sdhci_ops = {
 	.set_bus_width = sdhci_set_bus_width,
 	.reset = pxav3_reset,
 	.set_uhs_signaling = pxav3_set_uhs_signaling,
+	.platform_execute_tuning = pxav3_execute_tuning,
 };
 
 static const struct sdhci_pltfm_data sdhci_pxav3_pdata = {

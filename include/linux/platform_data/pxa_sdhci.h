@@ -47,5 +47,6 @@ struct sdhci_pxa_platdata {
 	unsigned int	quirks;
 	unsigned int	quirks2;
 	unsigned int	pm_caps;
+	struct clk		*fakeclk_tuned;
 };
 #endif /* _PXA_SDHCI_H_ */
