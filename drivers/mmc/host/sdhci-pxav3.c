@@ -50,6 +50,12 @@
 #define SD_RX_TUNE_STEP			1
 #define SD_RX_TUNE_MAX			0x3FF // NOTE: this is for -v2/3
 
+#define SD_RX_CFG_REG			0x114
+#define RX_SDCLK_DELAY_SHIFT		8
+#define RX_SDCLK_SEL1_MASK		0x3
+#define RX_SDCLK_SEL1_SHIFT		2
+#define RX_SDCLK_DELAY_MASK 0x3FF // NOTE: again, for v2/3
+
 struct sdhci_pxa {
 	struct clk *clk_core;
 	struct clk *clk_io;
@@ -315,6 +321,23 @@ static void pxav3_set_power(struct sdhci_host *host, unsigned char mode,
 
 	if (!IS_ERR(mmc->supply.vmmc))
 		mmc_regulator_set_ocr(mmc, mmc->supply.vmmc, vdd);
+}
+
+static void pxav3_prepare_tuning(struct sdhci_host *host, u32 val, bool done) {
+	struct platform_device *pdev = to_platform_device(mmc_dev(host->mmc));
+	u32 reg;
+
+	// val is delay
+
+	reg = sdhci_readl(host, SD_RX_CFG_REG);
+	reg &= (~RX_SDCLK_DELAY_MASK << RX_SDCLK_DELAY_SHIFT);
+	reg |= (val & RX_SDCLK_DELAY_MASK) << RX_SDCLK_DELAY_SHIFT;
+	reg &= ~(RX_SDCLK_SEL1_MASK << RX_SDCLK_SEL1_SHIFT);
+	reg |= (1 << RX_SDCLK_SEL1_SHIFT);
+
+	// leave out dtr_data intentionally and see what happens
+
+	sdhci_writel(host, reg, SD_RX_CFG_REG);
 }
 
 static void pxav3_execute_tuning_cycle(struct sdhci_host *host,
