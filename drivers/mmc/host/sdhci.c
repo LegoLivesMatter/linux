@@ -294,6 +294,14 @@ static void sdhci_reset_for_reason(struct sdhci_host *host, enum sdhci_reset_rea
 
 #define sdhci_reset_for(h, r) sdhci_reset_for_reason((h), SDHCI_RESET_FOR_##r)
 
+void sdhci_clear_set_irqs(struct sdhci_host *host, u32 clear, u32 set) {
+	u32 ier = sdhci_readl(host, SDHCI_INT_ENABLE);
+	ier &= ~clear;
+	ier |= set;
+	sdhci_writel(host, ier, SDHCI_INT_ENABLE);
+	sdhci_writel(host, ier, SDHCI_SIGNAL_ENABLE);
+}
+
 static void sdhci_set_default_irqs(struct sdhci_host *host)
 {
 	host->ier = SDHCI_INT_BUS_POWER | SDHCI_INT_DATA_END_BIT |

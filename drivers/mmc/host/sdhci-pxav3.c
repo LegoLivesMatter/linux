@@ -46,6 +46,10 @@
 #define SDCE_MISC_INT		(1<<2)
 #define SDCE_MISC_INT_EN	(1<<1)
 
+#define SD_RX_TUNE_MIN			0
+#define SD_RX_TUNE_STEP			1
+#define SD_RX_TUNE_MAX			0x3FF // NOTE: this is for -v2/3
+
 struct sdhci_pxa {
 	struct clk *clk_core;
 	struct clk *clk_io;
@@ -311,6 +315,29 @@ static void pxav3_set_power(struct sdhci_host *host, unsigned char mode,
 
 	if (!IS_ERR(mmc->supply.vmmc))
 		mmc_regulator_set_ocr(mmc, mmc->supply.vmmc, vdd);
+}
+
+static void pxav3_execute_tuning_cycle(struct sdhci_host *host,
+		u32 opcode, unsigned long *bitmap) {
+	u32 ier = 0;
+	unsigned long flags = 0;
+	int tune_value;
+	// assume SDHCI_QUIRK2_TUNING_ADMA_BROKEN as it is specified in the
+	// downstream DTS for coreprimevelte
+	spin_lock_irqsave(&host->lock, flags);
+	ier = sdhci_readl(host, SDHCI_INT_ENABLE);
+	sdhci_clear_set_irqs(host, ier, SDHCI_INT_DATA_AVAIL);
+
+	for (tune_value = SD_RX_TUNE_MIN; tune_value <= SD_RX_TUNE_MAX; tune_value += SD_RX_TUNE_STEP) {
+		if (!test_bit(tune_value, bitmap))
+			continue;
+		pxav3_prepare_tuning(host, tune_value, false);
+		if (pxav3_send_tuning_cmd(host, opcode, tune_value, flags))
+			bitmap_clear(bitmap, tune_value, SD_RX_TUNE_STEP);
+	}
+
+	sdhci_clear_set_irqs(host, SDHCI_INT_DATA_AVAIL, ier);
+	spin_unlock_irqrestore(&host->lock, flags);
 }
 
 static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
