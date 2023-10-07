@@ -65,6 +65,7 @@ struct sdhci_pxa_platdata {
 	struct clk		*fakeclk_tuned;
 	int dvfs_level_min;
 	int dvfs_level_max;
+	u32 tuning_win_limit; /* min requirement for tuning window size */
 	struct sdhci_pretuned_data *pretuned;
 };
 #endif /* _PXA_SDHCI_H_ */

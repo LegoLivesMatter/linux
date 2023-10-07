@@ -375,6 +375,7 @@ enum sdhci_cookie {
 struct sdhci_host {
 	/* Data set by hardware interface driver */
 	const char *hw_name;	/* Hardware bus name */
+	bool boot_complete;
 
 	unsigned int quirks;	/* Deviations from spec. */
 

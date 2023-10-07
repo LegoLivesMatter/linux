@@ -81,6 +81,8 @@ struct sdhci_pxa {
 #define SDIO3_CONF_CLK_INV	BIT(0)
 #define SDIO3_CONF_SD_FB_CLK	BIT(2)
 
+DEFINE_MUTEX(dvfs_tuning_lock);
+
 static int mv_conf_mbus_windows(struct platform_device *pdev,
 				const struct mbus_dram_target_info *dram)
 {
@@ -486,16 +488,6 @@ static int pxav3_check_pretuned(struct sdhci_host *host,
 	return 0;
 }
 
-static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
-	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
-	// assume no pretuned: the downstream driver checks this
-	// get bitmap
-	// lock mutex for dvfs
-	// set dvfs level
-	// execute tuning cycle -->
-	return 0;
-}
-
 #define VL_TO_RATE(level) (1000000*((level)+1))
 static int pxa_sdh_request_dvfs_level(struct sdhci_host *host, int level) {
 	struct platform_device *pdev = to_platform_device(mmc_dev(host->mmc));
@@ -505,6 +497,167 @@ static int pxa_sdh_request_dvfs_level(struct sdhci_host *host, int level) {
 		return -ENODEV;
 
 	clk_set_rate(pdata->fakeclk_tuned, VL_TO_RATE(level));
+	return 0;
+}
+
+static int pxav3_bitmap_scan(unsigned long *bitmap,
+	int length, int min_window_size, int *scanned_win_len)
+{
+	int p = 0, max_window_start = 0, max_window_len = 0, next_zero_bit;
+
+	while (p < length) {
+		p = find_next_bit(bitmap, length, p);
+		next_zero_bit = find_next_zero_bit(bitmap, length, p);
+		if (next_zero_bit - p > max_window_len) {
+			max_window_start = p;
+			max_window_len = next_zero_bit - p;
+		}
+
+		/* remove small windows */
+		if (next_zero_bit - p < min_window_size)
+			bitmap_clear(bitmap, p, next_zero_bit - p);
+
+		p = next_zero_bit;
+	}
+
+	pr_info(">>>> bitmap max_window start = %d, size = %d\n",
+		max_window_start,
+		max_window_len);
+
+	if (scanned_win_len)
+		*scanned_win_len = max_window_len;
+
+	if (max_window_len > 0)
+		return max_window_start + max_window_len / 2;
+	else
+		return -1;
+}
+
+static int pxav3_pretuned_save_card(struct sdhci_host *host,
+	struct sdhci_pretuned_data *pretuned)
+{
+	struct mmc_card *card;
+	if (host->mmc && host->mmc->card) {
+		card = host->mmc->card;
+
+		 pretuned->card_cid[0] = card->raw_cid[0];
+		 pretuned->card_cid[1] = card->raw_cid[1];
+		 pretuned->card_cid[2] = card->raw_cid[2];
+		 pretuned->card_cid[3] = card->raw_cid[3];
+		 pretuned->card_csd[0] = card->raw_csd[0];
+		 pretuned->card_csd[1] = card->raw_csd[1];
+		 pretuned->card_csd[2] = card->raw_csd[2];
+		 pretuned->card_csd[3] = card->raw_csd[3];
+		 pretuned->card_scr[0] = card->raw_scr[0];
+		 pretuned->card_scr[1] = card->raw_scr[1];
+	}
+
+	return 1;
+}
+
+atomic_t cur_dvfs_level = ATOMIC_INIT(-1);
+int is_dvfs_request_ok;
+static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct platform_device *pdev = to_platform_device(mmc_dev(host->mmc));
+	struct sdhci_pxa_platdata *pdata = pdev->dev.platform_data;
+	struct sdhci_pretuned_data *pretuned = pdata->pretuned;
+	int tuning_value = -1, tmp_tuning_value = 0, tmp_win_len = 0;
+	int tuning_range = SD_RX_TUNE_MAX + 1;
+	int dvfs_level = pdata->dvfs_level_max;
+	int dvfs_level_min;
+	unsigned long *bitmap;
+	int bitmap_size = sizeof(*bitmap) * BITS_TO_LONGS(tuning_range);
+	// lock mutex for dvfs
+	// set dvfs level
+	// execute tuning cycle -->
+
+	if (pxav3_check_pretuned(host, pretuned)) {
+		if (host->boot_complete &&
+				host->mmc->card && mmc_card_sd(host->mmc->card))
+			return -EPERM;
+		pr_warn("%s: no valid pretuned data, start real tuning\n",
+			mmc_hostname(host->mmc));
+	} else {
+		tuning_value = pretuned->rx_delay;
+		dvfs_level = pretuned->dvfs_level;
+		goto prep_tuning;
+	}
+
+	bitmap = kmalloc(bitmap_size, GFP_KERNEL);
+	if (IS_ERR_OR_NULL(bitmap)) {
+		pr_err("%s: can't alloc tuning bitmap!\n",
+			mmc_hostname(host->mmc));
+		goto out;
+	}
+
+	bitmap_set(bitmap, 0, tuning_range);
+
+	mutex_lock(&dvfs_tuning_lock);
+
+	dvfs_level_min = pdata->dvfs_level_min;
+
+	do {
+		atomic_set(&cur_dvfs_level, dvfs_level);
+		is_dvfs_request_ok = 0;
+		pxa_sdh_request_dvfs_level(host, dvfs_level);
+		if (is_dvfs_request_ok != 1) {
+			pr_err("%s: drequest dvfs level %d fail and tuning stop\n",
+				mmc_hostname(host->mmc), dvfs_level);
+			break;
+		}
+
+		pxav3_execute_tuning_cycle(host, opcode, bitmap);
+		tmp_tuning_value = pxav3_bitmap_scan(bitmap, tuning_range,
+					pdata->tuning_win_limit, &tmp_win_len);
+
+		if (tmp_win_len < pdata->tuning_win_limit) {
+			if (tmp_win_len > 0 && tuning_value < 0) {
+				pr_warn("%s: rx window found, len = %d, less than tuning_win_limit %d\n",
+					mmc_hostname(host->mmc),
+					tmp_win_len,
+					pdata->tuning_win_limit);
+				dvfs_level--;
+				tuning_value = tmp_tuning_value;
+			}
+			break;
+		} else {
+			dvfs_level--;
+			tuning_value = tmp_tuning_value;
+		}
+
+	} while (dvfs_level >= dvfs_level_min);
+
+	mutex_unlock(&dvfs_tuning_lock);
+
+	kfree(bitmap);
+
+	if (tuning_value < 0) {
+		pr_info("%s: failed to find any valid rx window\n",
+				mmc_hostname(host->mmc));
+		return -EINVAL;
+	} else {
+		dvfs_level++;
+		if (pretuned) {
+			pxav3_pretuned_save_card(host, pretuned);
+
+			/* save tuning_value and dvfs_level */
+			pretuned->magic1 = SDHCI_PRETUNED_MAGIC1;
+			pretuned->rx_delay = tuning_value;
+			pretuned->dvfs_level = dvfs_level;
+			pretuned->src_rate = clk_get_rate(pltfm_host->clk);
+			pretuned->magic2 = SDHCI_PRETUNED_MAGIC2;
+			pretuned->crc32	= crc32(~0, (void *)pretuned + 4,
+				(sizeof(struct sdhci_pretuned_data) - 4));
+		}
+
+	}
+
+prep_tuning:
+	pxav3_prepare_tuning(host, tuning_value, true);
+	pxa_sdh_request_dvfs_level(host, dvfs_level);
+
+out:
 	return 0;
 }
 
