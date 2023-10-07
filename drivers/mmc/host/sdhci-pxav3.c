@@ -588,9 +588,6 @@ static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
 	int bitmap_size = sizeof(*bitmap) * BITS_TO_LONGS(tuning_range);
 	/* min requirement for tuning window size; taken from downstream DTS */
 	u32 tuning_win_limit = 120;
-	// lock mutex for dvfs
-	// set dvfs level
-	// execute tuning cycle -->
 
 	if (pxav3_check_pretuned(host, pretuned)) {
 		if (host->boot_complete &&
