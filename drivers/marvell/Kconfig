@@ -1,0 +1,16 @@
+menuconfig MARVELL_DRIVERS
+	bool "Marvell kernel module drivers"
+	help
+	  marvell kernel module drivers
+
+if MARVELL_DRIVERS
+
+config MRVL_RSV_PAGE
+	tristate "Marvell emmc reserve page"
+	default y
+	help
+	Reserve some range both in eMMC and DDR memory.
+	With the help of bootloader, Driver or module can use
+	the data before eMMC is ready. It is something like DTB.
+
+endif
