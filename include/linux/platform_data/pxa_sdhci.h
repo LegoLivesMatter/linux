@@ -19,6 +19,19 @@
 /* Board design supports 8-bit data on SD/SDIO BUS */
 #define PXA_FLAG_SD_8_BIT_CAPABLE_SLOT (1<<2)
 
+struct sdhci_pretuned_data {
+	u32	crc32;		/* checksum */
+	int	magic1;		/* magic number */
+	unsigned long	src_rate;	/* the scr_rate */
+	int	rx_delay;	/* -1 for invalid */
+	int	dvfs_level;	/* -1 for invalid */
+	u32	card_cid[4];
+	u32	card_csd[4];
+	u32	card_scr[2];
+	int	magic2;		/* magic number */
+	u8	reserved[28];	/* not used */
+};
+
 /*
  * struct pxa_sdhci_platdata() - Platform device data for PXA SDHCI
  * @flags: flags for platform requirement
@@ -48,5 +61,6 @@ struct sdhci_pxa_platdata {
 	unsigned int	quirks2;
 	unsigned int	pm_caps;
 	struct clk		*fakeclk_tuned;
+	struct sdhci_pretuned_data *pretuned;
 };
 #endif /* _PXA_SDHCI_H_ */

@@ -425,6 +425,32 @@ static void pxav3_execute_tuning_cycle(struct sdhci_host *host,
 	spin_unlock_irqrestore(&host->lock, flags);
 }
 
+static int pxav3_pretuned_check_card(struct sdhci_host *host,
+	struct sdhci_pretuned_data *pretuned)
+{
+	struct mmc_card *card;
+	if (host->mmc && host->mmc->card) {
+		card = host->mmc->card;
+
+		if ((card->raw_cid[0] == pretuned->card_cid[0]) &&
+			(card->raw_cid[1] == pretuned->card_cid[1]) &&
+			(card->raw_cid[2] == pretuned->card_cid[2]) &&
+			(card->raw_cid[3] == pretuned->card_cid[3]) &&
+			(card->raw_csd[0] == pretuned->card_csd[0]) &&
+			(card->raw_csd[1] == pretuned->card_csd[1]) &&
+			(card->raw_csd[2] == pretuned->card_csd[2]) &&
+			(card->raw_csd[3] == pretuned->card_csd[3]) &&
+			(card->raw_scr[0] == pretuned->card_scr[0]) &&
+			(card->raw_scr[1] == pretuned->card_scr[1])
+		) {
+			/* it may be the same card */
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
 	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
 	// assume no pretuned: the downstream driver checks this
