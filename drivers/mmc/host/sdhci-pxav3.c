@@ -556,6 +556,22 @@ static int pxav3_pretuned_save_card(struct sdhci_host *host,
 	return 1;
 }
 
+static int pxav3_get_pretuned_data(struct sdhci_host *host,
+		struct device *dev, struct sdhci_pxa_platdata *pdata)
+{
+	struct sdhci_pretuned_data *pretuned;
+
+	pretuned = rsv_page_get_kaddr(host->mmc->index,
+			sizeof(*pretuned));
+	if (IS_ERR_OR_NULL(pretuned))
+		pr_err("%s: error when requesting pretune data\n",
+			mmc_hostname(host->mmc));
+	else
+		pdata->pretuned = pretuned;
+
+	return 0;
+}
+
 atomic_t cur_dvfs_level = ATOMIC_INIT(-1);
 int is_dvfs_request_ok;
 static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
