@@ -650,6 +650,7 @@ static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
 			pretuned->magic2 = SDHCI_PRETUNED_MAGIC2;
 			pretuned->crc32	= crc32(~0, (void *)pretuned + 4,
 				(sizeof(struct sdhci_pretuned_data) - 4));
+			// missing page write
 		}
 
 	}
