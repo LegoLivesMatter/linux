@@ -471,8 +471,8 @@ static int pxav3_check_pretuned(struct sdhci_host *host,
 	if ((pretuned->crc32 != checksum) ||
 		(pretuned->magic1 != SDHCI_PRETUNED_MAGIC1) ||
 		(pretuned->src_rate != clk_get_rate(pltfm_host->clk)) ||
-		(pretuned->dvfs_level > pdata->dvfs_level_max) ||
-		(pretuned->dvfs_level < pdata->dvfs_level_min) ||
+		(pretuned->dvfs_level > 7) ||
+		(pretuned->dvfs_level < 1) ||
 		(pretuned->rx_delay < 0) ||
 		(pretuned->rx_delay > SD_RX_TUNE_MAX) ||
 		(pretuned->magic2 != SDHCI_PRETUNED_MAGIC2)) {
@@ -564,10 +564,13 @@ static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
 	struct sdhci_pretuned_data *pretuned = pdata->pretuned;
 	int tuning_value = -1, tmp_tuning_value = 0, tmp_win_len = 0;
 	int tuning_range = SD_RX_TUNE_MAX + 1;
-	int dvfs_level = pdata->dvfs_level_max;
-	int dvfs_level_min;
+	int dvfs_level_max = 7;
+	int dvfs_level = dvfs_level_max;
+	int dvfs_level_min = 1; // source: downstream DTS for coreprimevelte rev02
 	unsigned long *bitmap;
 	int bitmap_size = sizeof(*bitmap) * BITS_TO_LONGS(tuning_range);
+	/* min requirement for tuning window size; taken from downstream DTS */
+	u32 tuning_win_limit = 120;
 	// lock mutex for dvfs
 	// set dvfs level
 	// execute tuning cycle -->
@@ -595,8 +598,6 @@ static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
 
 	mutex_lock(&dvfs_tuning_lock);
 
-	dvfs_level_min = pdata->dvfs_level_min;
-
 	do {
 		atomic_set(&cur_dvfs_level, dvfs_level);
 		is_dvfs_request_ok = 0;
@@ -609,14 +610,14 @@ static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
 
 		pxav3_execute_tuning_cycle(host, opcode, bitmap);
 		tmp_tuning_value = pxav3_bitmap_scan(bitmap, tuning_range,
-					pdata->tuning_win_limit, &tmp_win_len);
+					tuning_win_limit, &tmp_win_len);
 
-		if (tmp_win_len < pdata->tuning_win_limit) {
+		if (tmp_win_len < tuning_win_limit) {
 			if (tmp_win_len > 0 && tuning_value < 0) {
 				pr_warn("%s: rx window found, len = %d, less than tuning_win_limit %d\n",
 					mmc_hostname(host->mmc),
 					tmp_win_len,
-					pdata->tuning_win_limit);
+					tuning_win_limit);
 				dvfs_level--;
 				tuning_value = tmp_tuning_value;
 			}
