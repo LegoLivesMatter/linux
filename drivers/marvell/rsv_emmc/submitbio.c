@@ -16,6 +16,7 @@
  *
  */
 #define DEBUG
+#define __GFP_WAIT 0x10u
 
 #include <linux/bio.h>
 #include <linux/kernel.h>
@@ -25,7 +26,7 @@
 
 /* >>>>> some basic code to read/write eMMC <<<<< */
 
-void end_bio_read(struct bio *bio, int err)
+void end_bio_read(struct bio *bio)
 {
 	struct completion *done;
 
@@ -57,6 +58,7 @@ static int submit(int rw, struct block_device *bdev, sector_t blk_sector,
 {
 	struct bio *bio;
 	struct completion done;
+	blk_opf_t ff;
 
 	/*
 	 * submit_bio only send out the request to block device, but the data
@@ -67,7 +69,7 @@ static int submit(int rw, struct block_device *bdev, sector_t blk_sector,
 	if (rw & REQ_SYNC)
 		init_completion(&done);
 
-	bio = bio_alloc(__GFP_WAIT | __GFP_HIGH, 1);
+	bio = bio_alloc(bdev, 1, ff, __GFP_WAIT | __GFP_HIGH);
 	bio->bi_iter.bi_sector = blk_sector;
 	bio->bi_bdev = bdev;
 	bio->bi_end_io = end_bio_read;
@@ -85,7 +87,7 @@ static int submit(int rw, struct block_device *bdev, sector_t blk_sector,
 
 	/* bio_get here, make use end_bio_read not to release the bio */
 	bio_get(bio);
-	submit_bio(rw, bio);
+	submit_bio(bio);
 	if (rw & REQ_SYNC)
 		wait_for_completion(&done);
 	bio_put(bio);

@@ -17,6 +17,7 @@
  */
 #define DEBUG
 
+#include <linux/blkdev.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/errno.h>
@@ -288,13 +289,14 @@ EXPORT_SYMBOL(rsv_page_update);
 
 static struct block_device *rsv_page_get_bdev(void)
 {
+	struct blk_holder_ops *hops;
 	if (IS_ERR_OR_NULL(rsv_page_bdev)) {
 		rsv_page_bdev = blkdev_get_by_path("/dev/block/mmcblk0",
-			FMODE_READ | FMODE_WRITE, NULL);
+			FMODE_READ | FMODE_WRITE, NULL, hops);
 
 		if (IS_ERR_OR_NULL(rsv_page_bdev)) {
 			rsv_page_bdev = blkdev_get_by_path("/dev/mmcblk0",
-				FMODE_READ | FMODE_WRITE, NULL);
+				FMODE_READ | FMODE_WRITE, NULL, hops);
 		}
 	}
 
