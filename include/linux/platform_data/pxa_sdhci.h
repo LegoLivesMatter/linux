@@ -19,6 +19,8 @@
 /* Board design supports 8-bit data on SD/SDIO BUS */
 #define PXA_FLAG_SD_8_BIT_CAPABLE_SLOT (1<<2)
 
+#define SDHCI_PRETUNED_MAGIC1	0x53444800 /* "SDH\0" */
+#define SDHCI_PRETUNED_MAGIC2	0x44664653 /* "DVFS" */
 struct sdhci_pretuned_data {
 	u32	crc32;		/* checksum */
 	int	magic1;		/* magic number */
@@ -61,6 +63,8 @@ struct sdhci_pxa_platdata {
 	unsigned int	quirks2;
 	unsigned int	pm_caps;
 	struct clk		*fakeclk_tuned;
+	int dvfs_level_min;
+	int dvfs_level_max;
 	struct sdhci_pretuned_data *pretuned;
 };
 #endif /* _PXA_SDHCI_H_ */

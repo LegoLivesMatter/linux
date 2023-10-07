@@ -11,6 +11,7 @@
 #include <linux/init.h>
 #include <linux/platform_device.h>
 #include <linux/clk.h>
+#include <linux/crc32.h>
 #include <linux/io.h>
 #include <linux/mmc/mmc.h>
 #include <linux/mmc/card.h>
@@ -449,6 +450,40 @@ static int pxav3_pretuned_check_card(struct sdhci_host *host,
 	}
 
 	return 1;
+}
+
+static int pxav3_check_pretuned(struct sdhci_host *host,
+	struct sdhci_pretuned_data *pretuned)
+{
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct platform_device *pdev = to_platform_device(mmc_dev(host->mmc));
+	struct sdhci_pxa_platdata *pdata = pdev->dev.platform_data;
+	u32 checksum;
+
+	if (!pretuned)
+		return 1;
+
+	checksum = crc32(~0, (void *)pretuned + 4,
+		(sizeof(struct sdhci_pretuned_data) - 4));
+
+	if ((pretuned->crc32 != checksum) ||
+		(pretuned->magic1 != SDHCI_PRETUNED_MAGIC1) ||
+		(pretuned->src_rate != clk_get_rate(pltfm_host->clk)) ||
+		(pretuned->dvfs_level > pdata->dvfs_level_max) ||
+		(pretuned->dvfs_level < pdata->dvfs_level_min) ||
+		(pretuned->rx_delay < 0) ||
+		(pretuned->rx_delay > SD_RX_TUNE_MAX) ||
+		(pretuned->magic2 != SDHCI_PRETUNED_MAGIC2)) {
+		/* fail or invalid */
+		return 1;
+	}
+
+	if (pxav3_pretuned_check_card(host, pretuned)) {
+		/* if card changes, need to execute tuning again */
+		return 1;
+	}
+
+	return 0;
 }
 
 static int pxav3_execute_tuning_dvfs(struct sdhci_host *host, u32 opcode) {
