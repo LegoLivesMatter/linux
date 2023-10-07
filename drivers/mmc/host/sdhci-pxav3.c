@@ -790,6 +790,7 @@ static int sdhci_pxav3_probe(struct platform_device *pdev)
 			goto err_of_parse;
 		sdhci_get_of_property(pdev);
 		pdata = pxav3_get_mmc_pdata(dev);
+		pxav3_get_pretuned_data(host, dev, pdata);
 		pdev->dev.platform_data = pdata;
 	} else if (pdata) {
 		/* on-chip device */
