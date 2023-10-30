@@ -92,12 +92,28 @@
 			#size-cells = <1>;
 			ranges = <0 0 0xd4000000 0x200000>;
 
+			reset {
+				compatible = "marvell,pxa-reset";
+				/* RTC Backup Registers 0 that store erasable data */
+				reg = <0x80000 0xc8>,
+					  <0x50000 0x1024>,
+					  <0x10014 0x4>;
+			};
+
 			pdma: dma-controller@0 {
 				compatible = "marvell,pdma-1.0";
 				reg = <0 0x10000>;
 				interrupts = <GIC_SPI 47 IRQ_TYPE_LEVEL_HIGH>;
 				dma-channels = <30>;
 				#dma-cells = <2>;
+			};
+
+			rtc: rtc@10000 {
+				compatible = "mrvl,mmp-rtc";
+				reg = <0x10000 0x100>;
+				interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>;
+				interrupt-names = "rtc 1Hz", "rtc alarm";
+				clocks = <&apbc PXA1908_CLK_RTC>;
 			};
 
 			twsi1: i2c@10800 {
@@ -232,6 +248,12 @@
 				compatible = "marvell,pxa1908-mpmu";
 				reg = <0x50000 0x1000>;
 				#clock-cells = <1>;
+			};
+
+			watchdog: watchdog@80000 {
+				compatible = "marvell,mmp-watchdog";
+				reg = <0x80000 0xff>;
+				status = "disabled";
 			};
 		};
 

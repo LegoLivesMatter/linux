@@ -1,26 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /*
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * Based on vexpress-poweroff.c
- *
+ * Copyright (C) 2014 Marvell
  */
 
-#include <linux/jiffies.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/stat.h>
 #include <linux/delay.h>
 #include <linux/io.h>
-
-#include <asm/system_misc.h>
+#include <linux/reboot.h>
+#include <linux/irqflags.h>
 
 #define REBOOT_TIME (0x20)
 #define MPMU_APRR	(0x1020)
@@ -56,7 +47,7 @@ void pxa_wdt_reset(void __iomem *watchdog_virt_base, void __iomem *mpmu_vaddr)
 	 * enable WDT
 	 * 1. write 0xbaba to match 1st key
 	 * 2. write 0xeb10 to match 2nd key
-	 * 3. enable wdt count, generate interrupt when experies
+	 * 3. enable wdt count, generate interrupt when expires
 	 */
 	writel(0xbaba, watchdog_virt_base + TMR_WFAR);
 	writel(0xeb10, watchdog_virt_base + TMR_WSAR);
@@ -75,15 +66,16 @@ void pxa_wdt_reset(void __iomem *watchdog_virt_base, void __iomem *mpmu_vaddr)
 	writel(0xbaba, watchdog_virt_base + TMR_WFAR);
 	writel(0xeb10, watchdog_virt_base + TMR_WSAR);
 	writel(REBOOT_TIME, watchdog_virt_base + TMR_WMR);
-
-	return;
 }
-EXPORT_SYMBOL(pxa_wdt_reset);
 
-static void do_pxa_reset(enum reboot_mode mode, const char *cmd)
+static int do_pxa_reset(struct notifier_block *this, unsigned long mode,
+						void *data)
 {
 	u32 backup;
 	int i;
+	const char *cmd = "bootloader";
+
+	pr_emerg("lets try\n");
 
 	if (cmd && (!strcmp(cmd, "recovery")
 		|| !strcmp(cmd, "bootloader") || !strcmp(cmd, "boot")
@@ -98,26 +90,40 @@ static void do_pxa_reset(enum reboot_mode mode, const char *cmd)
 		} while (readl(rtc_br0_reg) != backup);
 	}
 
+	pr_emerg("lets reset\n");
+
 	pxa_wdt_reset(wdt_base, mpmu_base);
 
 	/* Give a grace period for failure to restart of 1s */
 	mdelay(1000);
+
+	local_irq_enable();
+	pr_emerg("Restart failed\n");
+
+	return NOTIFY_DONE;
 }
 
-static struct of_device_id pxa_reset_of_match[] = {
+static struct notifier_block pxa_restart_nb = {
+	.notifier_call = do_pxa_reset,
+	.priority = 128,
+};
+
+static const struct of_device_id pxa_reset_of_match[] = {
 	{.compatible = "marvell,pxa-reset",},
 	{}
 };
 
 static int pxa_reset_probe(struct platform_device *pdev)
 {
+	int ret;
+
 	wdt_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (wdt_mem == NULL) {
 		dev_err(&pdev->dev, "no memory resource specified for WDT\n");
 		return -ENOENT;
 	}
 
-	wdt_base = devm_ioremap_nocache(&pdev->dev, wdt_mem->start,
+	wdt_base = devm_ioremap(&pdev->dev, wdt_mem->start,
 					resource_size(wdt_mem));
 	if (IS_ERR(wdt_base))
 		return PTR_ERR(wdt_base);
@@ -128,7 +134,7 @@ static int pxa_reset_probe(struct platform_device *pdev)
 		return -ENOENT;
 	}
 
-	mpmu_base = devm_ioremap_nocache(&pdev->dev, mpmu_mem->start,
+	mpmu_base = devm_ioremap(&pdev->dev, mpmu_mem->start,
 					 resource_size(mpmu_mem));
 	if (IS_ERR(mpmu_base))
 		return PTR_ERR(mpmu_base);
@@ -139,27 +145,26 @@ static int pxa_reset_probe(struct platform_device *pdev)
 		return -ENOENT;
 	}
 
-	rtc_br0_reg = devm_ioremap_nocache(&pdev->dev, rtc_br0_mem->start,
-					   resource_size(rtc_br0_mem));
+	rtc_br0_reg = devm_ioremap(&pdev->dev, rtc_br0_mem->start,
+					resource_size(rtc_br0_mem));
 	if (IS_ERR(rtc_br0_reg))
 		return PTR_ERR(rtc_br0_reg);
-	arm_pm_restart = do_pxa_reset;
+	ret = register_restart_handler(&pxa_restart_nb);
+	if (ret)
+		return ret;
 
+	dev_info(&pdev->dev, "Reboot driver registered\n");
 	return 0;
 }
 
-static const struct platform_device_id pxa_reset_id_table[] = {
-	{.name = "pxa-reset",},
-	{}
-};
+MODULE_DEVICE_TABLE(of, pxa_reset_of_match);
 
 static struct platform_driver pxa_reset_driver = {
 	.probe = pxa_reset_probe,
 	.driver = {
-		   .name = "pxa-reset",
-		   .of_match_table = pxa_reset_of_match,
-		   },
-	.id_table = pxa_reset_id_table,
+		.name = "pxa-reset",
+		.of_match_table = of_match_ptr(pxa_reset_of_match),
+	},
 };
 
 static int __init pxa_reset_init(void)
