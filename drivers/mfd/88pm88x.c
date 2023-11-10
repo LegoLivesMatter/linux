@@ -5,6 +5,8 @@
 #define PM880_WHOAMI 1
 #define PM886_WHOAMI 2
 
+#define PM88X_REG_ID 0
+
 enum 88pm88x_chips {
 	PM880,
 	PM886,
@@ -21,6 +23,7 @@ static struct pm88x_chip {
 	int irq;
 	long whoami;
 	struct regmap *regmap;
+	unsigned int chip_id;
 };
 
 static const struct resource onkey_resources[] = {
@@ -67,6 +70,19 @@ static int pm88x_probe(struct i2c_client *client,
 	i2c_set_clientdata(chip->client, chip);
 
 	device_init_wakeup(&client->dev, 1);
+
+	// TODO: pages
+
+	ret = regmap_read(chip->regmap, PM88X_REG_ID, &chip->chip_id);
+	if (ret) {
+		dev_err(chip->dev, "Failed to read chip ID: %d\n", ret);
+		return ret;
+	}
+
+	// TODO: init IRQ
+
+	mfd_add_devices(chip->dev, 0, &onkey_devs[0], ARRAY_SIZE(onkey_devs),
+			&onkey_resources[0], 0, NULL);
 
 	return ret;
 }
