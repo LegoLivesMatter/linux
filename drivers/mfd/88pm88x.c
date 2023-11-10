@@ -116,22 +116,6 @@ static struct i2c_driver pm88x_i2c_driver = {
 	.remove = pm88x_remove,
 	.id_table = pm88x_i2c_id,
 };
-
-static int __init pm88x_init(void) {
-	int ret;
-
-	ret = i2c_add_driver(&pm88x_i2c_driver);
-	if (ret) {
-		pr_err("Failed to register I2C driver: %d\n", ret);
-		return ret;
-	}
-	return 0;
-}
-subsys_initcall(pm88x_init);
-
-static void __exit pm88x_exit(void) {
-	i2c_del_driver(&pm88x_i2c_driver);
-}
-module_exit(pm88x_exit);
+module_i2c_driver(pm88x_i2c_driver);
 
 MODULE_DESCRIPTION("88PM88X PMIC driver");
