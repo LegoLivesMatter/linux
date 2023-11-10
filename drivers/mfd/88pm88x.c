@@ -14,6 +14,14 @@ enum pm88x_irq {
 	PM88X_IRQ_ONKEY,
 };
 
+static struct pm88x_chip {
+	struct i2c_client *client;
+	struct device *dev;
+	struct regmap_irq_chip_data *irq_data;
+	int irq;
+	long whoami;
+};
+
 static const struct resource onkey_resources[] = {
 	DEFINE_RES_IRQ_NAMED(PM88X_IRQ_ONKEY, "88pm88x-onkey"),
 };
@@ -38,8 +46,10 @@ static int pm88x_probe(struct i2c_client *client,
 	return 0;
 }
 
-static int pm88x_remove(struct i2c_client *i2c) {
-	return 0;
+static void pm88x_remove(struct i2c_client *i2c) {
+	struct pm88x_chip *chip = dev_get_drvdata(&i2c->dev);
+	mfd_remove_devices(chip->dev);
+	regmap_del_irq_chip(chip->irq, chip->irq_data);
 }
 
 const struct of_device_id pm88x_of_match[] = {
