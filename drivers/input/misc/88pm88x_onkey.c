@@ -7,6 +7,7 @@ struct pm88x_onkey_data {
 	struct input_dev *onkey;
 	struct pm88x_chip *chip;
 	struct regmap *regmap;
+	int irq;
 };
 
 static irqreturn_t pm88x_onkey_interrupt(int irq, void *dummy) {
@@ -34,7 +35,9 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 	data->chip = chip;
 
 	data->irq = platform_get_irq(pdev, 0);
-	// TODO: handle failure
+	if (data->irq < 0) {
+		return -EINVAL;
+	}
 
 	// TODO: get regmap
 
@@ -50,6 +53,11 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 		dev_err(&pdev->dev, "Failed to register device\n");
 		goto err_free_dev;
 	}
+
+	data->onkey->evbit[0] = BIT_MASK(EV_KEY);
+	data->onkey->keybit[BIT_WORD(KEY_POWER)] = BIT_MASK(KEY_POWER);
+	data->onkey->name = "Power button";
+	data->onkey->id.bus_type = BUS_I2C;
 err_free_dev:
 	input_free_device(data->onkey);
 err_free_irq:
