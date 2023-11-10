@@ -20,6 +20,7 @@ static struct pm88x_chip {
 	struct regmap_irq_chip_data *irq_data;
 	int irq;
 	long whoami;
+	struct regmap *regmap;
 };
 
 static const struct resource onkey_resources[] = {
@@ -43,7 +44,31 @@ static const struct regmap_config pm88x_i2c_regmap = {
 
 static int pm88x_probe(struct i2c_client *client,
 		const struct i2c_device_id *id) {
-	return 0;
+	struct pm88x_chip *chip;
+	int ret = 0;
+	struct regmap *regmap;
+
+	chip = devm_kzalloc(&client->dev, sizeof(struct pm88x_chip), GFP_KERNEL);
+	if (!chip)
+		return -ENOMEM;
+
+	chip->client = client;
+
+	regmap = devm_regmap_init_i2c(client, &pm88x_i2c_regmap);
+	if (IS_ERR(regmap)) {
+		ret = PTR_ERR(regmap);
+		dev_err(&client->dev, "Failed to allocate register map: %d\n", ret);
+		return ret;
+	}
+	chip->regmap = regmap;
+
+	chip->irq = client->irq;
+	chip->dev = client->dev;
+	i2c_set_clientdata(chip->client, chip);
+
+	device_init_wakeup(&client->dev, 1);
+
+	return ret;
 }
 
 static void pm88x_remove(struct i2c_client *i2c) {
