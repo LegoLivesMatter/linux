@@ -1,6 +1,7 @@
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/regmap.h>
+#include <linux/mfd/core.h>
 
 #define PM880_WHOAMI 1
 #define PM886_WHOAMI 2
@@ -18,7 +19,7 @@
 #define PM88X_INT_WC BIT(1)
 #define PM88X_INT_MASK_MODE BIT(2)
 
-enum 88pm88x_chips {
+enum pm88x_chips {
 	PM880,
 	PM886,
 };
@@ -27,13 +28,13 @@ enum pm88x_irq {
 	PM88X_IRQ_ONKEY,
 };
 
-static const struct regmap_irq pm88x_regmap_irqs[] {
+static const struct regmap_irq pm88x_regmap_irqs[] = {
 	REGMAP_IRQ_REG(PM88X_IRQ_ONKEY, 0, PM88X_ONKEY_INT_ENA1),
 };
 
 static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 	.name = "88pm88x",
-	.irq = pm88x_regmap_irqs,
+	.irqs = pm88x_regmap_irqs,
 	.num_irqs = ARRAY_SIZE(pm88x_regmap_irqs),
 	.num_regs = 4,
 	.status_base = PM88X_INT_STATUS1,
@@ -41,7 +42,7 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 	.unmask_base = PM88X_INT_ENA_1,
 };
 
-static struct pm88x_chip {
+struct pm88x_chip {
 	struct i2c_client *client;
 	struct device *dev;
 	struct regmap_irq_chip_data *irq_data;
@@ -52,7 +53,7 @@ static struct pm88x_chip {
 	int irq_mode;
 };
 
-static const struct resource onkey_resources[] = {
+static struct resource onkey_resources[] = {
 	DEFINE_RES_IRQ_NAMED(PM88X_IRQ_ONKEY, "88pm88x-onkey"),
 };
 
@@ -71,8 +72,7 @@ static const struct regmap_config pm88x_i2c_regmap = {
 	.max_register = 0xfe,
 };
 
-static int pm88x_probe(struct i2c_client *client,
-		const struct i2c_device_id *id) {
+static int pm88x_probe(struct i2c_client *client) {
 	struct pm88x_chip *chip;
 	int mask, data, ret = 0;
 	struct regmap *regmap;
@@ -92,7 +92,7 @@ static int pm88x_probe(struct i2c_client *client,
 	chip->regmap = regmap;
 
 	chip->irq = client->irq;
-	chip->dev = client->dev;
+	chip->dev = &client->dev;
 	i2c_set_clientdata(chip->client, chip);
 
 	device_init_wakeup(&client->dev, 1);
@@ -145,7 +145,7 @@ const struct of_device_id pm88x_of_match[] = {
 	{},
 };
 
-static const struct i2c_device_id pm88x_i2c_id[] {
+static const struct i2c_device_id pm88x_i2c_id[] = {
 	{ "88pm880", PM880 },
 	{ "88pm886", PM886 },
 	{  },
