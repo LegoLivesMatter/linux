@@ -1,0 +1,1 @@
+#define PM88X_STATUS1 1
