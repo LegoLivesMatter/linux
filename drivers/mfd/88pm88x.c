@@ -3,8 +3,8 @@
 #include <linux/regmap.h>
 #include <linux/mfd/core.h>
 
-#define PM880_WHOAMI 1
-#define PM886_WHOAMI 2
+#define PM880_WHOAMI 0xb1
+#define PM886_WHOAMI 0xa1
 
 #define PM88X_REG_ID 0
 
@@ -44,9 +44,7 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 
 struct pm88x_chip {
 	struct i2c_client *client;
-	struct device *dev;
 	struct regmap_irq_chip_data *irq_data;
-	int irq;
 	long whoami;
 	struct regmap *regmap;
 	unsigned int chip_id;
@@ -75,24 +73,12 @@ static const struct regmap_config pm88x_i2c_regmap = {
 static int pm88x_probe(struct i2c_client *client) {
 	struct pm88x_chip *chip;
 	int mask, data, ret = 0;
-	struct regmap *regmap;
 
 	chip = devm_kzalloc(&client->dev, sizeof(struct pm88x_chip), GFP_KERNEL);
 	if (!chip)
 		return -ENOMEM;
 
 	chip->client = client;
-
-	regmap = devm_regmap_init_i2c(client, &pm88x_i2c_regmap);
-	if (IS_ERR(regmap)) {
-		ret = PTR_ERR(regmap);
-		dev_err(&client->dev, "Failed to allocate register map: %d\n", ret);
-		return ret;
-	}
-	chip->regmap = regmap;
-
-	chip->irq = client->irq;
-	chip->dev = &client->dev;
 	i2c_set_clientdata(chip->client, chip);
 
 	device_init_wakeup(&client->dev, 1);
@@ -106,29 +92,41 @@ static int pm88x_probe(struct i2c_client *client) {
 
 	ret = regmap_read(chip->regmap, PM88X_REG_ID, &chip->chip_id);
 	if (ret) {
-		dev_err(chip->dev, "Failed to read chip ID: %d\n", ret);
+		dev_err(chip->client->dev, "Failed to read chip ID: %d\n", ret);
+		// TODO: goto err_* and undo previously done things
 		return ret;
 	}
 
 	/* TODO: set irq_mode: downstream sets this via DT, could we set it here based on chip ID? */
 
 	mask = PM88X_INV_INT | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE;
-	data = (chip->irq_mode) ? PM88X_INT_WC : PM88X_INT_RC;
+	data = chip->irq_mode ? PM88X_INT_WC : PM88X_INT_RC;
 	ret = regmap_update_bits(chip->regmap, PM88X_MISC_CONFIG2, mask, data);
 	if (ret) {
-		dev_err(chip->dev, "Failed to set interrupt mode: %d\n", ret);
+		dev_err(chip->client->dev, "Failed to set interrupt mode: %d\n", ret);
+		// TODO: goto err_* and undo previously done things
 		return ret;
 	}
 
-	ret = regmap_add_irq_chip(chip->regmap, chip->irq, IRQF_ONESHOT, -1,
+	ret = regmap_add_irq_chip(chip->regmap, chip->client->irq, IRQF_ONESHOT, -1,
 				  &pm88x_regmap_irq_chip, &chip->irq_data);
 	if (ret) {
-		dev_err(chip->dev, "Failed to add IRQ: %d\n", ret);
+		dev_err(chip->client->dev, "Failed to request IRQ: %d\n", ret);
+		// TODO: goto err_* and undo previously done things
 		return ret;
 	}
 
-	mfd_add_devices(chip->dev, 0, &onkey_devs[0], ARRAY_SIZE(onkey_devs),
+	ret = mfd_add_devices(chip->dev, 0, &onkey_devs[0], ARRAY_SIZE(onkey_devs),
 			&onkey_resources[0], 0, NULL);
+	if (ret) {
+		dev_err(chip->client->dev, "Failed to add onkey device: %d\n", ret);
+		// TODO: goto err_* and undo previously done things
+		return ret;
+	}
+
+	/* TODO: apply base patch */
+
+	/* TODO: err_* labels */
 
 	return ret;
 }
