@@ -81,7 +81,7 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 		goto err_irq;
 	}
 
-	/* TODO: set platform data */
+	platform_set_drvdata(pdev, onkey);
 
 	device_init_wakeup(&pdev->dev, 1);
 
