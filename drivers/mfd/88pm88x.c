@@ -73,7 +73,7 @@ static struct mfd_cell onkey_devs[] = {
 	{
 		.name = "88pm88x-onkey",
 		.num_resources = ARRAY_SIZE(onkey_resources),
-		.resources = &onkey_resources[0],
+		.resources = onkey_resources,
 		.id = -1,
 	},
 };
