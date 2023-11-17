@@ -57,9 +57,8 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 struct pm88x_chip {
 	struct i2c_client *client;
 	struct regmap_irq_chip_data *irq_data;
-	long whoami;
+	unsigned int whoami;
 	struct regmap *regmap;
-	unsigned int chip_id;
 	int irq_mode;
 };
 
@@ -125,13 +124,14 @@ static int pm88x_probe(struct i2c_client *client) {
 		return ret;
 	}
 
-	ret = regmap_read(chip->regmap, PM88X_ID, &chip->chip_id);
+	ret = regmap_read(chip->regmap, PM88X_ID, &chip->whoami);
 	if (ret) {
 		dev_err(chip->client->dev, "Failed to read chip ID: %d\n", ret);
 		return ret;
 	}
 
-	/* TODO: set irq_mode: downstream sets this via DT, could we set it here based on chip ID? */
+	/* FIXME: downstream sets this via DT, could we set it here based on chip ID like this? */
+	chip->irq_mode = chip->whoami == PM886_WHOAMI ? 1 : 0;
 
 	mask = PM88X_INV_INT | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE;
 	data = chip->irq_mode ? PM88X_INT_WC : PM88X_INT_RC;
