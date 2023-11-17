@@ -236,23 +236,23 @@ static int pm88x_probe(struct i2c_client *client) {
 		return ret;
 	}
 	switch (chip->whoami) {
-		case PM880_WHOAMI:
-			chip->buck_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 4));
-			if (IS_ERR(chip->buck_page)) {
-				ret = PTR_ERR(chip->buck_page);
-				dev_err(&client->dev, "Failed to initialize BUCK page: %d\n", ret);
-				return ret;
-			}
-			chip->buck_regmap = devm_regmap_init_i2c(chip->buck_page, &pm88x_i2c_regmap);
-			if (IS_ERR(chip->buck_regmap)) {
-				ret = PTR_ERR(chip->buck_regmap);
-				dev_err(&client->dev, "Failed to initialize BUCK regmap: %d\n", ret);
-				return ret;
-			}
-			break;
-		case PM886_WHOAMI:
-			chip->buck_regmap = chip->ldo_regmap;
-			break;
+	case PM880_WHOAMI:
+		chip->buck_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 4));
+		if (IS_ERR(chip->buck_page)) {
+			ret = PTR_ERR(chip->buck_page);
+			dev_err(&client->dev, "Failed to initialize BUCK page: %d\n", ret);
+			return ret;
+		}
+		chip->buck_regmap = devm_regmap_init_i2c(chip->buck_page, &pm88x_i2c_regmap);
+		if (IS_ERR(chip->buck_regmap)) {
+			ret = PTR_ERR(chip->buck_regmap);
+			dev_err(&client->dev, "Failed to initialize BUCK regmap: %d\n", ret);
+			return ret;
+		}
+		break;
+	case PM886_WHOAMI:
+		chip->buck_regmap = chip->ldo_regmap;
+		break;
 	}
 
 	/* FIXME: downstream sets this via DT, could we set it here based on chip ID like this? */
@@ -280,14 +280,14 @@ static int pm88x_probe(struct i2c_client *client) {
 		goto err_subdevices;
 	}
 	switch (chip->whoami) {
-		case PM880_WHOAMI:
-			ret = mfd_add_devices(&client->dev, 0, pm880_devs, ARRAY_SIZE(pm880_devs),
-					NULL, 0, regmap_irq_get_domain(chip->irq_data));
-			break;
-		case PM886_WHOAMI:
-			ret = mfd_add_devices(&client->dev, 0, pm886_devs, ARRAY_SIZE(pm886_devs),
-					NULL, 0, regmap_irq_get_domain(chip->irq_data));
-			break;
+	case PM880_WHOAMI:
+		ret = mfd_add_devices(&client->dev, 0, pm880_devs, ARRAY_SIZE(pm880_devs),
+				NULL, 0, regmap_irq_get_domain(chip->irq_data));
+		break;
+	case PM886_WHOAMI:
+		ret = mfd_add_devices(&client->dev, 0, pm886_devs, ARRAY_SIZE(pm886_devs),
+				NULL, 0, regmap_irq_get_domain(chip->irq_data));
+		break;
 	}
 	if (ret) {
 		dev_err(&client->dev, "Failed to add %s devices: %d\n",
@@ -296,12 +296,12 @@ static int pm88x_probe(struct i2c_client *client) {
 	}
 
 	switch (chip->whoami) {
-		case PM880_WHOAMI:
-			ret = regmap_register_patch(chip->regmap, pm880_patch, ARRAY_SIZE(pm880_patch));
-			break;
-		case PM886_WHOAMI:
-			ret = regmap_register_patch(chip->regmap, pm886_patch, ARRAY_SIZE(pm886_patch));
-			break;
+	case PM880_WHOAMI:
+		ret = regmap_register_patch(chip->regmap, pm880_patch, ARRAY_SIZE(pm880_patch));
+		break;
+	case PM886_WHOAMI:
+		ret = regmap_register_patch(chip->regmap, pm886_patch, ARRAY_SIZE(pm886_patch));
+		break;
 	}
 	if (ret) {
 		dev_err(&client->dev, "Failed to register regmap patch: %d\n", ret);
