@@ -2,6 +2,8 @@
 #include <linux/module.h>
 #include <linux/regmap.h>
 #include <linux/mfd/core.h>
+#include <linux/notifier.h>
+#include <linux/reboot.h>
 
 #include <linux/mfd/88pm88x.h>
 
@@ -17,6 +19,8 @@
 #define PM88X_INT_RC 0
 #define PM88X_INT_WC BIT(1)
 #define PM88X_INT_MASK_MODE BIT(2)
+
+#define PM88X_SW_PDOWN	BIT(5)
 
 enum pm88x_chips {
 	PM880,
@@ -83,6 +87,16 @@ static const struct regmap_config pm88x_i2c_regmap = {
 	.max_register = 0xfe,
 };
 
+static int pm88x_power_off_handler(struct sys_off_data *data) {
+	struct pm88x_chip *chip = (struct pm88x_chip *)data->cb_data;
+	int ret = regmap_write(chip->regmap, PM88X_MISC_CONFIG1, PM88X_SW_PDOWN);
+	if (ret) {
+		dev_err(&chip->client->dev, "Failed to power off the device: %d\n", ret);
+		return NOTIFY_BAD;
+	}
+	return NOTIFY_DONE;
+}
+
 static int pm88x_probe(struct i2c_client *client) {
 	struct pm88x_chip *chip;
 	int mask, data, ret = 0;
@@ -145,6 +159,12 @@ static int pm88x_probe(struct i2c_client *client) {
 	}
 	if (ret) {
 		dev_err(&client->dev, "Failed to register regmap patch: %d\n", ret);
+		goto err_patch;
+	}
+
+	ret = devm_register_power_off_handler(&client->dev, pm88x_power_off_handler, chip);
+	if (ret) {
+		dev_err(&client->dev, "Failed to register power off handler: %d\n", ret);
 		goto err_patch;
 	}
 
