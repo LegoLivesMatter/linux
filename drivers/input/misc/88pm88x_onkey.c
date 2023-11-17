@@ -58,8 +58,8 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 		return -ENOMEM;
 	}
 
-	onkey->idev->name = "Power button";
-	/* TODO: phys? */
+	onkey->idev->name = "88pm88x-onkey";
+	onkey->idev->phys = "88pm88x-onkey/input0";
 	onkey->idev->id.bustype = BUS_I2C;
 	onkey->idev->dev.parent = &pdev->dev;
 	onkey->idev->evbit[0] = BIT_MASK(EV_KEY);
