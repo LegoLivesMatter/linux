@@ -1,3 +1,6 @@
+#define PM880_WHOAMI 0xb1
+#define PM886_WHOAMI 0xa1
+
 /* registers */
 #define PM88X_ID 				0x00
 #define PM88X_STATUS1		0x01
