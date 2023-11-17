@@ -1,5 +1,10 @@
 #include <linux/kernel.h>
 #include <linux/input.h>
+#include <linux/regmap.h>
+#include <linux/irq.h>
+#include <linux/interrupt.h>
+#include <linux/platform_device.h>
+#include <linux/of.h>
 
 #include <linux/mfd/88pm88x.h>
 
@@ -58,13 +63,13 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 
 	onkey->idev->name = "Power button";
 	/* TODO: phys? */
-	onkey->idev->id.bus_type = BUS_I2C;
+	onkey->idev->id.bustype = BUS_I2C;
 	onkey->idev->dev.parent = &pdev->dev;
 	onkey->idev->evbit[0] = BIT_MASK(EV_KEY);
 	onkey->idev->keybit[BIT_WORD(KEY_POWER)] = BIT_MASK(KEY_POWER);
 
 	err = devm_request_threaded_irq(&pdev->dev, onkey->irq, NULL, pm88x_onkey_interrupt,
-			IRQF_ONESHOT | IRQF|NO_SUSPEND, "onkey", onkey);
+			IRQF_ONESHOT | IRQF_NO_SUSPEND, "onkey", onkey);
 	if (err) {
 		dev_err(&pdev->dev, "Failed to request IRQ: %d\n", err);
 		goto err_allocate;

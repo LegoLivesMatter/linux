@@ -3,6 +3,8 @@
 #include <linux/regmap.h>
 #include <linux/mfd/core.h>
 
+#include <linux/mfd/88pm88x.h>
+
 #define PM880_WHOAMI 0xb1
 #define PM886_WHOAMI 0xa1
 
@@ -52,14 +54,6 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 	.status_base = PM88X_INT_STATUS1,
 	.ack_base = PM88X_INT_STATUS1,
 	.unmask_base = PM88X_INT_ENA_1,
-};
-
-struct pm88x_chip {
-	struct i2c_client *client;
-	struct regmap_irq_chip_data *irq_data;
-	unsigned int whoami;
-	struct regmap *regmap;
-	int irq_mode;
 };
 
 /* TODO: understand these presets */
