@@ -55,7 +55,7 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 		return -EINVAL;
 	}
 
-	onkey->idev = input_allocate_device();
+	onkey->idev = devm_input_allocate_device();
 	if (!onkey->idev) {
 		dev_err(&pdev->dev, "Failed to allocate input device\n");
 		return -ENOMEM;
@@ -72,16 +72,14 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 			IRQF_ONESHOT | IRQF_NO_SUSPEND, "onkey", onkey);
 	if (err) {
 		dev_err(&pdev->dev, "Failed to request IRQ: %d\n", err);
-		goto err_allocate;
+		return err;
 	}
 
 	err = input_register_device(onkey->idev);
 	if (err) {
 		dev_err(&pdev->dev, "Failed to register input device: %d\n", err);
-		goto err_irq;
+		return err;
 	}
-
-	platform_set_drvdata(pdev, onkey);
 
 	device_init_wakeup(&pdev->dev, 1);
 
@@ -90,13 +88,6 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 	/* TODO: fault wakeup? */
 
 	return 0;
-
-err_irq:
-	devm_free_irq(&pdev->dev, onkey->irq, onkey);
-err_allocate:
-	input_free_device(onkey->idev);
-
-	return err;
 }
 
 static const struct of_device_id pm88x_onkey_of_match[] = {
