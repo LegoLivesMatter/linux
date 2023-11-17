@@ -22,6 +22,8 @@
 
 #define PM88X_SW_PDOWN	BIT(5)
 
+#define PM88X_ADDR(client, offset) (client->addr + offset)
+
 enum pm88x_chips {
 	PM880,
 	PM886,
@@ -72,13 +74,19 @@ static struct resource onkey_resources[] = {
 	DEFINE_RES_IRQ_NAMED(PM88X_IRQ_ONKEY, "88pm88x-onkey"),
 };
 
-static struct mfd_cell onkey_devs[] = {
+static struct mfd_cell common_devs[] = {
 	{
 		.name = "88pm88x-onkey",
 		.num_resources = ARRAY_SIZE(onkey_resources),
 		.resources = onkey_resources,
 		.id = -1,
 	},
+};
+
+static struct mfd_cell pm880_devs[] = {
+};
+
+static struct mfd_cell pm886_devs[] = {
 };
 
 static const struct regmap_config pm88x_i2c_regmap = {
@@ -124,6 +132,38 @@ static int pm88x_probe(struct i2c_client *client) {
 	}
 	/* TODO: reject unknown chips */
 
+	chip->ldo_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 1));
+	if (IS_ERR(chip->ldo_page)) {
+		ret = PTR_ERR(chip->ldo_page);
+		dev_err(&client->dev, "Failed to initialize LDO page: %d\n", ret);
+		return ret;
+	}
+	chip->ldo_regmap = devm_regmap_init_i2c(chip->ldo_page, &pm88x_i2c_regmap);
+	if (IS_ERR(chip->ldo_regmap)) {
+		ret = PTR_ERR(chip->ldo_regmap);
+		dev_err(&client->dev, "Failed to initialize LDO regmap: %d\n", ret);
+		return ret;
+	}
+	switch (chip->whoami) {
+		case PM880_WHOAMI:
+			chip->buck_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 4));
+			if (IS_ERR(chip->buck_page)) {
+				ret = PTR_ERR(chip->buck_page);
+				dev_err(&client->dev, "Failed to initialize BUCK page: %d\n", ret);
+				return ret;
+			}
+			chip->buck_regmap = devm_regmap_init_i2c(chip->buck_page, &pm88x_i2c_regmap);
+			if (IS_ERR(chip->buck_regmap)) {
+				ret = PTR_ERR(chip->buck_regmap);
+				dev_err(&client->dev, "Failed to initialize BUCK regmap: %d\n", ret);
+				return ret;
+			}
+			break;
+		case PM886_WHOAMI:
+			chip->buck_regmap = chip->ldo_regmap;
+			break;
+	}
+
 	/* FIXME: downstream sets this via DT, could we set it here based on chip ID like this? */
 	chip->irq_mode = chip->whoami == PM886_WHOAMI ? 1 : 0;
 
@@ -142,10 +182,25 @@ static int pm88x_probe(struct i2c_client *client) {
 		return ret;
 	}
 
-	ret = mfd_add_devices(&client->dev, 0, onkey_devs, ARRAY_SIZE(onkey_devs),
-			onkey_resources, 0, regmap_irq_get_domain(chip->irq_data));
+	ret = mfd_add_devices(&client->dev, 0, common_devs, ARRAY_SIZE(common_devs),
+			NULL, 0, regmap_irq_get_domain(chip->irq_data));
 	if (ret) {
-		dev_err(&client->dev, "Failed to add onkey device: %d\n", ret);
+		dev_err(&client->dev, "Failed to add common devices: %d\n", ret);
+		goto err_subdevices;
+	}
+	switch (chip->whoami) {
+		case PM880_WHOAMI:
+			ret = mfd_add_devices(&client->dev, 0, pm880_devs, ARRAY_SIZE(pm880_devs),
+					NULL, 0, regmap_irq_get_domain(chip->irq_data));
+			break;
+		case PM886_WHOAMI:
+			ret = mfd_add_devices(&client->dev, 0, pm886_devs, ARRAY_SIZE(pm886_devs),
+					NULL, 0, regmap_irq_get_domain(chip->irq_data));
+			break;
+	}
+	if (ret) {
+		dev_err(&client->dev, "Failed to add %s devices: %d\n",
+				chip->whoami == PM880_WHOAMI ? "PM880" : "PM886", ret);
 		goto err_subdevices;
 	}
 

@@ -23,4 +23,8 @@ struct pm88x_chip {
 	unsigned int whoami;
 	struct regmap *regmap;
 	int irq_mode;
+	struct regmap *ldo_regmap;
+	struct regmap *buck_regmap;
+	struct i2c_client *ldo_page;
+	struct i2c_client *buck_page;
 };
