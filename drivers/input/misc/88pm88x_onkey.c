@@ -52,7 +52,7 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 		return -EINVAL;
 	}
 
-	onkey->idev = devm_input_allocate_device();
+	onkey->idev = devm_input_allocate_device(&pdev->dev);
 	if (!onkey->idev) {
 		dev_err(&pdev->dev, "Failed to allocate input device\n");
 		return -ENOMEM;
