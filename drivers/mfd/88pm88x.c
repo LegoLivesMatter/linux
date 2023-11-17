@@ -6,7 +6,19 @@
 #define PM880_WHOAMI 0xb1
 #define PM886_WHOAMI 0xa1
 
-#define PM88X_REG_ID 0
+/* registers */
+/* common */
+#define PM88X_ID 				0x00
+#define PM88X_WATCHDOG 		0x1d
+#define PM88X_AON_CTRL2		0xe2
+#define PM88X_BK_OSC_CTRL1	0x50
+#define PM88X_BK_OSC_CTRL3	0x52
+#define PM88X_LOWPOWER2		0x21
+#define PM88X_LOWPOWER4		0x23
+#define PM88X_GPIO_CTRL1	0x30
+#define PM88X_GPIO_CTRL2	0x31
+#define PM88X_GPIO_CTRL3	0x32
+#define PM88X_GPIO_CTRL4	0x33
 
 #define PM88X_ONKEY_INT_ENA1 1
 #define PM88X_INT_STATUS1 5
@@ -51,6 +63,29 @@ struct pm88x_chip {
 	int irq_mode;
 };
 
+/* TODO: understand these presets */
+static const struct reg_sequence pm880_patch[] = {
+	REG_SEQ0(PM88X_WDOG, 0x1),				/* disable watchdog */
+	REG_SEQ0(PM88X_AON_CTRL2, 0x2a),		/* output 32 kHz from XO */
+	REG_SEQ0(PM88X_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
+	REG_SEQ0(PM88X_LOWPOWER2, 0x20),		/* XO_LJ = 1, enable low jitter for 32 kHz */
+	REG_SEQ0(PM88X_LOWPOWER4, 0xc0),		/* enable LPM for internal reference group in sleep */
+	REG_SEQ0(PM88X_BK_OSC_CTRL3, 0xc0),	/* set the duty cycle of charger DC/DC to max */
+};
+
+static const struct reg_sequence pm886_patch[] = {
+	REG_SEQ0(PM88X_WDOG, 0x1),				/* disable watchdog */
+	REG_SEQ0(PM88X_GPIO_CTRL1, 0x40),	/* gpio1: dvc, gpio0: input, */
+	REG_SEQ0(PM88X_GPIO_CTRL2, 0x00),	/* gpio2: input */
+	REG_SEQ0(PM88X_GPIO_CTRL3, 0x44),	/* dvc2, dvc1 */
+	REG_SEQ0(PM88X_GPIO_CTRL4, 0x00),	/* gpio5v_1:input, gpio5v_2: input */
+	REG_SEQ0(PM88X_AON_CTRL2, 0x2a),		/* output 32 kHz from XO */
+	REG_SEQ0(PM88X_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
+	REG_SEQ0(PM88X_LOWPOWER2, 0x20),		/* XO_LJ = 1, enable low jitter for 32 kHz */
+	REG_SEQ0(PM88X_LOWPOWER4, 0xc8),		/* OV_VSYS and UV_VSYS1 comparators on VSYS disabled, VSYS_OVER_TH : 5.6V */
+	REG_SEQ0(PM88X_BK_OSC_CTRL3, 0xc0),	/* set the duty cycle of charger DC/DC to max */
+};
+
 static struct resource onkey_resources[] = {
 	DEFINE_RES_IRQ_NAMED(PM88X_IRQ_ONKEY, "88pm88x-onkey"),
 };
@@ -90,7 +125,7 @@ static int pm88x_probe(struct i2c_client *client) {
 		return ret;
 	}
 
-	ret = regmap_read(chip->regmap, PM88X_REG_ID, &chip->chip_id);
+	ret = regmap_read(chip->regmap, PM88X_ID, &chip->chip_id);
 	if (ret) {
 		dev_err(chip->client->dev, "Failed to read chip ID: %d\n", ret);
 		// TODO: goto err_* and undo previously done things
@@ -124,7 +159,18 @@ static int pm88x_probe(struct i2c_client *client) {
 		return ret;
 	}
 
-	/* TODO: apply base patch */
+	switch (chip->whoami) {
+		case PM880_WHOAMI:
+			ret = regmap_register_patch(chip->regmap, pm880_patch, ARRAY_SIZE(pm880_patch));
+			break;
+		case PM886_WHOAMI:
+			ret = regmap_register_patch(chip->regmap, pm886_patch, ARRAY_SIZE(pm886_patch));
+			break;
+	}
+	if (ret) {
+		dev_err(chip->client->dev, "Failed to register regmap patch: %d\n", ret);
+		goto // TODO
+	}
 
 	/* TODO: err_* labels */
 
