@@ -19,7 +19,107 @@
 
 #define PM88X_SW_PDOWN	BIT(5)
 
+#define PM880_BUCK_NAME		"88pm880-buck"
+#define PM880_LDO_NAME		"88pm880-ldo"
+#define PM88X_VIRTUAL_REGULATOR_NAME "88pm88x-vr"
+
+#define PM886_BUCK_NAME		"88pm886-buck"
+#define PM886_LDO_NAME		"88pm886-ldo"
+
 #define PM88X_ADDR(client, offset) (client->addr + offset)
+
+#define CELL_DEV(_name, _r, _compatible, _id) { \
+	.name = _name, \
+	.of_compatible = _compatible, \
+	.num_resources = ARRAY_SIZE(_r), \
+	.resources = _r, \
+	.id = _id, \
+	}
+
+static const struct resource pm886_buck_resources[] = {
+	{
+	.name = PM886_BUCK_NAME,
+	},
+};
+
+static const struct resource pm886_ldo_resources[] = {
+	{
+	.name = PM886_LDO_NAME,
+	},
+};
+
+static const struct resource vr_resources[] = {
+	{
+	.name = PM88X_VIRTUAL_REGULATOR_NAME,
+	},
+};
+
+const struct mfd_cell pm886_devs[] = {
+	CELL_DEV(PM886_BUCK_NAME, pm886_buck_resources, "marvell,88pm886-buck1", 0),
+	CELL_DEV(PM886_BUCK_NAME, pm886_buck_resources, "marvell,88pm886-buck2", 1),
+	CELL_DEV(PM886_BUCK_NAME, pm886_buck_resources, "marvell,88pm886-buck3", 2),
+	CELL_DEV(PM886_BUCK_NAME, pm886_buck_resources, "marvell,88pm886-buck4", 3),
+	CELL_DEV(PM886_BUCK_NAME, pm886_buck_resources, "marvell,88pm886-buck5", 4),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo1", 5),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo2", 6),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo3", 7),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo4", 8),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo5", 9),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo6", 10),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo7", 11),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo8", 12),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo9", 13),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo10", 14),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo11", 15),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo12", 16),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo13", 17),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo14", 18),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo15", 19),
+	CELL_DEV(PM886_LDO_NAME, pm886_ldo_resources, "marvell,88pm886-ldo16", 20),
+	CELL_DEV(PM88X_VIRTUAL_REGULATOR_NAME, vr_resources, "marvell,88pm886-buck1-slp", 21),
+};
+
+static const struct resource pm880_buck_resources[] = {
+	{
+	.name = PM880_BUCK_NAME,
+	},
+};
+
+static const struct resource pm880_ldo_resources[] = {
+	{
+	.name = PM880_LDO_NAME,
+	},
+};
+
+const struct mfd_cell pm880_devs[] = {
+	CELL_DEV(PM880_BUCK_NAME, pm880_buck_resources, "marvell,88pm880-buck1a", 0),
+	CELL_DEV(PM880_BUCK_NAME, pm880_buck_resources, "marvell,88pm880-buck2", 1),
+	CELL_DEV(PM880_BUCK_NAME, pm880_buck_resources, "marvell,88pm880-buck3", 2),
+	CELL_DEV(PM880_BUCK_NAME, pm880_buck_resources, "marvell,88pm880-buck4", 3),
+	CELL_DEV(PM880_BUCK_NAME, pm880_buck_resources, "marvell,88pm880-buck5", 4),
+	CELL_DEV(PM880_BUCK_NAME, pm880_buck_resources, "marvell,88pm880-buck6", 5),
+	CELL_DEV(PM880_BUCK_NAME, pm880_buck_resources, "marvell,88pm880-buck7", 6),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo1", 7),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo2", 8),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo3", 9),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo4", 10),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo5", 11),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo6", 12),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo7", 13),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo8", 14),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo9", 15),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo10", 16),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo11", 17),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo12", 18),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo13", 19),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo14", 20),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo15", 21),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo16", 22),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo17", 23),
+	CELL_DEV(PM880_LDO_NAME, pm880_ldo_resources, "marvell,88pm880-ldo18", 24),
+	CELL_DEV(PM88X_VIRTUAL_REGULATOR_NAME, vr_resources, "marvell,88pm880-buck1a-slp", 25),
+	CELL_DEV(PM88X_VIRTUAL_REGULATOR_NAME, vr_resources, "marvell,88pm880-buck1a-audio", 26),
+};
 
 enum pm88x_chips {
 	PM880,
@@ -78,12 +178,6 @@ static struct mfd_cell common_devs[] = {
 		.resources = onkey_resources,
 		.id = -1,
 	},
-};
-
-static struct mfd_cell pm880_devs[] = {
-};
-
-static struct mfd_cell pm886_devs[] = {
 };
 
 static const struct regmap_config pm88x_i2c_regmap = {
