@@ -72,7 +72,7 @@ static struct resource onkey_resources[] = {
 static struct mfd_cell onkey_devs[] = {
 	{
 		.name = "88pm88x-onkey",
-		.num_resources = 1,
+		.num_resources = ARRAY_SIZE(onkey_resources),
 		.resources = &onkey_resources[0],
 		.id = -1,
 	},
@@ -109,6 +109,7 @@ static int pm88x_probe(struct i2c_client *client) {
 		dev_err(&client->dev, "Failed to read chip ID: %d\n", ret);
 		return ret;
 	}
+	/* TODO: reject unknown chips */
 
 	/* FIXME: downstream sets this via DT, could we set it here based on chip ID like this? */
 	chip->irq_mode = chip->whoami == PM886_WHOAMI ? 1 : 0;
