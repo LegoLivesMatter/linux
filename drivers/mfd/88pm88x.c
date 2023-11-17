@@ -12,7 +12,6 @@
 #define PM88X_INT_STATUS1 5
 #define PM88X_INT_ENA_1 0xa
 
-#define PM88X_MISC_CONFIG2 0x15
 #define PM88X_INV_INT BIT(0)
 #define PM88X_INT_CLEAR	BIT(1)
 #define PM88X_INT_RC 0
