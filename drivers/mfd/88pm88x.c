@@ -178,10 +178,10 @@ err_subdevices:
 	return ret;
 }
 
-static void pm88x_remove(struct i2c_client *i2c) {
-	struct pm88x_chip *chip = dev_get_drvdata(&i2c->dev);
-	mfd_remove_devices(chip->dev);
-	regmap_del_irq_chip(chip->irq, chip->irq_data);
+static void pm88x_remove(struct i2c_client *client) {
+	struct pm88x_chip *chip = i2c_get_clientdata(client);
+	mfd_remove_devices(client->dev);
+	regmap_del_irq_chip(client->irq, chip->irq_data);
 }
 
 const struct of_device_id pm88x_of_match[] = {
