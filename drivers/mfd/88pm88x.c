@@ -64,7 +64,7 @@ struct pm88x_chip {
 
 /* TODO: understand these presets */
 static const struct reg_sequence pm880_patch[] = {
-	REG_SEQ0(PM88X_WDOG, 0x1),				/* disable watchdog */
+	REG_SEQ0(PM88X_WATCHDOG, 0x1),		/* disable watchdog */
 	REG_SEQ0(PM88X_AON_CTRL2, 0x2a),		/* output 32 kHz from XO */
 	REG_SEQ0(PM88X_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
 	REG_SEQ0(PM88X_LOWPOWER2, 0x20),		/* XO_LJ = 1, enable low jitter for 32 kHz */
@@ -73,7 +73,7 @@ static const struct reg_sequence pm880_patch[] = {
 };
 
 static const struct reg_sequence pm886_patch[] = {
-	REG_SEQ0(PM88X_WDOG, 0x1),				/* disable watchdog */
+	REG_SEQ0(PM88X_WATCHDOG, 0x1),		/* disable watchdog */
 	REG_SEQ0(PM88X_GPIO_CTRL1, 0x40),	/* gpio1: dvc, gpio0: input, */
 	REG_SEQ0(PM88X_GPIO_CTRL2, 0x00),	/* gpio2: input */
 	REG_SEQ0(PM88X_GPIO_CTRL3, 0x44),	/* dvc2, dvc1 */
@@ -113,20 +113,20 @@ static int pm88x_probe(struct i2c_client *client) {
 		return -ENOMEM;
 
 	chip->client = client;
-	i2c_set_clientdata(chip->client, chip);
+	i2c_set_clientdata(client, chip);
 
 	device_init_wakeup(&client->dev, 1);
 
 	chip->regmap = devm_regmap_init_i2c(client, &pm88x_i2c_regmap);
 	if (IS_ERR(chip->regmap)) {
 		ret = PTR_ERR(chip->regmap);
-		dev_err(chip->dev, "Failed to initialize regmap: %d\n", ret);
+		dev_err(&client->dev, "Failed to initialize regmap: %d\n", ret);
 		return ret;
 	}
 
 	ret = regmap_read(chip->regmap, PM88X_ID, &chip->whoami);
 	if (ret) {
-		dev_err(chip->client->dev, "Failed to read chip ID: %d\n", ret);
+		dev_err(&client->dev, "Failed to read chip ID: %d\n", ret);
 		return ret;
 	}
 
@@ -137,21 +137,21 @@ static int pm88x_probe(struct i2c_client *client) {
 	data = chip->irq_mode ? PM88X_INT_WC : PM88X_INT_RC;
 	ret = regmap_update_bits(chip->regmap, PM88X_MISC_CONFIG2, mask, data);
 	if (ret) {
-		dev_err(chip->client->dev, "Failed to set interrupt mode: %d\n", ret);
+		dev_err(&client->dev, "Failed to set interrupt mode: %d\n", ret);
 		return ret;
 	}
 
 	ret = regmap_add_irq_chip(chip->regmap, chip->client->irq, IRQF_ONESHOT, -1,
 				  &pm88x_regmap_irq_chip, &chip->irq_data);
 	if (ret) {
-		dev_err(chip->client->dev, "Failed to request IRQ: %d\n", ret);
+		dev_err(&client->dev, "Failed to request IRQ: %d\n", ret);
 		return ret;
 	}
 
-	ret = mfd_add_devices(chip->dev, 0, &onkey_devs[0], ARRAY_SIZE(onkey_devs),
+	ret = mfd_add_devices(&client->dev, 0, &onkey_devs[0], ARRAY_SIZE(onkey_devs),
 			&onkey_resources[0], 0, NULL);
 	if (ret) {
-		dev_err(chip->client->dev, "Failed to add onkey device: %d\n", ret);
+		dev_err(&client->dev, "Failed to add onkey device: %d\n", ret);
 		goto err_subdevices;
 	}
 
@@ -164,14 +164,14 @@ static int pm88x_probe(struct i2c_client *client) {
 			break;
 	}
 	if (ret) {
-		dev_err(chip->client->dev, "Failed to register regmap patch: %d\n", ret);
+		dev_err(&client->dev, "Failed to register regmap patch: %d\n", ret);
 		goto err_patch;
 	}
 
 	return 0;
 
 err_patch:
-	mfd_remove_devices(chip->client->dev);
+	mfd_remove_devices(&client->dev);
 err_subdevices:
 	regmap_del_irq_chip(chip->client->irq, chip->irq_data);
 
@@ -180,7 +180,7 @@ err_subdevices:
 
 static void pm88x_remove(struct i2c_client *client) {
 	struct pm88x_chip *chip = i2c_get_clientdata(client);
-	mfd_remove_devices(client->dev);
+	mfd_remove_devices(&client->dev);
 	regmap_del_irq_chip(client->irq, chip->irq_data);
 }
 
