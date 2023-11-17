@@ -129,8 +129,8 @@ static int pm88x_probe(struct i2c_client *client) {
 		return ret;
 	}
 
-	ret = mfd_add_devices(&client->dev, 0, &onkey_devs[0], ARRAY_SIZE(onkey_devs),
-			&onkey_resources[0], 0, NULL);
+	ret = mfd_add_devices(&client->dev, 0, onkey_devs, ARRAY_SIZE(onkey_devs),
+			onkey_resources, 0, regmap_irq_get_domain(chip->irq_data));
 	if (ret) {
 		dev_err(&client->dev, "Failed to add onkey device: %d\n", ret);
 		goto err_subdevices;
