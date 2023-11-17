@@ -5,71 +5,92 @@
 
 #define PM88X_ONKEY_STS1 1
 
-struct pm88x_onkey_data {
-	struct input_dev *onkey;
+/* TODO: longkey */
+
+struct pm88x_onkey {
+	struct input_dev *idev;
 	struct pm88x_chip *chip;
 	int irq;
 };
 
-static irqreturn_t pm88x_onkey_interrupt(int irq, void *dummy) {
-	struct pm88x_onkey_data *data = (pm88x_onkey_data *)dummy;
+static irqreturn_t pm88x_onkey_interrupt(int irq, void *data) {
+	struct pm88x_onkey *onkey = (struct pm88x_onkey *)data;
 	unsigned int val;
 	int ret = 0;
 
 	// TODO: reset LONKEY reset time?
 
-	ret = regmap_read(data->chip->regmap, PM88X_STATUS1, &val);
+	ret = regmap_read(onkey->chip->regmap, PM88X_STATUS1, &val);
 	if (ret) {
-		dev_err(data->onkey->dev.parent,
+		dev_err(onkey->idev->dev.parent,
 				"Failed to read status: %d\n", ret);
 		return ret; // FIXME: IRQ_NONE?
 	}
 	val &= PM88X_ONKEY_STS1;
 
-	input_report_key(data->onkey, KEY_POWER, val);
-	input_sync(data->onkey);
+	input_report_key(onkey->idev, KEY_POWER, val);
+	input_sync(onkey->idev);
 
 	return IRQ_HANDLED;
 }
 
 static int pm88x_onkey_probe(struct platform_device *pdev) {
 	struct pm88x_chip *chip = dev_get_drvdata(pdev->dev.parent);
-	struct pm88x_onkey_data *data;
+	struct pm88x_onkey *onkey;
 	int err;
 
-	data = devm_kzalloc(&pdev->dev, sizeof(struct pm88x_onkey_data), GFP_KERNEL);
-	if (!data)
+	onkey = devm_kzalloc(&pdev->dev, sizeof(struct pm88x_onkey), GFP_KERNEL);
+	if (!onkey)
 		return -ENOMEM;
 
-	data->chip = chip;
+	onkey->chip = chip;
 
-	data->irq = platform_get_irq(pdev, 0);
-	if (data->irq < 0) {
+	onkey->irq = platform_get_irq(pdev, 0);
+	if (onkey->irq < 0) {
 		return -EINVAL;
 	}
 
-	data->onkey = input_allocate_device();
-	if (!data->onkey) {
+	onkey->idev = input_allocate_device();
+	if (!onkey->idev) {
 		dev_err(&pdev->dev, "Failed to allocate input device\n");
-		err = -ENOMEM;
-		goto err_free_irq;
+		return -ENOMEM;
 	}
 
-	err = input_register_device(data->onkey);
+	onkey->idev->name = "Power button";
+	/* TODO: phys? */
+	onkey->idev->id.bus_type = BUS_I2C;
+	onkey->idev->dev.parent = &pdev->dev;
+	onkey->idev->evbit[0] = BIT_MASK(EV_KEY);
+	onkey->idev->keybit[BIT_WORD(KEY_POWER)] = BIT_MASK(KEY_POWER);
+
+	err = devm_request_threaded_irq(&pdev->dev, onkey->irq, NULL, pm88x_onkey_interrupt,
+			IRQF_ONESHOT | IRQF|NO_SUSPEND, "onkey", onkey);
 	if (err) {
-		dev_err(&pdev->dev, "Failed to register device\n");
-		goto err_free_dev;
+		dev_err(&pdev->dev, "Failed to request IRQ: %d\n", err);
+		goto err_allocate;
 	}
 
-	data->onkey->evbit[0] = BIT_MASK(EV_KEY);
-	data->onkey->keybit[BIT_WORD(KEY_POWER)] = BIT_MASK(KEY_POWER);
-	data->onkey->name = "Power button";
-	data->onkey->id.bus_type = BUS_I2C;
-	data->onkey->dev.parent = &pdev->dev;
-err_free_dev:
-	input_free_device(data->onkey);
-err_free_irq:
-	devm_free_irq(&pdev->dev, data->irq, data);
+	err = input_register_device(onkey->idev);
+	if (err) {
+		dev_err(&pdev->dev, "Failed to register input device: %d\n", err);
+		goto err_irq;
+	}
+
+	/* TODO: set platform data */
+
+	device_init_wakeup(&pdev->dev, 1);
+
+	/* TODO: configure GPIO */
+
+	/* TODO: fault wakeup? */
+
+	return 0;
+
+err_irq:
+	devm_free_irq(&pdev->dev, onkey->irq, onkey);
+err_allocate:
+	input_free_device(onkey->idev);
+
 	return err;
 }
 
