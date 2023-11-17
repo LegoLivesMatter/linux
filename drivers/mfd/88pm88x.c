@@ -128,7 +128,6 @@ static int pm88x_probe(struct i2c_client *client) {
 	ret = regmap_read(chip->regmap, PM88X_ID, &chip->chip_id);
 	if (ret) {
 		dev_err(chip->client->dev, "Failed to read chip ID: %d\n", ret);
-		// TODO: goto err_* and undo previously done things
 		return ret;
 	}
 
@@ -139,7 +138,6 @@ static int pm88x_probe(struct i2c_client *client) {
 	ret = regmap_update_bits(chip->regmap, PM88X_MISC_CONFIG2, mask, data);
 	if (ret) {
 		dev_err(chip->client->dev, "Failed to set interrupt mode: %d\n", ret);
-		// TODO: goto err_* and undo previously done things
 		return ret;
 	}
 
@@ -147,7 +145,6 @@ static int pm88x_probe(struct i2c_client *client) {
 				  &pm88x_regmap_irq_chip, &chip->irq_data);
 	if (ret) {
 		dev_err(chip->client->dev, "Failed to request IRQ: %d\n", ret);
-		// TODO: goto err_* and undo previously done things
 		return ret;
 	}
 
@@ -155,8 +152,7 @@ static int pm88x_probe(struct i2c_client *client) {
 			&onkey_resources[0], 0, NULL);
 	if (ret) {
 		dev_err(chip->client->dev, "Failed to add onkey device: %d\n", ret);
-		// TODO: goto err_* and undo previously done things
-		return ret;
+		goto err_subdevices;
 	}
 
 	switch (chip->whoami) {
@@ -169,10 +165,15 @@ static int pm88x_probe(struct i2c_client *client) {
 	}
 	if (ret) {
 		dev_err(chip->client->dev, "Failed to register regmap patch: %d\n", ret);
-		goto // TODO
+		goto err_patch;
 	}
 
-	/* TODO: err_* labels */
+	return 0;
+
+err_patch:
+	mfd_remove_devices(chip->client->dev);
+err_subdevices:
+	regmap_del_irq_chip(chip->client->irq, chip->irq_data);
 
 	return ret;
 }
