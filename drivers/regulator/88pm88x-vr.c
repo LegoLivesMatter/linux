@@ -17,8 +17,6 @@
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
 #include <linux/mfd/88pm88x.h>
-#include <linux/mfd/88pm886.h>
-#include <linux/mfd/88pm880.h>
 #include <linux/delay.h>
 #include <linux/io.h>
 #include <linux/of.h>
@@ -282,17 +280,11 @@ static struct regmap *nr_to_regmap(struct pm88x_chip *chip, unsigned int nr)
 {
 	switch (nr) {
 	case 0:
-		return chip->base_regmap;
+		return chip->regmap;
 	case 1:
 		return chip->ldo_regmap;
-	case 2:
-		return chip->gpadc_regmap;
-	case 3:
-		return chip->battery_regmap;
 	case 4:
 		return chip->buck_regmap;
-	case 7:
-		return chip->test_regmap;
 	default:
 		pr_err("unsupported pages.\n");
 		return NULL;
@@ -468,14 +460,14 @@ int pm88x_display_vr(struct pm88x_chip *chip, char *buf)
 	int slp_num, audio_num, vr_num, i, len = 0;
 	ssize_t ret;
 
-	switch (chip->type) {
-	case PM886:
+	switch (chip->whoami) {
+	case PM886_WHOAMI:
 		slp_info = pm886_buck_slp_configs;
 		slp_num = ARRAY_SIZE(pm886_buck_slp_configs);
 		vr_info = pm88x_vr_configs;
 		vr_num = ARRAY_SIZE(pm88x_vr_configs);
 		break;
-	case PM880:
+	case PM880_WHOAMI:
 		slp_info = pm880_buck_slp_configs;
 		slp_num = ARRAY_SIZE(pm880_buck_slp_configs);
 		audio_info = pm880_buck_audio_configs;

@@ -17,8 +17,6 @@
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
 #include <linux/mfd/88pm88x.h>
-#include <linux/mfd/88pm886.h>
-#include <linux/mfd/88pm880.h>
 #include <linux/delay.h>
 #include <linux/io.h>
 #include <linux/of.h>
@@ -574,14 +572,14 @@ int pm88x_display_ldo(struct pm88x_chip *chip, char *buf)
 	int ldo_num, extra_info_num, i, len = 0;
 	ssize_t ret;
 
-	switch (chip->type) {
-	case PM886:
+	switch (chip->whoami) {
+	case PM886_WHOAMI:
 		info = pm886_ldo_configs;
 		ldo_num = sizeof(pm886_ldo_configs) / sizeof(pm886_ldo_configs[0]);
 		extra = pm88x_ldo_extra_info;
 		extra_info_num = sizeof(pm88x_ldo_extra_info) / sizeof(pm88x_ldo_extra_info[0]);
 		break;
-	case PM880:
+	case PM880_WHOAMI:
 		info = pm880_ldo_configs;
 		ldo_num = sizeof(pm880_ldo_configs) / sizeof(pm880_ldo_configs[0]);
 		extra = pm88x_ldo_extra_info;

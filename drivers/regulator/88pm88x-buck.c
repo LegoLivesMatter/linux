@@ -17,8 +17,6 @@
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
 #include <linux/mfd/88pm88x.h>
-#include <linux/mfd/88pm886.h>
-#include <linux/mfd/88pm880.h>
 #include <linux/delay.h>
 #include <linux/io.h>
 #include <linux/of.h>
@@ -564,13 +562,13 @@ int pm88x_display_buck(struct pm88x_chip *chip, char *buf)
 	int buck_num, i, len = 0;
 	ssize_t ret;
 
-	switch (chip->type) {
-	case PM886:
+	switch (chip->whoami) {
+	case PM886_WHOAMI:
 		info = pm886_buck_configs;
 		extra = pm886_buck_extra_info;
 		buck_num = ARRAY_SIZE(pm886_buck_configs);
 		break;
-	case PM880:
+	case PM880_WHOAMI:
 		info = pm880_buck_configs;
 		extra = pm880_buck_extra_info;
 		buck_num = ARRAY_SIZE(pm880_buck_configs);

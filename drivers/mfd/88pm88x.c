@@ -7,9 +7,6 @@
 
 #include <linux/mfd/88pm88x.h>
 
-#define PM880_WHOAMI 0xb1
-#define PM886_WHOAMI 0xa1
-
 #define PM88X_ONKEY_INT_ENA1 1
 #define PM88X_INT_STATUS1 5
 #define PM88X_INT_ENA_1 0xa
