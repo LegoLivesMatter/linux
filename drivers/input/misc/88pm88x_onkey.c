@@ -18,18 +18,15 @@ struct pm88x_onkey {
 	int irq;
 };
 
-static irqreturn_t pm88x_onkey_interrupt(int irq, void *data) {
+static irqreturn_t pm88x_onkey_irq_handler(int irq, void *data) {
 	struct pm88x_onkey *onkey = (struct pm88x_onkey *)data;
 	unsigned int val;
 	int ret = 0;
 
-	// TODO: reset LONKEY reset time?
-
 	ret = regmap_read(onkey->chip->regmap, PM88X_STATUS1, &val);
 	if (ret) {
-		dev_err(onkey->idev->dev.parent,
-				"Failed to read status: %d\n", ret);
-		return ret; // FIXME: IRQ_NONE?
+		dev_err(onkey->idev->dev.parent, "Failed to read status: %d\n", ret);
+		return IRQ_NONE;
 	}
 	val &= PM88X_ONKEY_STS1;
 
@@ -68,7 +65,7 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 	onkey->idev->evbit[0] = BIT_MASK(EV_KEY);
 	onkey->idev->keybit[BIT_WORD(KEY_POWER)] = BIT_MASK(KEY_POWER);
 
-	err = devm_request_threaded_irq(&pdev->dev, onkey->irq, NULL, pm88x_onkey_interrupt,
+	err = devm_request_threaded_irq(&pdev->dev, onkey->irq, NULL, pm88x_onkey_irq_handler,
 			IRQF_ONESHOT | IRQF_NO_SUSPEND, "onkey", onkey);
 	if (err) {
 		dev_err(&pdev->dev, "Failed to request IRQ: %d\n", err);

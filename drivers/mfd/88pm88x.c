@@ -8,20 +8,6 @@
 #define PM880_WHOAMI 0xb1
 #define PM886_WHOAMI 0xa1
 
-/* registers */
-/* common */
-#define PM88X_ID 				0x00
-#define PM88X_WATCHDOG 		0x1d
-#define PM88X_AON_CTRL2		0xe2
-#define PM88X_BK_OSC_CTRL1	0x50
-#define PM88X_BK_OSC_CTRL3	0x52
-#define PM88X_LOWPOWER2		0x21
-#define PM88X_LOWPOWER4		0x23
-#define PM88X_GPIO_CTRL1	0x30
-#define PM88X_GPIO_CTRL2	0x31
-#define PM88X_GPIO_CTRL3	0x32
-#define PM88X_GPIO_CTRL4	0x33
-
 #define PM88X_ONKEY_INT_ENA1 1
 #define PM88X_INT_STATUS1 5
 #define PM88X_INT_ENA_1 0xa
