@@ -1,3 +1,6 @@
+#ifndef __LINUX_MFD_88PM88X_H
+#define __LINUX_MFD_88PM88X_H
+
 #include <linux/mfd/core.h>
 
 #define PM880_WHOAMI 0xb1
@@ -348,3 +351,4 @@ enum {
 #define PM880_LDO17_SLP_CTRL	(0x81)
 #define PM880_LDO18_SLP_CTRL	(0x87)
 
+#endif /* __LINUX_MFD_88PM88X_H */
