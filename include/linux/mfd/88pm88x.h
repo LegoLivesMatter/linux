@@ -1,3 +1,6 @@
+#ifndef __LINUX_MFD_88PM88X_H
+#define __LINUX_MFD_88PM88X_H
+
 #include <linux/mfd/core.h>
 
 #define PM880_WHOAMI 0xb1
@@ -41,3 +44,4 @@ struct pm88x_chip {
 	struct i2c_client *ldo_page;
 	struct i2c_client *buck_page;
 };
+#endif /* __LINUX_MFD_88PM88X_H */
