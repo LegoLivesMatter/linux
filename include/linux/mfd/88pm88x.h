@@ -1,3 +1,5 @@
+#include <linux/mfd/core.h>
+
 #define PM880_WHOAMI 0xb1
 #define PM886_WHOAMI 0xa1
 
@@ -20,10 +22,18 @@
 #define PM88X_GPIO_CTRL3	0x32
 #define PM88X_GPIO_CTRL4	0x33
 
+struct pm88x_data {
+	unsigned int whoami;
+	unsigned int num_devs;
+	unsigned int num_patch;
+	struct reg_sequence *patch;
+	struct mfd_cell *devs;
+};
+
 struct pm88x_chip {
 	struct i2c_client *client;
 	struct regmap_irq_chip_data *irq_data;
-	unsigned int whoami;
+	const struct pm88x_data *data;
 	struct regmap *regmap;
 	int irq_mode;
 	struct regmap *ldo_regmap;
