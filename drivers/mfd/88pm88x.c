@@ -212,7 +212,7 @@ static int pm88x_probe(struct i2c_client *client) {
 	int mask, data, ret = 0;
 	unsigned int chip_id;
 
-	chip = devm_kzalloc(&client->dev, sizeof(struct pm88x_chip), GFP_KERNEL);
+	chip = devm_kzalloc(&client->dev, sizeof(*chip), GFP_KERNEL);
 	if (!chip)
 		return -ENOMEM;
 
