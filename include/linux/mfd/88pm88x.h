@@ -27,10 +27,10 @@
 
 struct pm88x_data {
 	unsigned int whoami;
-	unsigned int num_devs;
-	unsigned int num_patch;
-	struct reg_sequence *patch;
 	struct mfd_cell *devs;
+	unsigned int num_devs;
+	struct reg_sequence *presets;
+	unsigned int num_presets;
 };
 
 struct pm88x_chip {

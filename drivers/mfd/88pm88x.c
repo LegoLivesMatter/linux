@@ -40,7 +40,7 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 };
 
 /* TODO: understand these presets */
-static struct reg_sequence pm880_patch[] = {
+static struct reg_sequence pm880_presets[] = {
 	REG_SEQ0(PM88X_WATCHDOG, 0x1),		/* disable watchdog */
 	REG_SEQ0(PM88X_AON_CTRL2, 0x2a),		/* output 32 kHz from XO */
 	REG_SEQ0(PM88X_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
@@ -49,7 +49,7 @@ static struct reg_sequence pm880_patch[] = {
 	REG_SEQ0(PM88X_BK_OSC_CTRL3, 0xc0),	/* set the duty cycle of charger DC/DC to max */
 };
 
-static struct reg_sequence pm886_patch[] = {
+static struct reg_sequence pm886_presets[] = {
 	REG_SEQ0(PM88X_WATCHDOG, 0x1),		/* disable watchdog */
 	REG_SEQ0(PM88X_GPIO_CTRL1, 0x40),	/* gpio1: dvc, gpio0: input, */
 	REG_SEQ0(PM88X_GPIO_CTRL2, 0x00),	/* gpio2: input */
@@ -85,16 +85,16 @@ static struct pm88x_data pm880_data = {
 	.whoami = PM880_WHOAMI,
 	.devs = pm880_devs,
 	.num_devs = ARRAY_SIZE(pm880_devs),
-	.patch = pm880_patch,
-	.num_patch = ARRAY_SIZE(pm880_patch),
+	.presets = pm880_presets,
+	.num_presets = ARRAY_SIZE(pm880_presets),
 };
 
 static struct pm88x_data pm886_data = {
 	.whoami = PM886_WHOAMI,
 	.devs = pm886_devs,
 	.num_devs = ARRAY_SIZE(pm886_devs),
-	.patch = pm886_patch,
-	.num_patch = ARRAY_SIZE(pm886_patch),
+	.presets = pm886_presets,
+	.num_presets = ARRAY_SIZE(pm886_presets),
 };
 
 static const struct regmap_config pm88x_i2c_regmap = {
@@ -210,7 +210,7 @@ static int pm88x_probe(struct i2c_client *client) {
 		goto err_subdevices;
 	}
 
-	ret = regmap_register_patch(chip->regmap, chip->data->patch, chip->data->num_patch);
+	ret = regmap_register_patch(chip->regmap, chip->data->presets, chip->data->num_presets);
 	if (ret) {
 		dev_err(&client->dev, "Failed to register regmap patch: %d\n", ret);
 		goto err_patch;
