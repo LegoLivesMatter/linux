@@ -121,16 +121,11 @@ const struct mfd_cell pm880_devs[] = {
 	CELL_DEV(PM88X_VIRTUAL_REGULATOR_NAME, vr_resources, "marvell,88pm880-buck1a-audio", 26),
 };
 
-enum pm88x_chips {
-	PM880,
-	PM886,
-};
-
 enum pm88x_irq {
 	PM88X_IRQ_ONKEY,
 };
 
-static const struct regmap_irq pm88x_regmap_irqs[] = {
+static struct regmap_irq pm88x_regmap_irqs[] = {
 	REGMAP_IRQ_REG(PM88X_IRQ_ONKEY, 0, PM88X_ONKEY_INT_ENA1),
 };
 
@@ -145,7 +140,7 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 };
 
 /* TODO: understand these presets */
-static const struct reg_sequence pm880_patch[] = {
+static struct reg_sequence pm880_patch[] = {
 	REG_SEQ0(PM88X_WATCHDOG, 0x1),		/* disable watchdog */
 	REG_SEQ0(PM88X_AON_CTRL2, 0x2a),		/* output 32 kHz from XO */
 	REG_SEQ0(PM88X_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
@@ -154,7 +149,7 @@ static const struct reg_sequence pm880_patch[] = {
 	REG_SEQ0(PM88X_BK_OSC_CTRL3, 0xc0),	/* set the duty cycle of charger DC/DC to max */
 };
 
-static const struct reg_sequence pm886_patch[] = {
+static struct reg_sequence pm886_patch[] = {
 	REG_SEQ0(PM88X_WATCHDOG, 0x1),		/* disable watchdog */
 	REG_SEQ0(PM88X_GPIO_CTRL1, 0x40),	/* gpio1: dvc, gpio0: input, */
 	REG_SEQ0(PM88X_GPIO_CTRL2, 0x00),	/* gpio2: input */
@@ -171,13 +166,29 @@ static struct resource onkey_resources[] = {
 	DEFINE_RES_IRQ_NAMED(PM88X_IRQ_ONKEY, "88pm88x-onkey"),
 };
 
-static struct mfd_cell common_devs[] = {
+static struct mfd_cell pm88x_devs[] = {
 	{
 		.name = "88pm88x-onkey",
 		.num_resources = ARRAY_SIZE(onkey_resources),
 		.resources = onkey_resources,
 		.id = -1,
 	},
+};
+
+static struct pm88x_data pm880_data = {
+	.whoami = PM880_WHOAMI,
+	.devs = pm880_devs,
+	.num_devs = ARRAY_SIZE(pm880_devs),
+	.patch = pm880_patch,
+	.num_patch = ARRAY_SIZE(pm880_patch),
+};
+
+static struct pm88x_data pm886_data = {
+	.whoami = PM886_WHOAMI,
+	.devs = pm886_devs,
+	.num_devs = ARRAY_SIZE(pm886_devs),
+	.patch = pm886_patch,
+	.num_patch = ARRAY_SIZE(pm886_patch),
 };
 
 static const struct regmap_config pm88x_i2c_regmap = {
@@ -199,12 +210,14 @@ static int pm88x_power_off_handler(struct sys_off_data *data) {
 static int pm88x_probe(struct i2c_client *client) {
 	struct pm88x_chip *chip;
 	int mask, data, ret = 0;
+	unsigned int chip_id;
 
 	chip = devm_kzalloc(&client->dev, sizeof(struct pm88x_chip), GFP_KERNEL);
 	if (!chip)
 		return -ENOMEM;
 
 	chip->client = client;
+	chip->data = device_get_match_data(&client->dev);
 	i2c_set_clientdata(client, chip);
 
 	device_init_wakeup(&client->dev, 1);
@@ -216,12 +229,15 @@ static int pm88x_probe(struct i2c_client *client) {
 		return ret;
 	}
 
-	ret = regmap_read(chip->regmap, PM88X_ID, &chip->whoami);
+	ret = regmap_read(chip->regmap, PM88X_ID, &chip_id);
 	if (ret) {
 		dev_err(&client->dev, "Failed to read chip ID: %d\n", ret);
 		return ret;
 	}
-	/* TODO: reject unknown chips */
+	if (chip->data->whoami != chip_id) {
+		dev_err(&client->dev, "Device reported wrong chip ID: %u\n", chip_id);
+		return -EINVAL;
+	}
 
 	chip->ldo_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 1));
 	if (IS_ERR(chip->ldo_page)) {
@@ -235,7 +251,7 @@ static int pm88x_probe(struct i2c_client *client) {
 		dev_err(&client->dev, "Failed to initialize LDO regmap: %d\n", ret);
 		return ret;
 	}
-	switch (chip->whoami) {
+	switch (chip->data->whoami) {
 	case PM880_WHOAMI:
 		chip->buck_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 4));
 		if (IS_ERR(chip->buck_page)) {
@@ -256,7 +272,7 @@ static int pm88x_probe(struct i2c_client *client) {
 	}
 
 	/* FIXME: downstream sets this via DT, could we set it here based on chip ID like this? */
-	chip->irq_mode = chip->whoami == PM886_WHOAMI ? 1 : 0;
+	chip->irq_mode = chip->data->whoami == PM886_WHOAMI ? 1 : 0;
 
 	mask = PM88X_INV_INT | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE;
 	data = chip->irq_mode ? PM88X_INT_WC : PM88X_INT_RC;
@@ -273,36 +289,22 @@ static int pm88x_probe(struct i2c_client *client) {
 		return ret;
 	}
 
-	ret = mfd_add_devices(&client->dev, 0, common_devs, ARRAY_SIZE(common_devs),
+	ret = mfd_add_devices(&client->dev, 0, pm88x_devs, ARRAY_SIZE(pm88x_devs),
 			NULL, 0, regmap_irq_get_domain(chip->irq_data));
 	if (ret) {
 		dev_err(&client->dev, "Failed to add common devices: %d\n", ret);
 		goto err_subdevices;
 	}
-	switch (chip->whoami) {
-	case PM880_WHOAMI:
-		ret = mfd_add_devices(&client->dev, 0, pm880_devs, ARRAY_SIZE(pm880_devs),
+
+	ret = mfd_add_devices(&client->dev, 0, chip->data->devs, chip->data->num_devs,
 				NULL, 0, regmap_irq_get_domain(chip->irq_data));
-		break;
-	case PM886_WHOAMI:
-		ret = mfd_add_devices(&client->dev, 0, pm886_devs, ARRAY_SIZE(pm886_devs),
-				NULL, 0, regmap_irq_get_domain(chip->irq_data));
-		break;
-	}
 	if (ret) {
 		dev_err(&client->dev, "Failed to add %s devices: %d\n",
-				chip->whoami == PM880_WHOAMI ? "PM880" : "PM886", ret);
+				chip->data->whoami == PM880_WHOAMI ? "PM880" : "PM886", ret);
 		goto err_subdevices;
 	}
 
-	switch (chip->whoami) {
-	case PM880_WHOAMI:
-		ret = regmap_register_patch(chip->regmap, pm880_patch, ARRAY_SIZE(pm880_patch));
-		break;
-	case PM886_WHOAMI:
-		ret = regmap_register_patch(chip->regmap, pm886_patch, ARRAY_SIZE(pm886_patch));
-		break;
-	}
+	ret = regmap_register_patch(chip->regmap, chip->data->patch, chip->data->num_patch);
 	if (ret) {
 		dev_err(&client->dev, "Failed to register regmap patch: %d\n", ret);
 		goto err_patch;
@@ -331,17 +333,10 @@ static void pm88x_remove(struct i2c_client *client) {
 }
 
 const struct of_device_id pm88x_of_match[] = {
-	{ .compatible = "marvell,88pm880", .data = (void *)PM880 },
-	{ .compatible = "marvell,88pm886", .data = (void *)PM886 },
-	{},
+	{ .compatible = "marvell,88pm880", .data = &pm880_data },
+	{ .compatible = "marvell,88pm886", .data = &pm886_data },
+	{ },
 };
-
-static const struct i2c_device_id pm88x_i2c_id[] = {
-	{ "88pm880", PM880 },
-	{ "88pm886", PM886 },
-	{  },
-};
-MODULE_DEVICE_TABLE(i2c, pm88x_i2c_id);
 
 static struct i2c_driver pm88x_i2c_driver = {
 	.driver = {
@@ -351,7 +346,6 @@ static struct i2c_driver pm88x_i2c_driver = {
 	},
 	.probe = pm88x_probe,
 	.remove = pm88x_remove,
-	.id_table = pm88x_i2c_id,
 };
 module_i2c_driver(pm88x_i2c_driver);
 
