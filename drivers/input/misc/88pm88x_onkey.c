@@ -10,14 +10,6 @@
 
 #define PM88X_ONKEY_STS1 						0x01
 
-#define PM88X_LONKEY_PRESS_TIME_MSK			0xf0
-#define PM88X_LONKEY_RESTOUTN_PULSE_MSK	0x03
-#define PM88X_LONKEY_PRESS_TIME_SHIFT		0x04
-#define PM88X_LONKEY_RESTOUTN_PULSE_1S		0x01
-#define PM88X_LONKEY_EN_MSK					0x03 /* enable long onkey detection */
-
-#define PM88X_LONKEY_PRESS_TIME	10 /* seconds */
-#define PM88X_LONG_ONKEY_DETECT	2
 
 struct pm88x_onkey {
 	struct input_dev *idev;
@@ -29,10 +21,6 @@ static irqreturn_t pm88x_onkey_irq_handler(int irq, void *data) {
 	struct pm88x_onkey *onkey = (struct pm88x_onkey *)data;
 	unsigned int val;
 	int ret = 0;
-
-	/* reset the long key reset time */
-	regmap_update_bits(onkey->chip->regmap, PM88X_MISC_CONFIG1,
-			PM88X_LONKEY_RST, PM88X_LONKEY_RST);
 
 	ret = regmap_read(onkey->chip->regmap, PM88X_STATUS1, &val);
 	if (ret) {
@@ -92,12 +80,6 @@ static int pm88x_onkey_probe(struct platform_device *pdev) {
 	device_init_wakeup(&pdev->dev, 1);
 
 	/* TODO: configure GPIO */
-
-	/* configure long onkey and set press time */
-	regmap_update_bits(onkey->chip->regmap, PM88X_AON_CTRL3,
-			PM88X_LONKEY_PRESS_TIME_MSK | PM88X_LONKEY_RESTOUTN_PULSE_MSK,
-			(PM88X_LONKEY_PRESS_TIME << PM88X_LONKEY_PRESS_TIME_SHIFT) | PM88X_LONKEY_RESTOUTN_PULSE_1S);
-	regmap_update_bits(onkey->chip->regmap, PM88X_AON_CTRL4, PM88X_LONKEY_EN_MSK, PM88X_LONG_ONKEY_DETECT);
 
 	/* TODO: fault wakeup? */
 
