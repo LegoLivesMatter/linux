@@ -803,8 +803,7 @@ config MFD_88PM88X
 	help
 	  This enables support for Marvell 88PM880/88PM886 Power Management IC.
 	  This includes the I2C driver and the core APIs _only_, you have to
-	  select individual components like voltage regulators, RTC and
-	  battery-charger under the corresponding menus.
+	  select individual components like ONKEY under the corresponding menus.
 
 config MFD_MAX14577
 	tristate "Maxim Semiconductor MAX14577/77836 MUIC + Charger Support"
