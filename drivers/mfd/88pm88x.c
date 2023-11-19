@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-only
+
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/regmap.h>
@@ -327,6 +329,7 @@ err_subdevices:
 }
 
 static void pm88x_remove(struct i2c_client *client) {
+	/* TODO: exit pages? */
 	struct pm88x_chip *chip = i2c_get_clientdata(client);
 	mfd_remove_devices(&client->dev);
 	regmap_del_irq_chip(client->irq, chip->irq_data);
@@ -349,3 +352,6 @@ static struct i2c_driver pm88x_i2c_driver = {
 module_i2c_driver(pm88x_i2c_driver);
 
 MODULE_DESCRIPTION("88PM88X PMIC driver");
+MODULE_AUTHOR("Karel Balej <balejk@matfyz.cz>");
+/* TODO: read up on GPL */
+MODULE_LICENSE("GPL");
