@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-only
+
 #include <linux/kernel.h>
 #include <linux/input.h>
 #include <linux/regmap.h>
@@ -120,3 +122,5 @@ static struct platform_driver pm88x_onkey_driver = {
 module_platform_driver(pm88x_onkey_driver);
 
 MODULE_DESCRIPTION("Marvell 88PM88X onkey driver");
+MODULE_AUTHOR("Karel Balej <balejk@matfyz.cz>");
+MODULE_LICENSE("GPL");
