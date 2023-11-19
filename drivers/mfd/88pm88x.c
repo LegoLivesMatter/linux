@@ -341,7 +341,6 @@ const struct of_device_id pm88x_of_match[] = {
 static struct i2c_driver pm88x_i2c_driver = {
 	.driver = {
 		.name = "88pm88x",
-		.owner = THIS_MODULE,
 		.of_match_table = of_match_ptr(pm88x_of_match),
 	},
 	.probe = pm88x_probe,
