@@ -27,7 +27,8 @@ struct pm88x_onkey {
 	int irq;
 };
 
-static irqreturn_t pm88x_onkey_irq_handler(int irq, void *data) {
+static irqreturn_t pm88x_onkey_irq_handler(int irq, void *data)
+{
 	struct pm88x_onkey *onkey = (struct pm88x_onkey *)data;
 	unsigned int val;
 	int ret = 0;
@@ -49,7 +50,8 @@ static irqreturn_t pm88x_onkey_irq_handler(int irq, void *data) {
 	return IRQ_HANDLED;
 }
 
-static int pm88x_onkey_probe(struct platform_device *pdev) {
+static int pm88x_onkey_probe(struct platform_device *pdev)
+{
 	struct pm88x_chip *chip = dev_get_drvdata(pdev->dev.parent);
 	struct pm88x_onkey *onkey;
 	int err;

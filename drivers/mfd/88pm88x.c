@@ -105,7 +105,8 @@ static const struct regmap_config pm88x_i2c_regmap = {
 	.max_register = 0xfe,
 };
 
-static int pm88x_power_off_handler(struct sys_off_data *data) {
+static int pm88x_power_off_handler(struct sys_off_data *data)
+{
 	struct pm88x_chip *chip = (struct pm88x_chip *)data->cb_data;
 	int ret = regmap_write(chip->regmap, PM88X_MISC_CONFIG1, PM88X_SW_PDOWN);
 	if (ret) {
@@ -115,7 +116,8 @@ static int pm88x_power_off_handler(struct sys_off_data *data) {
 	return NOTIFY_DONE;
 }
 
-static int pm88x_probe(struct i2c_client *client) {
+static int pm88x_probe(struct i2c_client *client)
+{
 	struct pm88x_chip *chip;
 	int mask, data, ret = 0;
 	unsigned int chip_id;
@@ -234,7 +236,8 @@ err_subdevices:
 	return ret;
 }
 
-static void pm88x_remove(struct i2c_client *client) {
+static void pm88x_remove(struct i2c_client *client)
+{
 	/* TODO: exit pages? */
 	struct pm88x_chip *chip = i2c_get_clientdata(client);
 	mfd_remove_devices(&client->dev);
