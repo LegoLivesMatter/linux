@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mfd/marvell,88pm88x.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Marvell 88PM88X PMIC core MFD
+
+maintainers:
+  - Karel Balej <balejk@matfyz.cz>
+
+description: |
+  Marvell 88PM880 and 88PM886 are two similar PMICs providing
+  several functions such as ONKEY, regulators or battery and
+  charger.
+
+properties:
+  compatible:
+    const: marvell,88pm880
+    const: marvell,88pm886
+
+  reg:
+    description: I2C device address
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    /* TODO */
