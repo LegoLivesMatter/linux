@@ -262,5 +262,4 @@ module_i2c_driver(pm88x_i2c_driver);
 
 MODULE_DESCRIPTION("88PM88X PMIC driver");
 MODULE_AUTHOR("Karel Balej <balejk@matfyz.cz>");
-/* TODO: read up on GPL */
 MODULE_LICENSE("GPL");

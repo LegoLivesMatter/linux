@@ -83,7 +83,7 @@ static int pm88x_onkey_probe(struct platform_device *pdev)
 
 	device_init_wakeup(&pdev->dev, 1);
 
-	/* TODO: configure GPIO */
+	/* TODO: configure GPIO? */
 
 	/* TODO: fault wakeup? */
 
