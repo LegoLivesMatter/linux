@@ -572,7 +572,7 @@ int pm88x_display_ldo(struct pm88x_chip *chip, char *buf)
 	int ldo_num, extra_info_num, i, len = 0;
 	ssize_t ret;
 
-	switch (chip->whoami) {
+	switch (chip->data->whoami) {
 	case PM886_WHOAMI:
 		info = pm886_ldo_configs;
 		ldo_num = sizeof(pm886_ldo_configs) / sizeof(pm886_ldo_configs[0]);
