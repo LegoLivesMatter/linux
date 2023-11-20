@@ -21,7 +21,7 @@ struct pm88x_onkey {
 
 static irqreturn_t pm88x_onkey_irq_handler(int irq, void *data)
 {
-	struct pm88x_onkey *onkey = (struct pm88x_onkey *)data;
+	struct pm88x_onkey *onkey = data;
 	unsigned int val;
 	int ret = 0;
 

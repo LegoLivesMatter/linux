@@ -201,7 +201,7 @@ static const struct regmap_config pm88x_i2c_regmap = {
 
 static int pm88x_power_off_handler(struct sys_off_data *data)
 {
-	struct pm88x_chip *chip = (struct pm88x_chip *)data->cb_data;
+	struct pm88x_chip *chip = data->cb_data;
 	int ret = regmap_write(chip->regmap, PM88X_MISC_CONFIG1, PM88X_SW_PDOWN);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to power off the device: %d\n", ret);
