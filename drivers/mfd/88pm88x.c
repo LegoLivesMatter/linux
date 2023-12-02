@@ -332,7 +332,6 @@ err_subdevices:
 
 static void pm88x_remove(struct i2c_client *client)
 {
-	/* TODO: exit pages? */
 	struct pm88x_chip *chip = i2c_get_clientdata(client);
 	mfd_remove_devices(&client->dev);
 	regmap_del_irq_chip(client->irq, chip->irq_data);
