@@ -210,6 +210,30 @@ static int pm88x_power_off_handler(struct sys_off_data *data)
 	return NOTIFY_DONE;
 }
 
+static int pm88x_mfd_add_devices(struct pm88x_chip *chip)
+{
+	int ret;
+
+	/* add common devices */
+	ret = mfd_add_devices(&chip->client->dev, 0, pm88x_devs, ARRAY_SIZE(pm88x_devs),
+			NULL, 0, regmap_irq_get_domain(chip->irq_data));
+	if (ret) {
+		dev_err(&chip->client->dev, "Failed to add common devices: %d\n", ret);
+		return ret;
+	}
+
+	/* add chip-specific devices */
+	ret = mfd_add_devices(&chip->client->dev, 0, chip->data->devs, chip->data->num_devs,
+			NULL, 0, regmap_irq_get_domain(chip->irq_data));
+	if (ret) {
+		dev_err(&chip->client->dev, "Failed to add %s devices: %d\n",
+				chip->data->whoami == PM880_WHOAMI ? "PM880" : "PM886", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
 static int pm88x_probe(struct i2c_client *client)
 {
 	struct pm88x_chip *chip;
@@ -293,20 +317,9 @@ static int pm88x_probe(struct i2c_client *client)
 		return ret;
 	}
 
-	ret = mfd_add_devices(&client->dev, 0, pm88x_devs, ARRAY_SIZE(pm88x_devs),
-			NULL, 0, regmap_irq_get_domain(chip->irq_data));
-	if (ret) {
-		dev_err(&client->dev, "Failed to add common devices: %d\n", ret);
+	ret = pm88x_mfd_add_devices(chip);
+	if (ret)
 		goto err_subdevices;
-	}
-
-	ret = mfd_add_devices(&client->dev, 0, chip->data->devs, chip->data->num_devs,
-				NULL, 0, regmap_irq_get_domain(chip->irq_data));
-	if (ret) {
-		dev_err(&client->dev, "Failed to add %s devices: %d\n",
-				chip->data->whoami == PM880_WHOAMI ? "PM880" : "PM886", ret);
-		goto err_subdevices;
-	}
 
 	ret = regmap_register_patch(chip->regmap, chip->data->presets, chip->data->num_presets);
 	if (ret) {
