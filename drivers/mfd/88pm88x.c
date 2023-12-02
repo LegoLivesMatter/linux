@@ -121,7 +121,7 @@ static int pm88x_mfd_add_devices(struct pm88x_chip *chip)
 	int ret;
 
 	/* add common devices */
-	ret = mfd_add_devices(&chip->client->dev, 0, pm88x_devs, ARRAY_SIZE(pm88x_devs),
+	ret = devm_mfd_add_devices(&chip->client->dev, 0, pm88x_devs, ARRAY_SIZE(pm88x_devs),
 			NULL, 0, regmap_irq_get_domain(chip->irq_data));
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to add common devices: %d\n", ret);
@@ -129,7 +129,7 @@ static int pm88x_mfd_add_devices(struct pm88x_chip *chip)
 	}
 
 	/* add chip-specific devices */
-	ret = mfd_add_devices(&chip->client->dev, 0, chip->data->devs, chip->data->num_devs,
+	ret = devm_mfd_add_devices(&chip->client->dev, 0, chip->data->devs, chip->data->num_devs,
 			NULL, 0, regmap_irq_get_domain(chip->irq_data));
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to add %s devices: %d\n",
@@ -216,8 +216,8 @@ static int pm88x_probe(struct i2c_client *client)
 		return ret;
 	}
 
-	ret = regmap_add_irq_chip(chip->regmap, chip->client->irq, IRQF_ONESHOT, -1,
-				  &pm88x_regmap_irq_chip, &chip->irq_data);
+	ret = devm_regmap_add_irq_chip(&client->dev, chip->regmap, chip->client->irq,
+			IRQF_ONESHOT, -1, &pm88x_regmap_irq_chip, &chip->irq_data);
 	if (ret) {
 		dev_err(&client->dev, "Failed to request IRQ: %d\n", ret);
 		return ret;
@@ -225,35 +225,21 @@ static int pm88x_probe(struct i2c_client *client)
 
 	ret = pm88x_mfd_add_devices(chip);
 	if (ret)
-		goto err_subdevices;
+		return ret;
 
 	ret = regmap_register_patch(chip->regmap, chip->data->presets, chip->data->num_presets);
 	if (ret) {
 		dev_err(&client->dev, "Failed to register regmap patch: %d\n", ret);
-		goto err_patch;
+		return ret;
 	}
 
 	ret = devm_register_power_off_handler(&client->dev, pm88x_power_off_handler, chip);
 	if (ret) {
 		dev_err(&client->dev, "Failed to register power off handler: %d\n", ret);
-		goto err_patch;
+		return ret;
 	}
 
 	return 0;
-
-err_patch:
-	mfd_remove_devices(&client->dev);
-err_subdevices:
-	regmap_del_irq_chip(chip->client->irq, chip->irq_data);
-
-	return ret;
-}
-
-static void pm88x_remove(struct i2c_client *client)
-{
-	struct pm88x_chip *chip = i2c_get_clientdata(client);
-	mfd_remove_devices(&client->dev);
-	regmap_del_irq_chip(client->irq, chip->irq_data);
 }
 
 const struct of_device_id pm88x_of_match[] = {
@@ -268,7 +254,6 @@ static struct i2c_driver pm88x_i2c_driver = {
 		.of_match_table = of_match_ptr(pm88x_of_match),
 	},
 	.probe = pm88x_probe,
-	.remove = pm88x_remove,
 };
 module_i2c_driver(pm88x_i2c_driver);
 
