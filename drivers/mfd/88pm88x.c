@@ -212,6 +212,28 @@ static int pm88x_power_off_handler(struct sys_off_data *data)
 	return NOTIFY_DONE;
 }
 
+static int pm88x_setup_irq(struct pm88x_chip *chip)
+{
+	int mask, data, ret;
+
+	mask = PM88X_INV_INT | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE;
+	data = chip->data->irq_mode ? PM88X_INT_WRITE_CLEAR : PM88X_INT_READ_CLEAR;
+	ret = regmap_update_bits(chip->regmap, PM88X_MISC_CONFIG2, mask, data);
+	if (ret) {
+		dev_err(&chip->client->dev, "Failed to set interrupt clearing mode: %d\n", ret);
+		return ret;
+	}
+
+	ret = devm_regmap_add_irq_chip(&chip->client->dev, chip->regmap, chip->client->irq,
+			IRQF_ONESHOT, -1, &pm88x_regmap_irq_chip, &chip->irq_data);
+	if (ret) {
+		dev_err(&chip->client->dev, "Failed to request IRQ: %d\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
 static int pm88x_mfd_add_devices(struct pm88x_chip *chip)
 {
 	int ret;
@@ -239,7 +261,7 @@ static int pm88x_mfd_add_devices(struct pm88x_chip *chip)
 static int pm88x_probe(struct i2c_client *client)
 {
 	struct pm88x_chip *chip;
-	int mask, data, ret = 0;
+	int ret = 0;
 	unsigned int chip_id;
 
 	chip = devm_kzalloc(&client->dev, sizeof(*chip), GFP_KERNEL);
@@ -301,20 +323,9 @@ static int pm88x_probe(struct i2c_client *client)
 		break;
 	}
 
-	mask = PM88X_INV_INT | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE;
-	data = chip->data->irq_mode ? PM88X_INT_WRITE_CLEAR : PM88X_INT_READ_CLEAR;
-	ret = regmap_update_bits(chip->regmap, PM88X_MISC_CONFIG2, mask, data);
-	if (ret) {
-		dev_err(&client->dev, "Failed to set interrupt clearing mode: %d\n", ret);
+	ret = pm88x_setup_irq(chip);
+	if (ret)
 		return ret;
-	}
-
-	ret = devm_regmap_add_irq_chip(&client->dev, chip->regmap, chip->client->irq,
-			IRQF_ONESHOT, -1, &pm88x_regmap_irq_chip, &chip->irq_data);
-	if (ret) {
-		dev_err(&client->dev, "Failed to request IRQ: %d\n", ret);
-		return ret;
-	}
 
 	ret = pm88x_mfd_add_devices(chip);
 	if (ret)
