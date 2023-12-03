@@ -305,7 +305,7 @@ static int pm88x_probe(struct i2c_client *client)
 	data = chip->data->irq_mode ? PM88X_INT_WRITE_CLEAR : PM88X_INT_READ_CLEAR;
 	ret = regmap_update_bits(chip->regmap, PM88X_MISC_CONFIG2, mask, data);
 	if (ret) {
-		dev_err(&client->dev, "Failed to set interrupt mode: %d\n", ret);
+		dev_err(&client->dev, "Failed to set interrupt clearing mode: %d\n", ret);
 		return ret;
 	}
 
