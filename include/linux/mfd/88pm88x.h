@@ -31,6 +31,8 @@ struct pm88x_data {
 	unsigned int num_devs;
 	struct reg_sequence *presets;
 	unsigned int num_presets;
+	/* FIXME: is this chip specific or should it be a DT option as in DS? */
+	int irq_mode;
 };
 
 struct pm88x_chip {
@@ -38,7 +40,6 @@ struct pm88x_chip {
 	struct regmap_irq_chip_data *irq_data;
 	const struct pm88x_data *data;
 	struct regmap *regmap;
-	int irq_mode;
 	struct regmap *ldo_regmap;
 	struct regmap *buck_regmap;
 	struct i2c_client *ldo_page;

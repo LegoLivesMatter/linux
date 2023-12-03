@@ -15,8 +15,8 @@
 
 #define PM88X_INV_INT BIT(0)
 #define PM88X_INT_CLEAR	BIT(1)
-#define PM88X_INT_RC 0
-#define PM88X_INT_WC BIT(1)
+#define PM88X_INT_READ_CLEAR 0
+#define PM88X_INT_WRITE_CLEAR BIT(1)
 #define PM88X_INT_MASK_MODE BIT(2)
 
 #define PM88X_SW_PDOWN	BIT(5)
@@ -183,6 +183,7 @@ static struct pm88x_data pm880_data = {
 	.num_devs = ARRAY_SIZE(pm880_devs),
 	.presets = pm880_presets,
 	.num_presets = ARRAY_SIZE(pm880_presets),
+	.irq_mode = 0,
 };
 
 static struct pm88x_data pm886_data = {
@@ -191,6 +192,7 @@ static struct pm88x_data pm886_data = {
 	.num_devs = ARRAY_SIZE(pm886_devs),
 	.presets = pm886_presets,
 	.num_presets = ARRAY_SIZE(pm886_presets),
+	.irq_mode = 1,
 };
 
 static const struct regmap_config pm88x_i2c_regmap = {
@@ -299,11 +301,8 @@ static int pm88x_probe(struct i2c_client *client)
 		break;
 	}
 
-	/* FIXME: downstream sets this via DT, could we set it here based on chip ID like this? */
-	chip->irq_mode = chip->data->whoami == PM886_WHOAMI ? 1 : 0;
-
 	mask = PM88X_INV_INT | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE;
-	data = chip->irq_mode ? PM88X_INT_WC : PM88X_INT_RC;
+	data = chip->data->irq_mode ? PM88X_INT_WRITE_CLEAR : PM88X_INT_READ_CLEAR;
 	ret = regmap_update_bits(chip->regmap, PM88X_MISC_CONFIG2, mask, data);
 	if (ret) {
 		dev_err(&client->dev, "Failed to set interrupt mode: %d\n", ret);
