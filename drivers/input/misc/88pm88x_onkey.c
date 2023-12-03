@@ -52,6 +52,7 @@ static int pm88x_onkey_probe(struct platform_device *pdev)
 
 	onkey->irq = platform_get_irq(pdev, 0);
 	if (onkey->irq < 0) {
+		dev_err(&pdev->dev, "Failed to get IRQ\n");
 		return -EINVAL;
 	}
 
@@ -82,10 +83,6 @@ static int pm88x_onkey_probe(struct platform_device *pdev)
 	}
 
 	device_init_wakeup(&pdev->dev, 1);
-
-	/* TODO: configure GPIO */
-
-	/* TODO: fault wakeup? */
 
 	return 0;
 }
