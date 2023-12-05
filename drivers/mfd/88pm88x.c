@@ -9,15 +9,54 @@
 
 #include <linux/mfd/88pm88x.h>
 
-#define PM88X_ONKEY_INT_ENA1 1
-#define PM88X_INT_STATUS1 5
-#define PM88X_INT_ENA_1 0xa
-
 #define PM88X_INV_INT BIT(0)
 #define PM88X_INT_CLEAR	BIT(1)
 #define PM88X_INT_READ_CLEAR 0
 #define PM88X_INT_WRITE_CLEAR BIT(1)
 #define PM88X_INT_MASK_MODE BIT(2)
+
+/* interrupt status registers */
+#define PM88X_REG_IRQ_STATUS1			0x05
+
+#define PM88X_REG_IRQ1				0x0a
+#define PM88X_REG_IRQ1_ONKEY			BIT(0)
+#define PM88X_REG_IRQ1_EXTON			BIT(1) // unused
+#define PM88X_REG_IRQ1_CHARGER			BIT(2)
+#define PM88X_REG_IRQ1_BATTERY			BIT(3) // unused
+#define PM88X_REG_IRQ1_RTC			BIT(4)
+#define PM88X_REG_IRQ1_CLASSD			BIT(5) // unused
+#define PM88X_REG_IRQ1_XO			BIT(6) // unused
+#define PM88X_REG_IRQ1_GPIO			BIT(7) // unused
+
+#define PM88X_REG_IRQ2				0x0b
+#define PM88X_REG_IRQ2_BATTERY_VOLTAGE		BIT(0)
+#define PM88X_REG_IRQ2_RESERVED1		BIT(1) // unused
+#define PM88X_REG_IRQ2_VBUS			BIT(2) // unused
+#define PM88X_REG_IRQ2_ITEMP			BIT(3) // unused
+#define PM88X_REG_IRQ2_BUCK_PGOOD		BIT(4) // unused
+#define PM88X_REG_IRQ2_LDO_PGOOD		BIT(5) // unused
+#define PM88X_REG_IRQ2_RESERVED6		BIT(6) // unused
+#define PM88X_REG_IRQ2_RESERVED7		BIT(7) // unused
+
+#define PM88X_REG_IRQ3				0x0c
+#define PM88X_REG_IRQ3_GPADC0			BIT(0)
+#define PM88X_REG_IRQ3_GPADC1			BIT(1)
+#define PM88X_REG_IRQ3_GPADC2			BIT(2)
+#define PM88X_REG_IRQ3_GPADC3			BIT(3)
+#define PM88X_REG_IRQ3_MICROPHONE 	   	BIT(4)
+#define PM88X_REG_IRQ3_HEADSET			BIT(5)
+#define PM88X_REG_IRQ3_GND  	 	   	BIT(6) // unused
+#define PM88X_REG_IRQ3_RESERVED7		BIT(7) // unused
+
+#define PM88X_REG_IRQ4				0x0d
+#define PM88X_REG_IRQ4_CHARGER_FAIL		BIT(0)
+#define PM88X_REG_IRQ4_CHARGER_DONE		BIT(1)
+#define PM88X_REG_IRQ4_RESERVED2		BIT(2) // unused
+#define PM88X_REG_IRQ4_OTG_FAIL			BIT(3)
+#define PM88X_REG_IRQ4_RESERVED4		BIT(4) // unused
+#define PM88X_REG_IRQ4_CHARGER_ILIM		BIT(5) // unused
+#define PM88X_REG_IRQ4_BATTERY_CC		BIT(6) /* TODO: CC? */
+#define PM88X_REG_IRQ4_RESERVED7		BIT(7) // unused
 
 #define PM88X_SW_PDOWN	BIT(5)
 
@@ -128,7 +167,7 @@ enum pm88x_irq {
 };
 
 static struct regmap_irq pm88x_regmap_irqs[] = {
-	REGMAP_IRQ_REG(PM88X_IRQ_ONKEY, 0, PM88X_ONKEY_INT_ENA1),
+	REGMAP_IRQ_REG(PM88X_IRQ_ONKEY, 0, PM88X_REG_IRQ1_ONKEY),
 };
 
 static struct regmap_irq_chip pm88x_regmap_irq_chip = {
@@ -136,9 +175,9 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 	.irqs = pm88x_regmap_irqs,
 	.num_irqs = ARRAY_SIZE(pm88x_regmap_irqs),
 	.num_regs = 4,
-	.status_base = PM88X_INT_STATUS1,
-	.ack_base = PM88X_INT_STATUS1,
-	.unmask_base = PM88X_INT_ENA_1,
+	.status_base = PM88X_REG_IRQ_STATUS1,
+	.ack_base = PM88X_REG_IRQ_STATUS1,
+	.unmask_base = PM88X_REG_IRQ1,
 };
 
 /* TODO: understand these presets */
