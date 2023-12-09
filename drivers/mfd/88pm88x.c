@@ -9,12 +9,6 @@
 
 #include <linux/mfd/88pm88x.h>
 
-#define PM88X_INV_INT BIT(0)
-#define PM88X_INT_CLEAR	BIT(1)
-#define PM88X_INT_READ_CLEAR 0
-#define PM88X_INT_WRITE_CLEAR BIT(1)
-#define PM88X_INT_MASK_MODE BIT(2)
-
 /* interrupt status registers */
 #define PM88X_REG_IRQ_STATUS1			0x05
 
@@ -58,7 +52,14 @@
 #define PM88X_REG_IRQ4_BATTERY_CC		BIT(6)
 #define PM88X_REG_IRQ4_RESERVED7		BIT(7) // unused
 
-#define PM88X_SW_PDOWN	BIT(5)
+#define PM88X_REG_MISC_CONFIG2			0x15
+#define PM88X_REG_IRQ_INV			BIT(0)
+#define PM88X_REG_IRQ_CLEAR			BIT(1)
+#define PM88X_REG_IRQ_READ_CLEAR		0x00
+#define PM88X_REG_IRQ_WRITE_CLEAR		BIT(1)
+#define PM88X_REG_IRQ_MASK_MODE			BIT(2)
+
+#define PM88X_SW_PDOWN				BIT(5)
 
 #define PM880_BUCK_NAME		"88pm880-buck"
 #define PM880_LDO_NAME		"88pm880-ldo"
@@ -287,8 +288,8 @@ static int pm88x_setup_irq(struct pm88x_chip *chip)
 {
 	int mask, data, ret;
 
-	mask = PM88X_INV_INT | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE;
-	data = chip->data->irq_mode ? PM88X_INT_WRITE_CLEAR : PM88X_INT_READ_CLEAR;
+	mask = PM88X_REG_IRQ_INV | PM88X_REG_IRQ_CLEAR | PM88X_REG_IRQ_MASK_MODE;
+	data = chip->data->irq_mode ? PM88X_REG_IRQ_WRITE_CLEAR : PM88X_REG_IRQ_READ_CLEAR;
 	ret = regmap_update_bits(chip->regmap, PM88X_REG_MISC_CONFIG2, mask, data);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to set interrupt clearing mode: %d\n", ret);
