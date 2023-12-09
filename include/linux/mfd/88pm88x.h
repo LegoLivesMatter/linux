@@ -3,8 +3,10 @@
 
 #include <linux/mfd/core.h>
 
-#define PM880_WHOAMI 0xb1
-#define PM886_WHOAMI 0xa1
+#define PM880_A0_WHOAMI		0xb0
+#define PM880_A1_WHOAMI		0xb1
+#define PM886_A0_WHOAMI		0x00
+#define PM886_A1_WHOAMI		0xa1
 
 #define PM88X_ID_VOTG 0
 /* registers */

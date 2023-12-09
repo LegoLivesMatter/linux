@@ -250,7 +250,7 @@ static struct mfd_cell pm88x_devs[] = {
 };
 
 static struct pm88x_data pm880_data = {
-	.whoami = PM880_WHOAMI,
+	.whoami = PM880_A1_WHOAMI,
 	.devs = pm880_devs,
 	.num_devs = ARRAY_SIZE(pm880_devs),
 	.presets = pm880_presets,
@@ -259,7 +259,7 @@ static struct pm88x_data pm880_data = {
 };
 
 static struct pm88x_data pm886_data = {
-	.whoami = PM886_WHOAMI,
+	.whoami = PM886_A1_WHOAMI,
 	.devs = pm886_devs,
 	.num_devs = ARRAY_SIZE(pm886_devs),
 	.presets = pm886_presets,
@@ -322,8 +322,7 @@ static int pm88x_mfd_add_devices(struct pm88x_chip *chip)
 	ret = devm_mfd_add_devices(&chip->client->dev, 0, chip->data->devs, chip->data->num_devs,
 			NULL, 0, regmap_irq_get_domain(chip->irq_data));
 	if (ret) {
-		dev_err(&chip->client->dev, "Failed to add %s devices: %d\n",
-				chip->data->whoami == PM880_WHOAMI ? "PM880" : "PM886", ret);
+		dev_err(&chip->client->dev, "Failed to add chip-specific devices: %d\n", ret);
 		return ret;
 	}
 
@@ -376,7 +375,7 @@ static int pm88x_probe(struct i2c_client *client)
 		return ret;
 	}
 	switch (chip->data->whoami) {
-	case PM880_WHOAMI:
+	case PM880_A1_WHOAMI:
 		chip->buck_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 4));
 		if (IS_ERR(chip->buck_page)) {
 			ret = PTR_ERR(chip->buck_page);
@@ -390,7 +389,7 @@ static int pm88x_probe(struct i2c_client *client)
 			return ret;
 		}
 		break;
-	case PM886_WHOAMI:
+	case PM886_A1_WHOAMI:
 		chip->buck_regmap = chip->ldo_regmap;
 		break;
 	}
