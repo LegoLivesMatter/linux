@@ -10,8 +10,7 @@
 
 #include <linux/mfd/88pm88x.h>
 
-#define PM88X_ONKEY_STS1 						0x01
-
+#define PM88X_ONKEY_STS1	0x01
 
 struct pm88x_onkey {
 	struct input_dev *idev;
