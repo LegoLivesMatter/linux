@@ -214,7 +214,7 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 };
 
 static struct reg_sequence pm880_presets[] = {
-	REG_SEQ0(PM88X_REG_WATCHDOG, 0x1),	/* disable watchdog */
+	REG_SEQ0(PM88X_REG_WATCHDOG, 0x01),	/* disable watchdog */
 	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),	/* output 32 kHz from XO */
 	REG_SEQ0(PM88X_REG_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
 	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),	/* XO_LJ = 1, enable low jitter for 32 kHz */
@@ -223,7 +223,7 @@ static struct reg_sequence pm880_presets[] = {
 };
 
 static struct reg_sequence pm886_presets[] = {
-	REG_SEQ0(PM88X_REG_WATCHDOG, 0x1),	/* disable watchdog */
+	REG_SEQ0(PM88X_REG_WATCHDOG, 0x01),	/* disable watchdog */
 	REG_SEQ0(PM88X_REG_GPIO_CTRL1, 0x40),	/* GPIO1: DVC, GPIO0: input */
 	REG_SEQ0(PM88X_REG_GPIO_CTRL2, 0x00),	/* GPIO2: input */
 	REG_SEQ0(PM88X_REG_GPIO_CTRL3, 0x44),	/* DVC2, DVC1 */
