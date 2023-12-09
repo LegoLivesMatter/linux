@@ -28,6 +28,7 @@
  * check the values of the following definitions against DS once again
  * maybe add page specifications (see DS comments)
  * check which of these are really used and what for where unclear
+ * FIELD_PREP?
  * */
 #define PM88X_REG_WHOAMI		0x00
 #define PM88X_REG_STATUS1		BIT(0)
