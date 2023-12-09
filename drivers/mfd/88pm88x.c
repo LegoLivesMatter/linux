@@ -55,7 +55,7 @@
 #define PM88X_REG_IRQ4_OTG_FAIL			BIT(3)
 #define PM88X_REG_IRQ4_RESERVED4		BIT(4) // unused
 #define PM88X_REG_IRQ4_CHARGER_ILIM		BIT(5) // unused
-#define PM88X_REG_IRQ4_BATTERY_CC		BIT(6) /* TODO: CC? */
+#define PM88X_REG_IRQ4_BATTERY_CC		BIT(6)
 #define PM88X_REG_IRQ4_RESERVED7		BIT(7) // unused
 
 #define PM88X_SW_PDOWN	BIT(5)
@@ -113,26 +113,25 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 	.unmask_base = PM88X_REG_IRQ1,
 };
 
-/* TODO: understand these presets */
 static struct reg_sequence pm880_presets[] = {
-	REG_SEQ0(PM88X_REG_WATCHDOG, 0x1),		/* disable watchdog */
-	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),		/* output 32 kHz from XO */
+	REG_SEQ0(PM88X_REG_WATCHDOG, 0x1),	/* disable watchdog */
+	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),	/* output 32 kHz from XO */
 	REG_SEQ0(PM88X_REG_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
-	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),		/* XO_LJ = 1, enable low jitter for 32 kHz */
-	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc0),		/* enable LPM for internal reference group in sleep */
+	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),	/* XO_LJ = 1, enable low jitter for 32 kHz */
+	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc0),	/* enable LPM for internal reference group in sleep */
 	REG_SEQ0(PM88X_REG_BK_OSC_CTRL3, 0xc0),	/* set the duty cycle of charger DC/DC to max */
 };
 
 static struct reg_sequence pm886_presets[] = {
-	REG_SEQ0(PM88X_REG_WATCHDOG, 0x1),		/* disable watchdog */
-	REG_SEQ0(PM88X_REG_GPIO_CTRL1, 0x40),	/* gpio1: dvc, gpio0: input, */
-	REG_SEQ0(PM88X_REG_GPIO_CTRL2, 0x00),	/* gpio2: input */
-	REG_SEQ0(PM88X_REG_GPIO_CTRL3, 0x44),	/* dvc2, dvc1 */
-	REG_SEQ0(PM88X_REG_GPIO_CTRL4, 0x00),	/* gpio5v_1:input, gpio5v_2: input */
-	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),		/* output 32 kHz from XO */
+	REG_SEQ0(PM88X_REG_WATCHDOG, 0x1),	/* disable watchdog */
+	REG_SEQ0(PM88X_REG_GPIO_CTRL1, 0x40),	/* GPIO1: DVC, GPIO0: input */
+	REG_SEQ0(PM88X_REG_GPIO_CTRL2, 0x00),	/* GPIO2: input */
+	REG_SEQ0(PM88X_REG_GPIO_CTRL3, 0x44),	/* DVC2, DVC1 */
+	REG_SEQ0(PM88X_REG_GPIO_CTRL4, 0x00),	/* GPIO5V_1:input, GPIO5V_2: input */
+	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),	/* output 32 kHz from XO */
 	REG_SEQ0(PM88X_REG_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
-	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),		/* XO_LJ = 1, enable low jitter for 32 kHz */
-	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc8),		/* OV_VSYS and UV_VSYS1 comparators on VSYS disabled, VSYS_OVER_TH : 5.6V */
+	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),	/* XO_LJ = 1, enable low jitter for 32 kHz */
+	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc8),	/* OV_VSYS and UV_VSYS1 comparators on VSYS disabled, VSYS_OVER_TH : 5.6V */
 	REG_SEQ0(PM88X_REG_BK_OSC_CTRL3, 0xc0),	/* set the duty cycle of charger DC/DC to max */
 };
 
