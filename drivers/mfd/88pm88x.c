@@ -114,25 +114,41 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 };
 
 static struct reg_sequence pm880_presets[] = {
-	REG_SEQ0(PM88X_REG_WATCHDOG, 0x01),	/* disable watchdog */
-	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),	/* output 32 kHz from XO */
-	REG_SEQ0(PM88X_REG_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
-	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),	/* XO_LJ = 1, enable low jitter for 32 kHz */
-	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc0),	/* enable LPM for internal reference group in sleep */
-	REG_SEQ0(PM88X_REG_BK_OSC_CTRL3, 0xc0),	/* set the duty cycle of charger DC/DC to max */
+	/* disable watchdog */
+	REG_SEQ0(PM88X_REG_WATCHDOG, 0x01),
+	/* output 32 kHz from XO */
+	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),
+	/* OSC_FREERUN = 1, to lock FLL */
+	REG_SEQ0(PM88X_REG_BK_OSC_CTRL1, 0x0f),
+	/* XO_LJ = 1, enable low jitter for 32 kHz */
+	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),
+	/* enable LPM for internal reference group in sleep */
+	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc0),
+	/* set the duty cycle of charger DC/DC to max */
+	REG_SEQ0(PM88X_REG_BK_OSC_CTRL3, 0xc0),
 };
 
 static struct reg_sequence pm886_presets[] = {
-	REG_SEQ0(PM88X_REG_WATCHDOG, 0x01),	/* disable watchdog */
-	REG_SEQ0(PM88X_REG_GPIO_CTRL1, 0x40),	/* GPIO1: DVC, GPIO0: input */
-	REG_SEQ0(PM88X_REG_GPIO_CTRL2, 0x00),	/* GPIO2: input */
-	REG_SEQ0(PM88X_REG_GPIO_CTRL3, 0x44),	/* DVC2, DVC1 */
-	REG_SEQ0(PM88X_REG_GPIO_CTRL4, 0x00),	/* GPIO5V_1:input, GPIO5V_2: input */
-	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),	/* output 32 kHz from XO */
-	REG_SEQ0(PM88X_REG_BK_OSC_CTRL1, 0x0f),	/* OSC_FREERUN = 1, to lock FLL */
-	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),	/* XO_LJ = 1, enable low jitter for 32 kHz */
-	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc8),	/* OV_VSYS and UV_VSYS1 comparators on VSYS disabled, VSYS_OVER_TH : 5.6V */
-	REG_SEQ0(PM88X_REG_BK_OSC_CTRL3, 0xc0),	/* set the duty cycle of charger DC/DC to max */
+	/* disable watchdog */
+	REG_SEQ0(PM88X_REG_WATCHDOG, 0x01),
+	/* GPIO1: DVC, GPIO0: input */
+	REG_SEQ0(PM88X_REG_GPIO_CTRL1, 0x40),
+	/* GPIO2: input */
+	REG_SEQ0(PM88X_REG_GPIO_CTRL2, 0x00),
+	/* DVC2, DVC1 */
+	REG_SEQ0(PM88X_REG_GPIO_CTRL3, 0x44),
+	/* GPIO5V_1:input, GPIO5V_2: input */
+	REG_SEQ0(PM88X_REG_GPIO_CTRL4, 0x00),
+	/* output 32 kHz from XO */
+	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),
+	/* OSC_FREERUN = 1, to lock FLL */
+	REG_SEQ0(PM88X_REG_BK_OSC_CTRL1, 0x0f),
+	/* XO_LJ = 1, enable low jitter for 32 kHz */
+	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),
+	/* OV_VSYS and UV_VSYS1 comparators on VSYS disabled, VSYS_OVER_TH : 5.6V */
+	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc8),
+	/* set the duty cycle of charger DC/DC to max */
+	REG_SEQ0(PM88X_REG_BK_OSC_CTRL3, 0xc0),
 };
 
 static struct resource onkey_resources[] = {
@@ -181,7 +197,10 @@ static const struct regmap_config pm88x_i2c_regmap = {
 static int pm88x_power_off_handler(struct sys_off_data *data)
 {
 	struct pm88x_chip *chip = data->cb_data;
-	int ret = regmap_update_bits(chip->regmap, PM88X_REG_MISC_CONFIG1, PM88X_SW_PDOWN, PM88X_SW_PDOWN);
+	int ret;
+
+	ret = regmap_update_bits(chip->regmap, PM88X_REG_MISC_CONFIG1,
+			PM88X_SW_PDOWN, PM88X_SW_PDOWN);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to power off the device: %d\n", ret);
 		return NOTIFY_BAD;
