@@ -324,6 +324,7 @@ static int pm88x_probe(struct i2c_client *client)
 }
 
 const struct of_device_id pm88x_of_match[] = {
+	/* FIXME: compatible per stepping? */
 	{ .compatible = "marvell,88pm880", .data = &pm880_data },
 	{ .compatible = "marvell,88pm886", .data = &pm886_data },
 	{ },
