@@ -41,7 +41,7 @@ config INPUT_88PM88X_ONKEY
 	  reporting power button status.
 
 	  To compile this driver as a module, choose M here: the module
-	  will be called 88pm88x_onkey.
+	  will be called 88pm88x-onkey.
 
 config INPUT_AB8500_PONKEY
 	tristate "AB8500 Pon (PowerOn) Key"
