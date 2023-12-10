@@ -563,12 +563,12 @@ int pm88x_display_buck(struct pm88x_chip *chip, char *buf)
 	ssize_t ret;
 
 	switch (chip->data->whoami) {
-	case PM886_WHOAMI:
+	case PM886_A1_WHOAMI:
 		info = pm886_buck_configs;
 		extra = pm886_buck_extra_info;
 		buck_num = ARRAY_SIZE(pm886_buck_configs);
 		break;
-	case PM880_WHOAMI:
+	case PM880_A1_WHOAMI:
 		info = pm880_buck_configs;
 		extra = pm880_buck_extra_info;
 		buck_num = ARRAY_SIZE(pm880_buck_configs);

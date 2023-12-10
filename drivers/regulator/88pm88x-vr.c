@@ -461,13 +461,13 @@ int pm88x_display_vr(struct pm88x_chip *chip, char *buf)
 	ssize_t ret;
 
 	switch (chip->data->whoami) {
-	case PM886_WHOAMI:
+	case PM886_A1_WHOAMI:
 		slp_info = pm886_buck_slp_configs;
 		slp_num = ARRAY_SIZE(pm886_buck_slp_configs);
 		vr_info = pm88x_vr_configs;
 		vr_num = ARRAY_SIZE(pm88x_vr_configs);
 		break;
-	case PM880_WHOAMI:
+	case PM880_A1_WHOAMI:
 		slp_info = pm880_buck_slp_configs;
 		slp_num = ARRAY_SIZE(pm880_buck_slp_configs);
 		audio_info = pm880_buck_audio_configs;
