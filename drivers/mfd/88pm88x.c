@@ -168,7 +168,7 @@ static struct mfd_cell pm880_devs[] = {
 static struct mfd_cell pm886_devs[] = {
 };
 
-static struct pm88x_data pm880_data = {
+static struct pm88x_data pm880_a1_data = {
 	.whoami = PM880_A1_WHOAMI,
 	.devs = pm880_devs,
 	.num_devs = ARRAY_SIZE(pm880_devs),
@@ -177,7 +177,7 @@ static struct pm88x_data pm880_data = {
 	.irq_mode = 0,
 };
 
-static struct pm88x_data pm886_data = {
+static struct pm88x_data pm886_a1_data = {
 	.whoami = PM886_A1_WHOAMI,
 	.devs = pm886_devs,
 	.num_devs = ARRAY_SIZE(pm886_devs),
@@ -360,9 +360,8 @@ static int pm88x_probe(struct i2c_client *client)
 }
 
 const struct of_device_id pm88x_of_match[] = {
-	/* FIXME: compatible per stepping? */
-	{ .compatible = "marvell,88pm880", .data = &pm880_data },
-	{ .compatible = "marvell,88pm886", .data = &pm886_data },
+	{ .compatible = "marvell,88pm880-a1", .data = &pm880_a1_data },
+	{ .compatible = "marvell,88pm886-a1", .data = &pm886_a1_data },
 	{ },
 };
 
