@@ -23,7 +23,7 @@ static irqreturn_t pm88x_onkey_irq_handler(int irq, void *data)
 	unsigned int val;
 	int ret = 0;
 
-	ret = regmap_read(onkey->chip->regmap, PM88X_REG_STATUS1, &val);
+	ret = regmap_read(onkey->chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_STATUS1, &val);
 	if (ret) {
 		dev_err(onkey->idev->dev.parent, "Failed to read status: %d\n", ret);
 		return IRQ_NONE;

@@ -60,8 +60,6 @@
 
 #define PM88X_SW_PDOWN				BIT(5)
 
-#define PM88X_ADDR(client, offset) (client->addr + offset)
-
 enum pm88x_irq_number {
 	PM88X_IRQ_ONKEY,
 	PM88X_IRQ_EXTON,
@@ -199,7 +197,7 @@ static int pm88x_power_off_handler(struct sys_off_data *data)
 	struct pm88x_chip *chip = data->cb_data;
 	int ret;
 
-	ret = regmap_update_bits(chip->regmap, PM88X_REG_MISC_CONFIG1,
+	ret = regmap_update_bits(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_MISC_CONFIG1,
 			PM88X_SW_PDOWN, PM88X_SW_PDOWN);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to power off the device: %d\n", ret);
@@ -214,13 +212,13 @@ static int pm88x_setup_irq(struct pm88x_chip *chip)
 
 	mask = PM88X_REG_IRQ_INV | PM88X_REG_IRQ_CLEAR | PM88X_REG_IRQ_MASK_MODE;
 	data = chip->data->irq_mode ? PM88X_REG_IRQ_WRITE_CLEAR : PM88X_REG_IRQ_READ_CLEAR;
-	ret = regmap_update_bits(chip->regmap, PM88X_REG_MISC_CONFIG2, mask, data);
+	ret = regmap_update_bits(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_MISC_CONFIG2, mask, data);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to set interrupt clearing mode: %d\n", ret);
 		return ret;
 	}
 
-	ret = devm_regmap_add_irq_chip(&chip->client->dev, chip->regmap, chip->client->irq,
+	ret = devm_regmap_add_irq_chip(&chip->client->dev, chip->regmaps[PM88X_REGMAP_BASE], chip->client->irq,
 			IRQF_ONESHOT, -1, &pm88x_regmap_irq_chip, &chip->irq_data);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to request IRQ: %d\n", ret);
@@ -253,6 +251,54 @@ static int pm88x_mfd_add_devices(struct pm88x_chip *chip)
 	return 0;
 }
 
+static int pm88x_initialize_regmaps(struct pm88x_chip *chip)
+{
+	struct i2c_client *page;
+	struct regmap *regmap;
+	int ret;
+
+	/* LDO page */
+	page = devm_i2c_new_dummy_device(&chip->client->dev, chip->client->adapter, chip->client->addr + PM88X_PAGE_OFFSET_LDO);
+	if (IS_ERR(page)) {
+		ret = PTR_ERR(page);
+		dev_err(&chip->client->dev, "Failed to initialize LDO: %d\n", ret);
+		return ret;
+	}
+	regmap = devm_regmap_init_i2c(page, &pm88x_i2c_regmap);
+	if (IS_ERR(regmap)) {
+		ret = PTR_ERR(regmap);
+		dev_err(&chip->client>dev, "Failed to initialize LDO regmap: %d\n", ret);
+		return ret;
+	}
+	chip->regmaps[PM88X_REGMAP_LDO] = regmap;
+	/* power page is the same as LDO */
+	chip->regmaps[PM88X_REGMAP_POWER] = regmap;
+
+	/* buck page */
+	switch (chip->data->whoami) {
+	case PM880_A1_WHOAMI:
+		page = devm_i2c_new_dummy_device(&chip->client->dev, chip->client->adapter, chip->client->addr + PM880_PAGE_OFFSET_BUCK);
+		if (IS_ERR(page)) {
+			ret = PTR_ERR(page);
+			dev_err(&chip->client->dev, "Failed to initialize buck page: %d\n", ret);
+			return ret;
+		}
+		regmap = devm_regmap_init_i2c(page, &pm88x_i2c_regmap);
+		if (IS_ERR(regmap)) {
+			ret = PTR_ERR(regmap);
+			dev_err(&chip->client->dev, "Failed to initialize buck regmap: %d\n", ret);
+			return ret;
+		}
+		break;
+	case PM886_A1_WHOAMI:
+		regmap = chip->regmaps[PM88X_REGMAP_LDO];
+		break;
+	}
+	chip->regmaps[PM88X_REGMAP_BUCK] = regmap;
+
+	return 0;
+}
+
 static int pm88x_probe(struct i2c_client *client)
 {
 	struct pm88x_chip *chip;
@@ -269,7 +315,7 @@ static int pm88x_probe(struct i2c_client *client)
 
 	device_init_wakeup(&client->dev, 1);
 
-	chip->regmap = devm_regmap_init_i2c(client, &pm88x_i2c_regmap);
+	chip->regmaps[PM88X_REGMAP_BASE] = devm_regmap_init_i2c(client, &pm88x_i2c_regmap);
 	if (IS_ERR(chip->regmap)) {
 		ret = PTR_ERR(chip->regmap);
 		dev_err(&client->dev, "Failed to initialize regmap: %d\n", ret);
@@ -286,37 +332,9 @@ static int pm88x_probe(struct i2c_client *client)
 		return -EINVAL;
 	}
 
-	chip->ldo_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 1));
-	if (IS_ERR(chip->ldo_page)) {
-		ret = PTR_ERR(chip->ldo_page);
-		dev_err(&client->dev, "Failed to initialize LDO page: %d\n", ret);
+	ret = pm88x_initialize_regmaps(chip);
+	if (ret)
 		return ret;
-	}
-	chip->ldo_regmap = devm_regmap_init_i2c(chip->ldo_page, &pm88x_i2c_regmap);
-	if (IS_ERR(chip->ldo_regmap)) {
-		ret = PTR_ERR(chip->ldo_regmap);
-		dev_err(&client->dev, "Failed to initialize LDO regmap: %d\n", ret);
-		return ret;
-	}
-	switch (chip->data->whoami) {
-	case PM880_A1_WHOAMI:
-		chip->buck_page = devm_i2c_new_dummy_device(&client->dev, client->adapter, PM88X_ADDR(client, 4));
-		if (IS_ERR(chip->buck_page)) {
-			ret = PTR_ERR(chip->buck_page);
-			dev_err(&client->dev, "Failed to initialize BUCK page: %d\n", ret);
-			return ret;
-		}
-		chip->buck_regmap = devm_regmap_init_i2c(chip->buck_page, &pm88x_i2c_regmap);
-		if (IS_ERR(chip->buck_regmap)) {
-			ret = PTR_ERR(chip->buck_regmap);
-			dev_err(&client->dev, "Failed to initialize BUCK regmap: %d\n", ret);
-			return ret;
-		}
-		break;
-	case PM886_A1_WHOAMI:
-		chip->buck_regmap = chip->ldo_regmap;
-		break;
-	}
 
 	ret = pm88x_setup_irq(chip);
 	if (ret)

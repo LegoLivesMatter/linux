@@ -102,6 +102,22 @@
 
 #define PM88X_REG_CHARGER_CONFIG1	0x28
 
+#define PM88X_PAGE_OFFSET_LDO		1
+#define PM88X_PAGE_OFFSET_GPADC		2
+#define PM88X_PAGE_OFFSET_BATTERY	3
+#define PM880_PAGE_OFFSET_BUCK		4
+
+enum pm88x_regmap_index {
+	PM88X_REGMAP_BASE,
+	PM88X_REGMAP_LDO,
+	PM88X_REGMAP_POWER,
+	PM88X_REGMAP_GPADC,
+	PM88X_REGMAP_BATTERY,
+	PM88X_REGMAP_BUCK,
+
+	PM88X_REGMAP_NR
+};
+
 struct pm88x_data {
 	unsigned int whoami;
 	struct mfd_cell *devs;
@@ -116,10 +132,6 @@ struct pm88x_chip {
 	struct i2c_client *client;
 	struct regmap_irq_chip_data *irq_data;
 	const struct pm88x_data *data;
-	struct regmap *regmap;
-	struct regmap *ldo_regmap;
-	struct regmap *buck_regmap;
-	struct i2c_client *ldo_page;
-	struct i2c_client *buck_page;
+	struct regmap regmaps[PM88X_REGMAP_NR];
 };
 #endif /* __LINUX_MFD_88PM88X_H */
