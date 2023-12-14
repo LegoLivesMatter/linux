@@ -11,24 +11,46 @@ maintainers:
 
 description: |
   Marvell 88PM880 and 88PM886 are two similar PMICs providing
-  several functions such as ONKEY, regulators or battery and
+  several functions such as onkey, regulators or battery and
   charger.
 
 properties:
   compatible:
-    const: marvell,88pm880
-    const: marvell,88pm886
+    const: marvell,88pm880-a1
+    const: marvell,88pm886-a1
 
   reg:
     description: I2C device address
     maxItems: 1
 
+  interrupt-controller: true
+
+  interrupts:
+    maxItems: 1
+
+  "#interrupt-cells":
+    const: 2
+
 required:
   - compatible
   - reg
+  - interrupt-controller
+  - interrupts
 
 additionalProperties: false
 
 examples:
   - |
-    /* TODO */
+    i2c {
+      #address-cells = <1>;
+      #size-cells = <0>;
+      pmic0: 88pm886@30 {
+        compatible = "marvell,88pm886-a1";
+        reg = <0x30>;
+        interrupts = <0 4 IRQ_TYPE_LEVEL_HIGH>;
+        interrupt-parent = <&gic>;
+        interrupt-controller;
+        #interrupt-cells = <1>;
+      };
+    };
+...
