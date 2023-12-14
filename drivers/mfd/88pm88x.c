@@ -174,7 +174,7 @@ static struct pm88x_data pm880_a1_data = {
 	.num_devs = ARRAY_SIZE(pm880_devs),
 	.presets = pm880_presets,
 	.num_presets = ARRAY_SIZE(pm880_presets),
-	.irq_mode = 0,
+	.irq_mode = 1,
 };
 
 static struct pm88x_data pm886_a1_data = {
