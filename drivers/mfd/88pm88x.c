@@ -12,53 +12,44 @@
 #define PM88X_REG_IRQ_STATUS1			0x05
 
 #define PM88X_REG_IRQ1				0x0a
-#define PM88X_REG_IRQ1_ONKEY			BIT(0)
-#define PM88X_REG_IRQ1_EXTON			BIT(1) // unused
-#define PM88X_REG_IRQ1_CHARGER			BIT(2)
-#define PM88X_REG_IRQ1_BATTERY			BIT(3) // unused
-#define PM88X_REG_IRQ1_RTC			BIT(4)
-#define PM88X_REG_IRQ1_CLASSD			BIT(5) // unused
-#define PM88X_REG_IRQ1_XO			BIT(6) // unused
-#define PM88X_REG_IRQ1_GPIO			BIT(7) // unused
+#define PM88X_IRQ1_ONKEY			BIT(0)
+#define PM88X_IRQ1_EXTON			BIT(1) // unused
+#define PM88X_IRQ1_CHARGER			BIT(2)
+#define PM88X_IRQ1_BATTERY			BIT(3) // unused
+#define PM88X_IRQ1_RTC				BIT(4)
+#define PM88X_IRQ1_CLASSD			BIT(5) // unused
+#define PM88X_IRQ1_XO				BIT(6) // unused
+#define PM88X_IRQ1_GPIO				BIT(7) // unused
 
 #define PM88X_REG_IRQ2				0x0b
-#define PM88X_REG_IRQ2_BATTERY_VOLTAGE		BIT(0)
-#define PM88X_REG_IRQ2_RESERVED1		BIT(1) // unused
-#define PM88X_REG_IRQ2_VBUS			BIT(2) // unused
-#define PM88X_REG_IRQ2_ITEMP			BIT(3) // unused
-#define PM88X_REG_IRQ2_BUCK_PGOOD		BIT(4) // unused
-#define PM88X_REG_IRQ2_LDO_PGOOD		BIT(5) // unused
-#define PM88X_REG_IRQ2_RESERVED6		BIT(6) // unused
-#define PM88X_REG_IRQ2_RESERVED7		BIT(7) // unused
+#define PM88X_IRQ2_BATTERY_VOLTAGE		BIT(0)
+#define PM88X_IRQ2_RESERVED1			BIT(1) // unused
+#define PM88X_IRQ2_VBUS				BIT(2) // unused
+#define PM88X_IRQ2_ITEMP			BIT(3) // unused
+#define PM88X_IRQ2_BUCK_PGOOD			BIT(4) // unused
+#define PM88X_IRQ2_LDO_PGOOD			BIT(5) // unused
+#define PM88X_IRQ2_RESERVED6			BIT(6) // unused
+#define PM88X_IRQ2_RESERVED7			BIT(7) // unused
 
 #define PM88X_REG_IRQ3				0x0c
-#define PM88X_REG_IRQ3_GPADC0			BIT(0)
-#define PM88X_REG_IRQ3_GPADC1			BIT(1)
-#define PM88X_REG_IRQ3_GPADC2			BIT(2)
-#define PM88X_REG_IRQ3_GPADC3			BIT(3)
-#define PM88X_REG_IRQ3_MICROPHONE 	   	BIT(4)
-#define PM88X_REG_IRQ3_HEADSET			BIT(5)
-#define PM88X_REG_IRQ3_GND  	 	   	BIT(6) // unused
-#define PM88X_REG_IRQ3_RESERVED7		BIT(7) // unused
+#define PM88X_IRQ3_GPADC0			BIT(0)
+#define PM88X_IRQ3_GPADC1			BIT(1)
+#define PM88X_IRQ3_GPADC2			BIT(2)
+#define PM88X_IRQ3_GPADC3			BIT(3)
+#define PM88X_IRQ3_MICROPHONE 	   		BIT(4)
+#define PM88X_IRQ3_HEADSET			BIT(5)
+#define PM88X_IRQ3_GND  	 	   	BIT(6) // unused
+#define PM88X_IRQ3_RESERVED7			BIT(7) // unused
 
 #define PM88X_REG_IRQ4				0x0d
-#define PM88X_REG_IRQ4_CHARGER_FAIL		BIT(0)
-#define PM88X_REG_IRQ4_CHARGER_DONE		BIT(1)
-#define PM88X_REG_IRQ4_RESERVED2		BIT(2) // unused
-#define PM88X_REG_IRQ4_OTG_FAIL			BIT(3)
-#define PM88X_REG_IRQ4_RESERVED4		BIT(4) // unused
-#define PM88X_REG_IRQ4_CHARGER_ILIM		BIT(5) // unused
-#define PM88X_REG_IRQ4_BATTERY_CC		BIT(6)
-#define PM88X_REG_IRQ4_RESERVED7		BIT(7) // unused
-
-#define PM88X_REG_MISC_CONFIG2			0x15
-#define PM88X_REG_IRQ_INV			BIT(0)
-#define PM88X_REG_IRQ_CLEAR			BIT(1)
-#define PM88X_REG_IRQ_READ_CLEAR		0x00
-#define PM88X_REG_IRQ_WRITE_CLEAR		BIT(1)
-#define PM88X_REG_IRQ_MASK_MODE			BIT(2)
-
-#define PM88X_SW_PDOWN				BIT(5)
+#define PM88X_IRQ4_CHARGER_FAIL			BIT(0)
+#define PM88X_IRQ4_CHARGER_DONE			BIT(1)
+#define PM88X_IRQ4_RESERVED2			BIT(2) // unused
+#define PM88X_IRQ4_OTG_FAIL			BIT(3)
+#define PM88X_IRQ4_RESERVED4			BIT(4) // unused
+#define PM88X_IRQ4_CHARGER_ILIM			BIT(5) // unused
+#define PM88X_IRQ4_BATTERY_CC			BIT(6)
+#define PM88X_IRQ4_RESERVED7			BIT(7) // unused
 
 enum pm88x_irq_number {
 	PM88X_IRQ_ONKEY,
@@ -98,7 +89,7 @@ enum pm88x_irq_number {
 };
 
 static struct regmap_irq pm88x_regmap_irqs[] = {
-	REGMAP_IRQ_REG(PM88X_IRQ_ONKEY, 0, PM88X_REG_IRQ1_ONKEY),
+	REGMAP_IRQ_REG(PM88X_IRQ_ONKEY, 0, PM88X_IRQ1_ONKEY),
 };
 
 static struct regmap_irq_chip pm88x_regmap_irq_chip = {
@@ -198,7 +189,7 @@ static int pm88x_power_off_handler(struct sys_off_data *data)
 	int ret;
 
 	ret = regmap_update_bits(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_MISC_CONFIG1,
-			PM88X_SW_PDOWN, PM88X_SW_PDOWN);
+			PM88X_SW_POWERDOWN, PM88X_SW_POWERDOWN);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to power off the device: %d\n", ret);
 		return NOTIFY_BAD;
@@ -210,8 +201,8 @@ static int pm88x_setup_irq(struct pm88x_chip *chip)
 {
 	int mask, data, ret;
 
-	mask = PM88X_REG_IRQ_INV | PM88X_REG_IRQ_CLEAR | PM88X_REG_IRQ_MASK_MODE;
-	data = chip->data->irq_mode ? PM88X_REG_IRQ_WRITE_CLEAR : PM88X_REG_IRQ_READ_CLEAR;
+	mask = PM88X_IRQ_INV | PM88X_IRQ_CLEAR | PM88X_IRQ_MASK_MODE;
+	data = chip->data->irq_mode ? PM88X_IRQ_WRITE_CLEAR : PM88X_IRQ_READ_CLEAR;
 	ret = regmap_update_bits(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_MISC_CONFIG2, mask, data);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to set interrupt clearing mode: %d\n", ret);

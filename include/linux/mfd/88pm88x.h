@@ -13,15 +13,25 @@
  * check the values of the following definitions against DS once again
  * maybe add page specifications (see DS comments)
  * check which of these are really used and what for where unclear
- * FIELD_PREP?
  * */
 #define PM88X_REG_WHOAMI		0x00
-#define PM88X_REG_STATUS1		BIT(0)
-#define PM88X_REG_CHARGER_DETECT	BIT(2)
-#define PM88X_REG_BATTERY_DETECT	BIT(3)
+
+#define PM88X_REG_STATUS1		0x01
+#define PM88X_ONKEY_STATUS1		BIT(0)
+#define PM88X_CHARGER_DETECT		BIT(2)
+#define PM88X_BATTERY_DETECT		BIT(3)
 
 #define PM88X_REG_MISC_CONFIG1		0x14
-#define PM88X_REG_LONGKEY_RESET		BIT(3)
+#define PM88X_LONGKEY_RESET		BIT(3)
+#define PM88X_SW_POWERDOWN		BIT(5)
+
+#define PM88X_REG_MISC_CONFIG2		0x15
+/* FIXME: rename and maybe change definition style */
+#define PM88X_IRQ_INV			BIT(0)
+#define PM88X_IRQ_CLEAR			BIT(1)
+#define PM88X_IRQ_READ_CLEAR		0x00
+#define PM88X_IRQ_WRITE_CLEAR		BIT(1)
+#define PM88X_IRQ_MODE_MASK		BIT(2)
 
 #define PM88X_REG_WATCHDOG		0x1d
 
@@ -54,8 +64,8 @@
 #define PM88X_REG_BK_OSC_CTRL3		0x52
 
 #define PM88X_REG_RTC_ALARM_CTRL1	0xd0
-#define PM88X_REG_RTC_ALARM_WAKEUP	BIT(4)
-#define PM88X_REG_RTC_USE_XO		BIT(7)
+#define PM88X_RTC_ALARM_WAKEUP		BIT(4)
+#define PM88X_RTC_USE_XO		BIT(7)
 
 #define PM88X_REG_AON_CTRL2		0xe2
 #define PM88X_REG_AON_CTRL3		0xe3
