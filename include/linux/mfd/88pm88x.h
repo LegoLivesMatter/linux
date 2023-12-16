@@ -142,6 +142,6 @@ struct pm88x_chip {
 	struct i2c_client *client;
 	struct regmap_irq_chip_data *irq_data;
 	const struct pm88x_data *data;
-	struct regmap regmaps[PM88X_REGMAP_NR];
+	struct regmap *regmaps[PM88X_REGMAP_NR];
 };
 #endif /* __LINUX_MFD_88PM88X_H */

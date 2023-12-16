@@ -201,7 +201,7 @@ static int pm88x_setup_irq(struct pm88x_chip *chip)
 {
 	int mask, data, ret;
 
-	mask = PM88X_IRQ_INV | PM88X_IRQ_CLEAR | PM88X_IRQ_MASK_MODE;
+	mask = PM88X_IRQ_INV | PM88X_IRQ_CLEAR | PM88X_IRQ_MODE_MASK;
 	data = chip->data->irq_mode ? PM88X_IRQ_WRITE_CLEAR : PM88X_IRQ_READ_CLEAR;
 	ret = regmap_update_bits(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_MISC_CONFIG2, mask, data);
 	if (ret) {
@@ -258,7 +258,7 @@ static int pm88x_initialize_regmaps(struct pm88x_chip *chip)
 	regmap = devm_regmap_init_i2c(page, &pm88x_i2c_regmap);
 	if (IS_ERR(regmap)) {
 		ret = PTR_ERR(regmap);
-		dev_err(&chip->client>dev, "Failed to initialize LDO regmap: %d\n", ret);
+		dev_err(&chip->client->dev, "Failed to initialize LDO regmap: %d\n", ret);
 		return ret;
 	}
 	chip->regmaps[PM88X_REGMAP_LDO] = regmap;
@@ -307,13 +307,13 @@ static int pm88x_probe(struct i2c_client *client)
 	device_init_wakeup(&client->dev, 1);
 
 	chip->regmaps[PM88X_REGMAP_BASE] = devm_regmap_init_i2c(client, &pm88x_i2c_regmap);
-	if (IS_ERR(chip->regmap)) {
-		ret = PTR_ERR(chip->regmap);
+	if (IS_ERR(chip->regmaps[PM88X_REGMAP_BASE])) {
+		ret = PTR_ERR(chip->regmaps[PM88X_REGMAP_BASE]);
 		dev_err(&client->dev, "Failed to initialize regmap: %d\n", ret);
 		return ret;
 	}
 
-	ret = regmap_read(chip->regmap, PM88X_REG_WHOAMI, &chip_id);
+	ret = regmap_read(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_WHOAMI, &chip_id);
 	if (ret) {
 		dev_err(&client->dev, "Failed to read chip ID: %d\n", ret);
 		return ret;
@@ -335,7 +335,7 @@ static int pm88x_probe(struct i2c_client *client)
 	if (ret)
 		return ret;
 
-	ret = regmap_register_patch(chip->regmap, chip->data->presets, chip->data->num_presets);
+	ret = regmap_register_patch(chip->regmaps[PM88X_REGMAP_BASE], chip->data->presets, chip->data->num_presets);
 	if (ret) {
 		dev_err(&client->dev, "Failed to register regmap patch: %d\n", ret);
 		return ret;
