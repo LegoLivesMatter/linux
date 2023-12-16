@@ -203,14 +203,16 @@ static int pm88x_setup_irq(struct pm88x_chip *chip)
 
 	mask = PM88X_IRQ_INV | PM88X_IRQ_CLEAR | PM88X_IRQ_MODE_MASK;
 	data = chip->data->irq_mode ? PM88X_IRQ_WRITE_CLEAR : PM88X_IRQ_READ_CLEAR;
-	ret = regmap_update_bits(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_MISC_CONFIG2, mask, data);
+	ret = regmap_update_bits(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_MISC_CONFIG2,
+			mask, data);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to set interrupt clearing mode: %d\n", ret);
 		return ret;
 	}
 
-	ret = devm_regmap_add_irq_chip(&chip->client->dev, chip->regmaps[PM88X_REGMAP_BASE], chip->client->irq,
-			IRQF_ONESHOT, -1, &pm88x_regmap_irq_chip, &chip->irq_data);
+	ret = devm_regmap_add_irq_chip(&chip->client->dev, chip->regmaps[PM88X_REGMAP_BASE],
+			chip->client->irq, IRQF_ONESHOT, -1, &pm88x_regmap_irq_chip,
+			&chip->irq_data);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to request IRQ: %d\n", ret);
 		return ret;
@@ -335,7 +337,8 @@ static int pm88x_probe(struct i2c_client *client)
 	if (ret)
 		return ret;
 
-	ret = regmap_register_patch(chip->regmaps[PM88X_REGMAP_BASE], chip->data->presets, chip->data->num_presets);
+	ret = regmap_register_patch(chip->regmaps[PM88X_REGMAP_BASE], chip->data->presets,
+			chip->data->num_presets);
 	if (ret) {
 		dev_err(&client->dev, "Failed to register regmap patch: %d\n", ret);
 		return ret;
