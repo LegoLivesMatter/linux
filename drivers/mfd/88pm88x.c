@@ -368,6 +368,6 @@ static struct i2c_driver pm88x_i2c_driver = {
 };
 module_i2c_driver(pm88x_i2c_driver);
 
-MODULE_DESCRIPTION("88PM88X PMIC driver");
+MODULE_DESCRIPTION("Marvell 88PM88X PMIC driver");
 MODULE_AUTHOR("Karel Balej <balejk@matfyz.cz>");
 MODULE_LICENSE("GPL");
