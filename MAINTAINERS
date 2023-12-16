@@ -12632,8 +12632,8 @@ F:	include/linux/platform_data/mv88e6xxx.h
 MARVELL 88PM88X PMIC MFD DRIVER
 M:	Karel Balej <balejk@matfyz.cz>
 S:	Maintained
-F:	Documentation/devicetree/bindings/mfd/marvell,88pm88x.yaml
 F:	Documentation/devicetree/bindings/input/marvell,88pm88x-onkey.yaml
+F:	Documentation/devicetree/bindings/mfd/marvell,88pm88x.yaml
 F:	drivers/input/misc/88pm88x-onkey.c
 F:	drivers/mfd/88pm88x.c
 F:	include/linux/mfd/88pm88x.h
