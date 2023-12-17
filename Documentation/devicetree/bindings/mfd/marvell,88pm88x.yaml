@@ -50,6 +50,10 @@ examples:
         interrupt-parent = <&gic>;
         interrupt-controller;
         #interrupt-cells = <1>;
+
+        onkey {
+          compatible = "marvell,88pm88x-onkey";
+        };
       };
     };
 ...
