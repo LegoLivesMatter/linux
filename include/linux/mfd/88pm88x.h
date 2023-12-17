@@ -130,8 +130,6 @@ enum pm88x_regmap_index {
 
 struct pm88x_data {
 	unsigned int whoami;
-	struct mfd_cell *devs;
-	unsigned int num_devs;
 	struct reg_sequence *presets;
 	unsigned int num_presets;
 	/* FIXME: is this chip specific or should it be a DT option as in DS? */
