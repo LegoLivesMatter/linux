@@ -33,6 +33,16 @@ config INPUT_88PM80X_ONKEY
 	  To compile this driver as a module, choose M here: the module
 	  will be called 88pm80x_onkey.
 
+config INPUT_88PM88X_ONKEY
+	tristate "Marvell 88PM88X onkey support"
+	depends on MFD_88PM88X
+	help
+	  Support the onkey of Marvell 88PM88X PMICs as an input device
+	  reporting power button status.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called 88pm88x-onkey.
+
 config INPUT_AB8500_PONKEY
 	tristate "AB8500 Pon (PowerOn) Key"
 	depends on AB8500_CORE
