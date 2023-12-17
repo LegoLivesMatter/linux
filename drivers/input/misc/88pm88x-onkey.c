@@ -26,7 +26,7 @@ static irqreturn_t pm88x_onkey_irq_handler(int irq, void *data)
 		dev_err(onkey->idev->dev.parent, "Failed to read status: %d\n", ret);
 		return IRQ_NONE;
 	}
-	val &= PM88X_ONKEY_STATUS1;
+	val &= PM88X_ONKEY_STS1;
 
 	input_report_key(onkey->idev, KEY_POWER, val);
 	input_sync(onkey->idev);
