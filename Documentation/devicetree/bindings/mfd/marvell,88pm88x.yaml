@@ -12,7 +12,7 @@ maintainers:
 description: |
   Marvell 88PM880 and 88PM886 are two similar PMICs providing
   several functions such as onkey, regulators or battery and
-  charger.
+  charger. Both seem to come in two revisions -- A0 and A1.
 
 properties:
   compatible:
