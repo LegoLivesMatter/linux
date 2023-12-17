@@ -154,10 +154,24 @@ static struct mfd_cell pm88x_devs[] = {
 	},
 };
 
+static struct pm88x_data pm880_a0_data = {
+	.whoami = PM880_A0_WHOAMI,
+	.presets = pm880_presets,
+	.num_presets = ARRAY_SIZE(pm880_presets),
+	.irq_mode = 1,
+};
+
 static struct pm88x_data pm880_a1_data = {
 	.whoami = PM880_A1_WHOAMI,
 	.presets = pm880_presets,
 	.num_presets = ARRAY_SIZE(pm880_presets),
+	.irq_mode = 1,
+};
+
+static struct pm88x_data pm886_a0_data = {
+	.whoami = PM886_A0_WHOAMI,
+	.presets = pm886_presets,
+	.num_presets = ARRAY_SIZE(pm886_presets),
 	.irq_mode = 1,
 };
 
@@ -325,7 +339,9 @@ static int pm88x_probe(struct i2c_client *client)
 }
 
 const struct of_device_id pm88x_of_match[] = {
+	{ .compatible = "marvell,88pm880-a0", .data = &pm880_a0_data },
 	{ .compatible = "marvell,88pm880-a1", .data = &pm880_a1_data },
+	{ .compatible = "marvell,88pm886-a0", .data = &pm886_a0_data },
 	{ .compatible = "marvell,88pm886-a1", .data = &pm886_a1_data },
 	{ },
 };
