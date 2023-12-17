@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/input/marvell,88pm88x-onkey.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Onkey driver for Marvell 88PM88X PMICs.
+
+maintainers:
+  - Karel Balej <balejk@matfyz.cz>
+
+description: |
+  This module is part of the 88PM88X MFD device. For more details
+  see Documentation/devicetree/bindings/mfd/marvell,88pm88x.yaml.
+
+  The onkey controller is represented as a sub-node of the PMIC node in
+  the device tree.
+
+allOf:
+  - $ref: input.yaml#
+
+properties:
+  compatible:
+    const: marvell,88pm88x-onkey
+
+required:
+  - compatible
+
+additionalProperties: false
+...
