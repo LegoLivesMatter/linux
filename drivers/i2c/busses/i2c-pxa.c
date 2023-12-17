@@ -585,6 +585,13 @@ static void i2c_pxa_do_reset(struct pxa_i2c *i2c)
 	i2c_pxa_set_slave(i2c, 0);
 }
 
+static void i2c_pxa_disable(struct pxa_i2c *i2c)
+{
+	/* disable unit */
+	writel(readl(_ICR(i2c)) & ~ICR_IUE, _ICR(i2c));
+	udelay(100);
+}
+
 static void i2c_pxa_enable(struct pxa_i2c *i2c)
 {
 	/* enable unit */
@@ -1140,6 +1147,13 @@ static int i2c_pxa_xfer(struct i2c_adapter *adap,
 {
 	struct pxa_i2c *i2c = adap->algo_data;
 
+	/* If the I2C controller is disabled we need to reset it
+	  (probably due to a suspend/resume destroying state). We do
+	  this here as we can then avoid worrying about resuming the
+	  controller before its users. */
+	if (!(readl(_ICR(i2c)) & ICR_IUE))
+		i2c_pxa_reset(i2c);
+
 	return i2c_pxa_internal_xfer(i2c, msgs, num, i2c_pxa_do_xfer);
 }
 
@@ -1473,6 +1487,11 @@ static int i2c_pxa_probe(struct platform_device *dev)
 #else
 	dev_info(&i2c->adap.dev, " PXA I2C adapter\n");
 #endif
+
+	/* disable i2c unit before 1st transmission to avoid getting
+	 * controller busy due to noice by power up of bus devices */
+	i2c_pxa_disable(i2c);
+
 	return 0;
 
 ereqirq:
