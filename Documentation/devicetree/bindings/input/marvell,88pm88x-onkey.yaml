@@ -4,7 +4,7 @@
 $id: http://devicetree.org/schemas/input/marvell,88pm88x-onkey.yaml#
 $schema: http://devicetree.org/meta-schemas/core.yaml#
 
-title: Onkey driver for Marvell 88PM88X PMIC.
+title: Onkey driver for Marvell 88PM88X PMICs.
 
 maintainers:
   - Karel Balej <balejk@matfyz.cz>
