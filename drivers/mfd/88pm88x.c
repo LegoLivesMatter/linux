@@ -103,21 +103,6 @@ static struct regmap_irq_chip pm88x_regmap_irq_chip = {
 	.unmask_base = PM88X_REG_INT_ENA_1,
 };
 
-static struct reg_sequence pm880_presets[] = {
-	/* disable watchdog */
-	REG_SEQ0(PM88X_REG_WDOG, 0x01),
-	/* output 32 kHz from XO */
-	REG_SEQ0(PM88X_REG_AON_CTRL2, 0x2a),
-	/* OSC_FREERUN = 1, to lock FLL */
-	REG_SEQ0(PM88X_REG_BK_OSC_CTRL1, 0x0f),
-	/* XO_LJ = 1, enable low jitter for 32 kHz */
-	REG_SEQ0(PM88X_REG_LOWPOWER2, 0x20),
-	/* enable LPM for internal reference group in sleep */
-	REG_SEQ0(PM88X_REG_LOWPOWER4, 0xc0),
-	/* set the duty cycle of charger DC/DC to max */
-	REG_SEQ0(PM88X_REG_BK_OSC_CTRL3, 0xc0),
-};
-
 static struct reg_sequence pm886_presets[] = {
 	/* disable watchdog */
 	REG_SEQ0(PM88X_REG_WDOG, 0x01),
@@ -152,27 +137,6 @@ static struct mfd_cell pm88x_devs[] = {
 		.resources = onkey_resources,
 		.id = -1,
 	},
-};
-
-static struct pm88x_data pm880_a0_data = {
-	.whoami = PM880_A0_WHOAMI,
-	.presets = pm880_presets,
-	.num_presets = ARRAY_SIZE(pm880_presets),
-	.irq_mode = 1,
-};
-
-static struct pm88x_data pm880_a1_data = {
-	.whoami = PM880_A1_WHOAMI,
-	.presets = pm880_presets,
-	.num_presets = ARRAY_SIZE(pm880_presets),
-	.irq_mode = 1,
-};
-
-static struct pm88x_data pm886_a0_data = {
-	.whoami = PM886_A0_WHOAMI,
-	.presets = pm886_presets,
-	.num_presets = ARRAY_SIZE(pm886_presets),
-	.irq_mode = 1,
 };
 
 static struct pm88x_data pm886_a1_data = {
@@ -248,27 +212,7 @@ static int pm88x_initialize_regmaps(struct pm88x_chip *chip)
 	chip->regmaps[PM88X_REGMAP_LDO] = regmap;
 	/* power page is the same as LDO */
 	chip->regmaps[PM88X_REGMAP_POWER] = regmap;
-
-	/* buck page */
-	switch (chip->data->whoami) {
-	case PM880_A1_WHOAMI:
-		page = devm_i2c_new_dummy_device(&chip->client->dev, chip->client->adapter, chip->client->addr + PM880_PAGE_OFFSET_BUCK);
-		if (IS_ERR(page)) {
-			ret = PTR_ERR(page);
-			dev_err(&chip->client->dev, "Failed to initialize buck page: %d\n", ret);
-			return ret;
-		}
-		regmap = devm_regmap_init_i2c(page, &pm88x_i2c_regmap);
-		if (IS_ERR(regmap)) {
-			ret = PTR_ERR(regmap);
-			dev_err(&chip->client->dev, "Failed to initialize buck regmap: %d\n", ret);
-			return ret;
-		}
-		break;
-	case PM886_A1_WHOAMI:
-		regmap = chip->regmaps[PM88X_REGMAP_LDO];
-		break;
-	}
+	/* buck page is the same as LDO */
 	chip->regmaps[PM88X_REGMAP_BUCK] = regmap;
 
 	return 0;
@@ -339,9 +283,6 @@ static int pm88x_probe(struct i2c_client *client)
 }
 
 const struct of_device_id pm88x_of_match[] = {
-	{ .compatible = "marvell,88pm880-a0", .data = &pm880_a0_data },
-	{ .compatible = "marvell,88pm880-a1", .data = &pm880_a1_data },
-	{ .compatible = "marvell,88pm886-a0", .data = &pm886_a0_data },
 	{ .compatible = "marvell,88pm886-a1", .data = &pm886_a1_data },
 	{ },
 };

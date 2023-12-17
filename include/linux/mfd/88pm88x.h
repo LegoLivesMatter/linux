@@ -4,9 +4,6 @@
 
 #include <linux/mfd/core.h>
 
-#define PM880_A0_WHOAMI		0xb0
-#define PM880_A1_WHOAMI		0xb1
-#define PM886_A0_WHOAMI		0x00
 #define PM886_A1_WHOAMI		0xa1
 
 /* TODO:
@@ -115,7 +112,6 @@
 #define PM88X_PAGE_OFFSET_LDO		1
 #define PM88X_PAGE_OFFSET_GPADC		2
 #define PM88X_PAGE_OFFSET_BATTERY	3
-#define PM880_PAGE_OFFSET_BUCK		4
 
 enum pm88x_regmap_index {
 	PM88X_REGMAP_BASE,

@@ -16,9 +16,6 @@ description: |
 
 properties:
   compatible:
-    const: marvell,88pm880-a0
-    const: marvell,88pm880-a1
-    const: marvell,88pm886-a0
     const: marvell,88pm886-a1
 
   reg:
