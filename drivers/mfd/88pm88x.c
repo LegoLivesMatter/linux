@@ -143,7 +143,6 @@ static struct pm88x_data pm886_a1_data = {
 	.whoami = PM886_A1_WHOAMI,
 	.presets = pm886_presets,
 	.num_presets = ARRAY_SIZE(pm886_presets),
-	.irq_mode = 1,
 };
 
 static const struct regmap_config pm88x_i2c_regmap = {
@@ -168,12 +167,12 @@ static int pm88x_power_off_handler(struct sys_off_data *data)
 
 static int pm88x_setup_irq(struct pm88x_chip *chip)
 {
-	int mask, data, ret;
+	int ret;
 
-	mask = PM88X_INT_INV | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE;
-	data = chip->data->irq_mode ? PM88X_INT_WC : PM88X_INT_RC;
+	/* set interrupt clearing mode to clear on write */
 	ret = regmap_update_bits(chip->regmaps[PM88X_REGMAP_BASE], PM88X_REG_MISC_CONFIG2,
-			mask, data);
+			PM88X_INT_INV | PM88X_INT_CLEAR | PM88X_INT_MASK_MODE,
+			PM88X_INT_WC);
 	if (ret) {
 		dev_err(&chip->client->dev, "Failed to set interrupt clearing mode: %d\n", ret);
 		return ret;

@@ -128,8 +128,6 @@ struct pm88x_data {
 	unsigned int whoami;
 	struct reg_sequence *presets;
 	unsigned int num_presets;
-	/* FIXME: is this chip specific or should it be a DT option as in DS? */
-	int irq_mode;
 };
 
 struct pm88x_chip {
