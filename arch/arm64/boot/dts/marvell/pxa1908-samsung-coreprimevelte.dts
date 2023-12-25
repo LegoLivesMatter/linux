@@ -301,6 +301,38 @@
 
 &twsi2 {
 	status = "okay";
+
+	pmic@30 {
+		compatible = "marvell,88pm886-a1";
+		reg = <0x30>;
+		interrupts = <0 4 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-parent = <&gic>;
+		wakeup-source;
+
+		regulators {
+			ldo2: ldo2 {
+				regulator-min-microvolt = <1900000>;
+				regulator-max-microvolt = <3100000>;
+			};
+
+			ldo6: ldo6 {
+				regulator-boot-on;
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			ldo14: ldo14 {
+				regulator-boot-on;
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			/* for sdh1 */
+			ldo15: ldo15 {
+				regulator-always-on;
+			};
+		};
+	};
 };
 
 &twsi3 {
@@ -326,4 +358,6 @@
 	cd-inverted;
 	bus-width = <4>;
 	wp-inverted;
+	vqmmc-supply = <&ldo6>;
+	vmmc-supply = <&ldo14>;
 };
