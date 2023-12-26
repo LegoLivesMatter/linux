@@ -53,8 +53,8 @@
 		};
 
 		/* Communications processor, aka modem */
-		cp@3000000 {
-			reg = <0 0x3000000 0 0x5000000>;
+		cp@5000000 {
+			reg = <0 0x5000000 0 0x3000000>;
 		};
 
 		cm3@a000000 {
