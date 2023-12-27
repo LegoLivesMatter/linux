@@ -134,6 +134,15 @@
 		powerdown-gpios = <&gpio 57 GPIO_ACTIVE_HIGH>;
 		reset-gpios = <&gpio 58 GPIO_ACTIVE_HIGH>;
 	};
+
+	vibrator {
+		compatible = "pwm-vibrator";
+		pwm-names = "enable";
+		pwms = <&pwm 100000>;
+		enable-gpios = <&gpio 20 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vibrator_pin>;
+	};
 };
 
 &smmu {
