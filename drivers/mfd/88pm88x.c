@@ -68,6 +68,21 @@ static struct mfd_cell pm886_devs[] = {
 		.num_resources = ARRAY_SIZE(pm88x_onkey_resources),
 		.resources = pm88x_onkey_resources,
 	},
+	{
+		.name = "88pm88x-regulator",
+		.id = PM88X_REGULATOR_ID_LDO2,
+		.of_compatible = "marvell,88pm88x-regulator",
+	},
+	{
+		.name = "88pm88x-regulator",
+		.id = PM88X_REGULATOR_ID_LDO15,
+		.of_compatible = "marvell,88pm88x-regulator",
+	},
+	{
+		.name = "88pm88x-regulator",
+		.id = PM886_REGULATOR_ID_BUCK2,
+		.of_compatible = "marvell,88pm88x-regulator",
+	},
 };
 
 static struct pm88x_data pm886_a1_data = {
