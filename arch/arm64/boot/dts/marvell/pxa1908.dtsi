@@ -195,6 +195,13 @@
 				};
 			};
 
+			pwm: pwm@1ac00 {
+				compatible = "marvell,pxa250-pwm";
+				reg = <0x1ac00 0x10>;
+				#pwm-cells = <1>;
+				clocks = <&apbc PXA1908_CLK_PWM3>;
+			};
+
 			pmx: pinmux@1e000 {
 				compatible = "marvell,pxa1908-padconf", "pinconf-single";
 				reg = <0x1e000 0x330>;
