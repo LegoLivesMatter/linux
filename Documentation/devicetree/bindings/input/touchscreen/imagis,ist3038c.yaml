@@ -42,6 +42,17 @@ properties:
   touchscreen-inverted-y: true
   touchscreen-swapped-x-y: true
 
+if:
+  properties:
+    compatible:
+      contains:
+        const: imagis,ist3032c
+then:
+  properties:
+    linux,keycodes:
+      description: Keycodes for the touch keys
+      maxItems: 2
+
 additionalProperties: false
 
 required:
