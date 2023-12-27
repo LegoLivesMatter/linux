@@ -130,6 +130,12 @@
 		powerdown-gpios = <&gpio 57 GPIO_ACTIVE_HIGH>;
 		reset-gpios = <&gpio 58 GPIO_ACTIVE_HIGH>;
 	};
+
+	vibrator {
+		compatible = "pwm-vibrator";
+		pwm-names = "enable";
+		pwms = <&pwm 1000>;
+	};
 };
 
 &smmu {
