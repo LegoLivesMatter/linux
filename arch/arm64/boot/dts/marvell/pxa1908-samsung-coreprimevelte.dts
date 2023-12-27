@@ -134,6 +134,15 @@
 		powerdown-gpios = <&gpio 57 GPIO_ACTIVE_HIGH>;
 		reset-gpios = <&gpio 58 GPIO_ACTIVE_HIGH>;
 	};
+
+	vibrator {
+		compatible = "pwm-vibrator";
+		pwm-names = "enable";
+		pwms = <&pwm 100000>;
+		enable-gpios = <&gpio 20 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vibrator_pins>;
+	};
 };
 
 &smmu {
@@ -442,6 +451,16 @@
 		pinctrl-single,bias-pullup = <0xc000 0xc000 0 0xc000>;
 		pinctrl-single,bias-pulldown = <0x8000 0xa000 0x8000 0xa000>;
 		pinctrl-single,low-power-mode = <0x288 0x388>;
+	};
+
+	vibrator_pins: pinmux-vibrator {
+		pinctrl-single,pins = <0x12c 0>;
+		pinctrl-single,drive-strength = <0x1000 0x1800>;
+		pinctrl-single,bias-pullup = <0x8000 0xc000 0x8000 0xc000>;
+		pinctrl-single,bias-pulldown = <0xa000 0xa000 0 0xa000>;
+		pinctrl-single,input-schmitt = <0 0x30>;
+		pinctrl-single,input-schmitt-enable = <0x40 0 0x40 0x40>;
+		pinctrl-single,low-power-mode = <0 0x388>;
 	};
 };
 
