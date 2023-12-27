@@ -57,16 +57,16 @@ static struct reg_sequence pm886_presets[] = {
 	REG_SEQ0(PM88X_REG_BK_OSC_CTRL3, 0xc0),
 };
 
-static struct resource onkey_resources[] = {
+static struct resource pm88x_onkey_resources[] = {
 	DEFINE_RES_IRQ_NAMED(PM88X_IRQ_ONKEY, "88pm88x-onkey"),
 };
 
-static struct mfd_cell pm88x_devs[] = {
+static struct mfd_cell pm886_devs[] = {
 	{
 		.name = "88pm88x-onkey",
-		.num_resources = ARRAY_SIZE(onkey_resources),
-		.resources = onkey_resources,
-		.id = -1,
+		.of_compatible = "marvell,88pm88x-onkey",
+		.num_resources = ARRAY_SIZE(pm88x_onkey_resources),
+		.resources = pm88x_onkey_resources,
 	},
 };
 
@@ -74,6 +74,8 @@ static struct pm88x_data pm886_a1_data = {
 	.whoami = PM886_A1_WHOAMI,
 	.presets = pm886_presets,
 	.num_presets = ARRAY_SIZE(pm886_presets),
+	.devs = pm886_devs,
+	.num_devs = ARRAY_SIZE(pm886_devs),
 };
 
 static const struct regmap_config pm88x_i2c_regmap = {
@@ -157,7 +159,7 @@ static int pm88x_probe(struct i2c_client *client)
 	if (ret)
 		return ret;
 
-	ret = devm_mfd_add_devices(&client->dev, 0, pm88x_devs, ARRAY_SIZE(pm88x_devs),
+	ret = devm_mfd_add_devices(&client->dev, 0, chip->data->devs, chip->data->num_devs,
 			NULL, 0, regmap_irq_get_domain(chip->irq_data));
 	if (ret) {
 		dev_err(&client->dev, "Failed to add devices: %d\n", ret);
