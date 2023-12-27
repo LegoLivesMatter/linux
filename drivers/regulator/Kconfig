@@ -81,6 +81,12 @@ config REGULATOR_88PM8607
 	help
 	  This driver supports 88PM8607 voltage regulator chips.
 
+config REGULATOR_88PM88X
+	tristate "Marvell 88PM88X voltage regulators"
+	depends on MFD_88PM88X
+	help
+	  This driver implements support for Marvell 88PM88X voltage regulators.
+
 config REGULATOR_ACT8865
 	tristate "Active-semi act8865 voltage regulator"
 	depends on I2C
