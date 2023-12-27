@@ -98,6 +98,35 @@ static int pm88x_power_off_handler(struct sys_off_data *data)
 	return NOTIFY_DONE;
 }
 
+static int pm88x_initialize_subregmaps(struct pm88x_chip *chip)
+{
+	struct i2c_client *page;
+	struct regmap *regmap;
+	int ret;
+
+	/* LDO page */
+	page = devm_i2c_new_dummy_device(&chip->client->dev, chip->client->adapter,
+					chip->client->addr + PM88X_PAGE_OFFSET_LDO);
+	if (IS_ERR(page)) {
+		ret = PTR_ERR(page);
+		dev_err(&chip->client->dev, "Failed to initialize LDO client: %d\n",
+				ret);
+		return ret;
+	}
+	regmap = devm_regmap_init_i2c(page, &pm88x_i2c_regmap);
+	if (IS_ERR(regmap)) {
+		ret = PTR_ERR(regmap);
+		dev_err(&chip->client->dev, "Failed to initialize LDO regmap: %d\n",
+				ret);
+		return ret;
+	}
+	chip->regmaps[PM88X_REGMAP_LDO] = regmap;
+	/* buck regmap is the same as LDO */
+	chip->regmaps[PM88X_REGMAP_BUCK] = regmap;
+
+	return 0;
+}
+
 static int pm88x_setup_irq(struct pm88x_chip *chip)
 {
 	int ret;
@@ -154,6 +183,10 @@ static int pm88x_probe(struct i2c_client *client)
 		dev_err(&client->dev, "Device reported wrong chip ID: %u\n", chip_id);
 		return -EINVAL;
 	}
+
+	ret = pm88x_initialize_subregmaps(chip);
+	if (ret)
+		return ret;
 
 	ret = pm88x_setup_irq(chip);
 	if (ret)

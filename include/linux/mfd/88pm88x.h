@@ -39,8 +39,12 @@
 
 #define PM88X_REG_AON_CTRL2		0xe2
 
+#define PM88X_PAGE_OFFSET_LDO		1
+
 enum pm88x_regmap_index {
 	PM88X_REGMAP_BASE,
+	PM88X_REGMAP_LDO,
+	PM88X_REGMAP_BUCK,
 
 	PM88X_REGMAP_NR
 };
