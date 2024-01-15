@@ -143,6 +143,12 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&vibrator_pins>;
 	};
+
+	rfkill {
+		compatible = "rfkill-gpio";
+		radio-type = "wlan";
+		shutdown-gpios = <&gpio 4 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &smmu {
