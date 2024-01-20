@@ -496,6 +496,10 @@
 		interrupt-controller;
 		#interrupt-cells = <1>;
 
+		onkey {
+			compatible = "marvell,88pm88x-onkey";
+		};
+
 		regulators {
 			ldo2: ldo2 {
 				regulator-min-microvolt = <3100000>;
