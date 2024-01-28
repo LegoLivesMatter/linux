@@ -1879,6 +1879,7 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 	 * sudden power failure tests. Let's extend the timeout to a minimum of
 	 * DEFAULT_CACHE_EN_TIMEOUT_MS and do it for all cards.
 	 */
+	card->ext_csd.cache_size = 0;
 	if (card->ext_csd.cache_size > 0) {
 		unsigned int timeout_ms = MIN_CACHE_EN_TIMEOUT_MS;
 
