@@ -24,7 +24,7 @@
 
 		/* S-Boot places the initramfs here */
 		linux,initrd-start = <0x4d70000>;
-		linux,initrd-end = <0x5000000>;
+		linux,initrd-end = <0x6000000>;
 
 		fb0: framebuffer@17177000 {
 			compatible = "simple-framebuffer";
