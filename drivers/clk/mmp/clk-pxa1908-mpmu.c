@@ -43,6 +43,9 @@ static struct mmp_param_fixed_factor_clk fixed_factor_clks[] = {
 	{PXA1908_CLK_PLL1_32, "pll1_32", "pll1_d13", 2, 3, 0},
 	{PXA1908_CLK_PLL1_208, "pll1_208", "pll1_d2", 2, 3, 0},
 	{PXA1908_CLK_PLL1_117, "pll1_117", "pll1_624", 3, 16, 0},
+	{PXA1908_CLK_PLL2VCODIV3, "pll2_div3", "pll2_vco", 1, 3, 0},
+	{PXA1908_CLK_PLL3VCODIV3, "pll3_div3", "pll3_vco", 1, 3, 0},
+	{PXA1908_CLK_PLL4VCODIV3, "pll4_div3", "pll4_vco", 1, 3, 0},
 };
 
 static struct u32_fract uart_factor_tbl[] = {
