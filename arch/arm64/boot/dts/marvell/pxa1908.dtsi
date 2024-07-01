@@ -244,7 +244,9 @@
 
 			mpmu: clock-controller@50000 {
 				compatible = "marvell,pxa1908-mpmu";
-				reg = <0x50000 0x1000>;
+				reg = <0x50000 0x1000>,
+					<0x90000 0x1000>;
+				reg-names = "mpmu", "apbs";
 				#clock-cells = <1>;
 			};
 		};
