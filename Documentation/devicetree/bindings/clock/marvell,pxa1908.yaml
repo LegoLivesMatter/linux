@@ -26,7 +26,13 @@ properties:
       - marvell,pxa1908-apmu
 
   reg:
-    maxItems: 1
+    minItems: 1
+    maxItems: 2
+
+  reg-names:
+    items:
+      - const: mpmu
+      - const: apbs
 
   '#clock-cells':
     const: 1
@@ -35,6 +41,18 @@ required:
   - compatible
   - reg
   - '#clock-cells'
+
+if:
+  properties:
+    compatible:
+      contains:
+        const: marvell,pxa1908-mpmu
+then:
+  required:
+    - reg-names
+else:
+  properties:
+    reg-names: false
 
 additionalProperties: false
 
