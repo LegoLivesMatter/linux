@@ -16,6 +16,7 @@
 struct pxa1908_clk_unit {
 	struct mmp_clk_unit unit;
 	void __iomem *base;
+	void __iomem *apbs_base;
 };
 
 static struct mmp_param_fixed_rate_clk fixed_rate_clks[] = {
@@ -81,9 +82,12 @@ static int pxa1908_mpmu_probe(struct platform_device *pdev)
 	if (IS_ERR(pxa_unit))
 		return PTR_ERR(pxa_unit);
 
-	pxa_unit->base = devm_platform_ioremap_resource(pdev, 0);
+	pxa_unit->base = devm_platform_ioremap_resource_byname(pdev, "mpmu");
 	if (IS_ERR(pxa_unit->base))
 		return PTR_ERR(pxa_unit->base);
+	pxa_unit->apbs_base = devm_platform_ioremap_resource_byname(pdev, "apbs");
+	if (IS_ERR(pxa_unit->apbs_base))
+		return PTR_ERR(pxa_unit->apbs_base);
 
 	mmp_clk_init(pdev->dev.of_node, &pxa_unit->unit, MPMU_NR_CLKS);
 
