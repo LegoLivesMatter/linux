@@ -13,6 +13,10 @@
 
 #define MPMU_UART_PLL		0x14
 
+#define APB_SPARE_PLL2CR	0x104
+#define APB_SPARE_PLL3CR	0x108
+#define APB_SPARE_PLL4CR	0x124
+
 #define MPMU_NR_CLKS		39
 
 struct pxa1908_clk_unit {
@@ -48,6 +52,26 @@ static struct mmp_param_fixed_factor_clk fixed_factor_clks[] = {
 	{PXA1908_CLK_PLL2VCODIV3, "pll2_div3", "pll2_vco", 1, 3, 0},
 	{PXA1908_CLK_PLL3VCODIV3, "pll3_div3", "pll3_vco", 1, 3, 0},
 	{PXA1908_CLK_PLL4VCODIV3, "pll4_div3", "pll4_vco", 1, 3, 0},
+};
+
+struct mmp_param_pll {
+	unsigned int id;
+	char *name;
+	const char *parent_name;
+	unsigned long flags;
+	unsigned long out_flag;
+	unsigned int swcr_offset;
+	unsigned long default_rate;
+};
+
+/* NOTE: the default rate is ONLY applicable for downstream ddr_mode=1 (533M). */
+static struct mmp_param_pll plls[] = {
+	{PXA1908_CLK_PLL2, "pll2", "pll2_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL2CR, 1057 * HZ_PER_MHZ},
+	{PXA1908_CLK_PLL3, "pll3", "pll3_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL3CR, 1526 * HZ_PER_MHZ},
+	{PXA1908_CLK_PLL4, "pll4", "pll4_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUT, APB_SPARE_PLL4CR, 1595 * HZ_PER_MHZ},
+	{PXA1908_CLK_PLL2P, "pll2p", "pll2_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL2CR, 528 * HZ_PER_MHZ},
+	{PXA1908_CLK_PLL3P, "pll3p", "pll3_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUTP, APB_SPARE_PLL3CR, 1526 * HZ_PER_MHZ},
+	{PXA1908_CLK_PLL4P, "pll4p", "pll4_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL4CR, 797 * HZ_PER_MHZ},
 };
 
 static struct u32_fract uart_factor_tbl[] = {
