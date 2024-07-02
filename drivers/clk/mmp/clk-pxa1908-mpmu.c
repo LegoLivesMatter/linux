@@ -67,7 +67,7 @@ struct mmp_param_pll {
 	unsigned int id;
 	char *name;
 	const char *parent_name;
-	unsigned long flags;
+	unsigned long clk_flags;
 	u32 pll_flags;
 	unsigned int swcr_offset;
 	spinlock_t *lock;
@@ -115,7 +115,7 @@ static struct mmp_param_pll plls[] = {
 struct mmp_param_vco {
 	unsigned int id;
 	char *name;
-	unsigned long flags;
+	unsigned long clk_flags;
 	u32 vco_flags;
 	unsigned int cr_offset;
 	unsigned int swcr_offset;
@@ -190,7 +190,7 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 		pll->params.swcr = pxa_unit->apbs_base + pll->swcr_offset;
 
 		clk = helanx_register_clk_pll(pll->name, pll->parent_name,
-				pll->flags, pll->pll_flags, pll->lock,
+				pll->clk_flags, pll->pll_flags, pll->lock,
 				&pll->params);
 		clk_set_rate(clk, pll->params.default_rate);
 		mmp_clk_add(unit, pll->id, clk);
@@ -204,7 +204,7 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 		vco->params.swcr = pxa_unit->apbs_base + vco->swcr_offset;
 		vco->params.lock_reg = pxa_unit->base + MPMU_POSR;
 
-		clk = helanx_register_clk_vco(vco->name, 0, vco->flags,
+		clk = helanx_register_clk_vco(vco->name, 0, vco->clk_flags,
 				vco->vco_flags, vco->lock, &vco->params);
 		clk_set_rate(clk, vco->params.default_rate);
 		mmp_clk_add(unit, vco->id, clk);
