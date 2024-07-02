@@ -139,31 +139,31 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 			0, pxa_unit->apbs_base + APBS_PLL1_CTRL, 31, 0, NULL);
 	mmp_clk_add(unit, PXA1908_CLK_PLL1_499_EN, clk);
 
-	struct mmp_param_pll *pll_param;
+	struct mmp_param_pll *pll;
 	for (int i = 0; i < ARRAY_SIZE(plls); i++) {
-		pll_param = &plls[i];
+		pll = &plls[i];
 
-		pll_param->params.swcr = pxa_unit->apbs_base + pll_param->swcr_offset;
+		pll->params.swcr = pxa_unit->apbs_base + pll->swcr_offset;
 
-		clk = helanx_register_clk_pll(pll_param->name, pll_param->parent_name,
-				pll_param->flags, pll_param->pll_flags, pll_param->lock,
-				&pll_param->params);
-		clk_set_rate(clk, pll_param->params.default_rate);
-		mmp_clk_add(unit, pll_param->id, clk);
+		clk = helanx_register_clk_pll(pll->name, pll->parent_name,
+				pll->flags, pll->pll_flags, pll->lock,
+				&pll->params);
+		clk_set_rate(clk, pll->params.default_rate);
+		mmp_clk_add(unit, pll->id, clk);
 	}
 
-	struct mmp_param_vco *vco_param;
+	struct mmp_param_vco *vco;
 	for (int i = 0; i < ARRAY_SIZE(vcos); i++) {
-		vco_param = &vcos[i];
+		vco = &vcos[i];
 
-		vco_param->params.cr = pxa_unit->base + vco_param->cr_offset;
-		vco_param->params.swcr = pxa_unit->apbs_base + vco_param->swcr_offset;
-		vco_param->params.lock_reg = pxa_unit->base + MPMU_POSR;
+		vco->params.cr = pxa_unit->base + vco->cr_offset;
+		vco->params.swcr = pxa_unit->apbs_base + vco->swcr_offset;
+		vco->params.lock_reg = pxa_unit->base + MPMU_POSR;
 
-		clk = helanx_register_clk_vco(vco_param->name, 0, vco_param->flags,
-				vco_param->vco_flags, vco_param->lock, &vco_param->params);
-		clk_set_rate(clk, vco_param->params.default_rate);
-		mmp_clk_add(unit, vco_param->id, clk);
+		clk = helanx_register_clk_vco(vco->name, 0, vco->flags,
+				vco->vco_flags, vco->lock, &vco->params);
+		clk_set_rate(clk, vco->params.default_rate);
+		mmp_clk_add(unit, vco->id, clk);
 	}
 }
 
