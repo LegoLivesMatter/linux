@@ -80,12 +80,36 @@ static DEFINE_SPINLOCK(pll4_lock);
 
 /* NOTE: the default rate is ONLY applicable for downstream ddr_mode=1 (533M). */
 static struct mmp_param_pll plls[] = {
-	{PXA1908_CLK_PLL2, "pll2", "pll2_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL2CR, &pll2_lock, { .default_rate = 1057 * HZ_PER_MHZ }},
-	{PXA1908_CLK_PLL3, "pll3", "pll3_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL3CR, &pll3_lock, { .default_rate = 1526 * HZ_PER_MHZ }},
-	{PXA1908_CLK_PLL4, "pll4", "pll4_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUT, APB_SPARE_PLL4CR, &pll4_lock, { .default_rate = 1595 * HZ_PER_MHZ }},
-	{PXA1908_CLK_PLL2P, "pll2p", "pll2_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL2CR, &pll2_lock, { .default_rate = 528 * HZ_PER_MHZ }},
-	{PXA1908_CLK_PLL3P, "pll3p", "pll3_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUTP, APB_SPARE_PLL3CR, &pll3_lock, { .default_rate = 1526 * HZ_PER_MHZ }},
-	{PXA1908_CLK_PLL4P, "pll4p", "pll4_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL4CR, &pll4_lock, { .default_rate = 797 * HZ_PER_MHZ }},
+	{PXA1908_CLK_PLL2, "pll2", "pll2_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL2CR, &pll2_lock,
+		{
+			.default_rate = 1057 * HZ_PER_MHZ
+		}
+	},
+	{PXA1908_CLK_PLL3, "pll3", "pll3_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL3CR, &pll3_lock,
+		{
+			.default_rate = 1526 * HZ_PER_MHZ
+		}
+	},
+	{PXA1908_CLK_PLL4, "pll4", "pll4_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUT, APB_SPARE_PLL4CR, &pll4_lock,
+		{
+			.default_rate = 1595 * HZ_PER_MHZ
+		}
+	},
+	{PXA1908_CLK_PLL2P, "pll2p", "pll2_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL2CR, &pll2_lock,
+		{
+			.default_rate = 528 * HZ_PER_MHZ
+		}
+	},
+	{PXA1908_CLK_PLL3P, "pll3p", "pll3_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUTP, APB_SPARE_PLL3CR, &pll3_lock,
+		{
+			.default_rate = 1526 * HZ_PER_MHZ
+		}
+	},
+	{PXA1908_CLK_PLL4P, "pll4p", "pll4_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL4CR, &pll4_lock,
+		{
+			.default_rate = 797 * HZ_PER_MHZ
+		}
+	},
 };
 
 struct mmp_param_vco {
@@ -101,9 +125,29 @@ struct mmp_param_vco {
 
 /* NOTE: the default rate is ONLY applicable for downstream ddr_mode=1 (533M). */
 static struct mmp_param_vco vcos[] = {
-	{PXA1908_CLK_PLL2VCO, "pll2_vco", 0, 0, MPMU_PLL2CR, APB_SPARE_PLL2CR, &pll2_lock, { .default_rate = 2115 * HZ_PER_MHZ, .vco_min = 1200000000UL, .vco_max = 3000000000UL, .lock_enable_bit = MPMU_POSR_PLL2_LOCK }},
-	{PXA1908_CLK_PLL3VCO, "pll3_vco", 0, 0, MPMU_PLL3CR, APB_SPARE_PLL3CR, &pll3_lock, { .default_rate = 1526 * HZ_PER_MHZ, .vco_min = 1200000000UL, .vco_max = 3000000000UL, .lock_enable_bit = MPMU_POSR_PLL3_LOCK }},
-	{PXA1908_CLK_PLL4VCO, "pll4_vco", 0, HELANX_VCO_SKIP_DEF_RATE, MPMU_PLL4CR, APB_SPARE_PLL4CR, &pll4_lock, { .default_rate = 1595 * HZ_PER_MHZ, .vco_min = 1200000000UL, .vco_max = 3000000000UL, .lock_enable_bit = MPMU_POSR_PLL4_LOCK }},
+	{PXA1908_CLK_PLL2VCO, "pll2_vco", 0, 0, MPMU_PLL2CR, APB_SPARE_PLL2CR, &pll2_lock,
+		{
+			.default_rate = 2115 * HZ_PER_MHZ,
+			.vco_min = 1200000000UL,
+			.vco_max = 3000000000UL,
+			.lock_enable_bit = MPMU_POSR_PLL2_LOCK
+		}
+	},
+	{PXA1908_CLK_PLL3VCO, "pll3_vco", 0, 0, MPMU_PLL3CR, APB_SPARE_PLL3CR, &pll3_lock,
+		{
+			.default_rate = 1526 * HZ_PER_MHZ,
+			.vco_min = 1200000000UL, .vco_max = 3000000000UL,
+			.lock_enable_bit = MPMU_POSR_PLL3_LOCK
+		}
+	},
+	{PXA1908_CLK_PLL4VCO, "pll4_vco", 0, HELANX_VCO_SKIP_DEF_RATE, MPMU_PLL4CR, APB_SPARE_PLL4CR, &pll4_lock,
+		{
+			.default_rate = 1595 * HZ_PER_MHZ,
+			.vco_min = 1200000000UL,
+			.vco_max = 3000000000UL,
+			.lock_enable_bit = MPMU_POSR_PLL4_LOCK
+		}
+	},
 };
 
 static struct u32_fract uart_factor_tbl[] = {
