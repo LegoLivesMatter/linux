@@ -9,6 +9,8 @@
 
 #include "clk.h"
 
+#define APBS_PLL1_CTRL		0x100
+
 #define MPMU_UART_PLL		0x14
 
 #define MPMU_NR_CLKS		39
@@ -75,6 +77,10 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 			pxa_unit->base + MPMU_UART_PLL,
 			&uart_factor_masks, uart_factor_tbl,
 			ARRAY_SIZE(uart_factor_tbl), NULL);
+
+	struct clk *clk = clk_register_gate(NULL, "pll1_499_gate", "pll1_499",
+			0, pxa_unit->apbs_base + APBS_PLL1_CTRL, 31, 0, NULL);
+	mmp_clk_add(unit, PXA1908_CLK_PLL1_499_EN, clk);
 }
 
 static int pxa1908_mpmu_probe(struct platform_device *pdev)
