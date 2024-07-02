@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include <linux/bits.h>
 #include <linux/clk-provider.h>
+#include <linux/clk.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/units.h>
@@ -8,6 +9,7 @@
 #include <dt-bindings/clock/marvell,pxa1908.h>
 
 #include "clk.h"
+#include "clk-pll-helanx.h"
 
 #define APBS_PLL1_CTRL		0x100
 
@@ -59,19 +61,24 @@ struct mmp_param_pll {
 	char *name;
 	const char *parent_name;
 	unsigned long flags;
-	unsigned long out_flag;
+	u32 pll_flags;
 	unsigned int swcr_offset;
-	unsigned long default_rate;
+	spinlock_t *lock;
+	struct mmp_pll_params params;
 };
+
+static DEFINE_SPINLOCK(pll2_lock);
+static DEFINE_SPINLOCK(pll3_lock);
+static DEFINE_SPINLOCK(pll4_lock);
 
 /* NOTE: the default rate is ONLY applicable for downstream ddr_mode=1 (533M). */
 static struct mmp_param_pll plls[] = {
-	{PXA1908_CLK_PLL2, "pll2", "pll2_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL2CR, 1057 * HZ_PER_MHZ},
-	{PXA1908_CLK_PLL3, "pll3", "pll3_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL3CR, 1526 * HZ_PER_MHZ},
-	{PXA1908_CLK_PLL4, "pll4", "pll4_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUT, APB_SPARE_PLL4CR, 1595 * HZ_PER_MHZ},
-	{PXA1908_CLK_PLL2P, "pll2p", "pll2_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL2CR, 528 * HZ_PER_MHZ},
-	{PXA1908_CLK_PLL3P, "pll3p", "pll3_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUTP, APB_SPARE_PLL3CR, 1526 * HZ_PER_MHZ},
-	{PXA1908_CLK_PLL4P, "pll4p", "pll4_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL4CR, 797 * HZ_PER_MHZ},
+	{PXA1908_CLK_PLL2, "pll2", "pll2_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL2CR, &pll2_lock, { .default_rate = 1057 * HZ_PER_MHZ }},
+	{PXA1908_CLK_PLL3, "pll3", "pll3_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL3CR, &pll3_lock, { .default_rate = 1526 * HZ_PER_MHZ }},
+	{PXA1908_CLK_PLL4, "pll4", "pll4_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUT, APB_SPARE_PLL4CR, &pll4_lock, { .default_rate = 1595 * HZ_PER_MHZ }},
+	{PXA1908_CLK_PLL2P, "pll2p", "pll2_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL2CR, &pll2_lock, { .default_rate = 528 * HZ_PER_MHZ }},
+	{PXA1908_CLK_PLL3P, "pll3p", "pll3_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUTP, APB_SPARE_PLL3CR, &pll3_lock, { .default_rate = 1526 * HZ_PER_MHZ }},
+	{PXA1908_CLK_PLL4P, "pll4p", "pll4_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL4CR, &pll4_lock, { .default_rate = 797 * HZ_PER_MHZ }},
 };
 
 static struct u32_fract uart_factor_tbl[] = {
@@ -89,6 +96,7 @@ static struct mmp_clk_factor_masks uart_factor_masks = {
 static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 {
 	struct mmp_clk_unit *unit = &pxa_unit->unit;
+	struct clk *clk;
 
 	mmp_register_fixed_rate_clks(unit, fixed_rate_clks,
 					ARRAY_SIZE(fixed_rate_clks));
@@ -102,9 +110,22 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 			&uart_factor_masks, uart_factor_tbl,
 			ARRAY_SIZE(uart_factor_tbl), NULL);
 
-	struct clk *clk = clk_register_gate(NULL, "pll1_499_gate", "pll1_499",
+	clk = clk_register_gate(NULL, "pll1_499_gate", "pll1_499",
 			0, pxa_unit->apbs_base + APBS_PLL1_CTRL, 31, 0, NULL);
 	mmp_clk_add(unit, PXA1908_CLK_PLL1_499_EN, clk);
+
+	struct mmp_param_pll *pll_param;
+	for (int i = 0; i < ARRAY_SIZE(plls); i++) {
+		pll_param = &plls[i];
+
+		pll_param->params.swcr = pxa_unit->apbs_base + pll_param->swcr_offset;
+
+		clk = helanx_register_clk_pll(pll_param->name, pll_param->parent_name,
+				pll_param->flags, pll_param->pll_flags, pll_param->lock,
+				&pll_param->params);
+		clk_set_rate(clk, pll_param->params.default_rate);
+		mmp_clk_add(unit, pll_param->id, clk);
+	}
 }
 
 static int pxa1908_mpmu_probe(struct platform_device *pdev)
