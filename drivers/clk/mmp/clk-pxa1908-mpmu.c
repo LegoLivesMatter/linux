@@ -71,7 +71,7 @@ struct mmp_param_pll {
 	u32 pll_flags;
 	unsigned int swcr_offset;
 	spinlock_t *lock;
-	struct mmp_pll_params params;
+	unsigned long default_rate;
 };
 
 static DEFINE_SPINLOCK(pll2_lock);
@@ -80,12 +80,12 @@ static DEFINE_SPINLOCK(pll4_lock);
 
 /* NOTE: the default rate is ONLY applicable for downstream ddr_mode=1 (533M). */
 static struct mmp_param_pll plls[] = {
-	{PXA1908_CLK_PLL2, "pll2", "pll2_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL2CR, &pll2_lock, { .default_rate = 1057 * HZ_PER_MHZ } },
-	{PXA1908_CLK_PLL3, "pll3", "pll3_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL3CR, &pll3_lock, { .default_rate = 1526 * HZ_PER_MHZ } },
-	{PXA1908_CLK_PLL4, "pll4", "pll4_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUT, APB_SPARE_PLL4CR, &pll4_lock, { .default_rate = 1595 * HZ_PER_MHZ } },
-	{PXA1908_CLK_PLL2P, "pll2p", "pll2_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL2CR, &pll2_lock,{ .default_rate = 528 * HZ_PER_MHZ } },
-	{PXA1908_CLK_PLL3P, "pll3p", "pll3_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUTP, APB_SPARE_PLL3CR, &pll3_lock, { .default_rate = 1526 * HZ_PER_MHZ } },
-	{PXA1908_CLK_PLL4P, "pll4p", "pll4_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL4CR, &pll4_lock, { .default_rate = 797 * HZ_PER_MHZ } },
+	{PXA1908_CLK_PLL2, "pll2", "pll2_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL2CR, &pll2_lock, 1057 * HZ_PER_MHZ },
+	{PXA1908_CLK_PLL3, "pll3", "pll3_vco", 0, HELANX_PLLOUT, APB_SPARE_PLL3CR, &pll3_lock, 1526 * HZ_PER_MHZ },
+	{PXA1908_CLK_PLL4, "pll4", "pll4_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUT, APB_SPARE_PLL4CR, &pll4_lock, 1595 * HZ_PER_MHZ },
+	{PXA1908_CLK_PLL2P, "pll2p", "pll2_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL2CR, &pll2_lock, 528 * HZ_PER_MHZ },
+	{PXA1908_CLK_PLL3P, "pll3p", "pll3_vco", CLK_SET_RATE_PARENT, HELANX_PLLOUTP, APB_SPARE_PLL3CR, &pll3_lock, 1526 * HZ_PER_MHZ },
+	{PXA1908_CLK_PLL4P, "pll4p", "pll4_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL4CR, &pll4_lock, 797 * HZ_PER_MHZ },
 };
 
 struct mmp_param_vco {
@@ -163,12 +163,10 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 	for (int i = 0; i < ARRAY_SIZE(plls); i++) {
 		pll = &plls[i];
 
-		pll->params.swcr = pxa_unit->apbs_base + pll->swcr_offset;
-
 		clk = helanx_register_clk_pll(pll->name, pll->parent_name,
 				pll->clk_flags, pll->pll_flags, pll->lock,
-				&pll->params);
-		clk_set_rate(clk, pll->params.default_rate);
+				pxa_unit->apbs_base);
+		clk_set_rate(clk, pll->default_rate);
 		mmp_clk_add(unit, pll->id, clk);
 	}
 

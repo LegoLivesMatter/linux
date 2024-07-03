@@ -489,7 +489,7 @@ static unsigned long clk_pll_get_rate(struct clk_hw *hw,
 	struct clk_pll *pll = to_clk_pll(hw);
 	union pll_swcr swcr;
 
-	swcr.v = pll_readl_swcr(pll);
+	swcr.v = readl_relaxed(pll->swcr);
 	if (pll->flags & HELANX_PLLOUT)
 		return parent_rate / BIT(swcr.b.se_div_sel);
 	else
@@ -505,12 +505,12 @@ static int clk_pll_set_rate(struct clk_hw *hw, unsigned long rate,
 	union pll_swcr swcr;
 
 	spin_lock_irqsave(pll->lock, flags);
-	swcr.v = pll_readl_swcr(pll);
+	swcr.v = readl_relaxed(pll->swcr);
 	if (pll->flags & HELANX_PLLOUT)
 		swcr.b.se_div_sel = div;
 	else
 		swcr.b.diff_div_sel = div;
-	pll_writel_swcr(swcr.v, pll);
+	writel_relaxed(swcr.v, pll->swcr);
 	spin_unlock_irqrestore(pll->lock, flags);
 
 	return 0;
@@ -538,7 +538,7 @@ static struct clk_ops clk_pll_ops = {
 
 struct clk *helanx_register_clk_pll(const char *name, const char *parent_name,
 		unsigned long flags, u32 pll_flags, spinlock_t *lock,
-		struct mmp_pll_params *params)
+		void __iomem *swcr)
 {
 	struct clk_pll *pll;
 	struct clk *clk;
@@ -559,7 +559,7 @@ struct clk *helanx_register_clk_pll(const char *name, const char *parent_name,
 
 	pll->flags = pll_flags;
 	pll->lock = lock;
-	pll->params = params;
+	pll->swcr = swcr;
 	pll->hw.init = init;
 
 	clk = clk_register(NULL, &pll->hw);

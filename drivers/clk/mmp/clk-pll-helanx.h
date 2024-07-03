@@ -56,11 +56,6 @@ struct mmp_vco_params {
 	struct ssc_params *ssc_params;
 };
 
-struct mmp_pll_params {
-	void __iomem *swcr;
-	unsigned long default_rate;
-};
-
 struct clk_vco {
 	struct clk_hw hw;
 	spinlock_t *lock;
@@ -73,7 +68,7 @@ struct clk_pll {
 	const char *parent;
 	spinlock_t *lock;
 	u32 flags;
-	struct mmp_pll_params *params;
+	void __iomem *swcr;
 };
 
 #define to_clk_vco(vco_hw) container_of(vco_hw, struct clk_vco, hw)
@@ -95,6 +90,6 @@ extern struct clk *helanx_register_clk_vco(const char *name,
 
 extern struct clk *helanx_register_clk_pll(const char *name,
 		const char *parent_name, unsigned long flags, u32 pll_flags,
-		spinlock_t *lock, struct mmp_pll_params *params);
+		spinlock_t *lock, void __iomem *swcr);
 
 #endif
