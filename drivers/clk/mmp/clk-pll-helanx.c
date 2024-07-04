@@ -127,19 +127,12 @@ static long clk_vco_round_rate(struct clk_hw *hw, unsigned long rate,
 		return -EINVAL;
 	}
 
-	if (params->freq_table)
-		for (int i = 0; i < params->freq_table_size; i++) {
-			if (params->freq_table[i].output_rate <= rate &&
-					max < params->freq_table[i].output_rate)
-				max = params->freq_table[i].output_rate;
-		}
-	else {
-		div = 104;
-		rate = rate / HZ_PER_MHZ;
-		fbd = rate * refd / div;
-		max = DIV_ROUND_UP(div * fbd, refd);
-		max *= HZ_PER_MHZ;
-	}
+	div = 104;
+	rate = rate / HZ_PER_MHZ;
+	fbd = rate * refd / div;
+	max = DIV_ROUND_UP(div * fbd, refd);
+	max *= HZ_PER_MHZ;
+
 	return max;
 }
 
@@ -237,10 +230,9 @@ static void clk_vco_config_ssc(struct clk_vco *vco, unsigned long new_rate)
 static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
 		unsigned long parent_rate)
 {
-	unsigned int i, kvco = 0, vcovnrg, refd, fbd;
+	unsigned int kvco = 0, vcovnrg, refd, fbd;
 	unsigned long flags;
 	struct clk_vco *vco = to_clk_vco(hw);
-	struct mmp_vco_params *params = vco->params;
 	union pll_swcr swcr;
 	union pll_cr cr;
 
@@ -251,27 +243,14 @@ static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
 
 	rate /= HZ_PER_MHZ;
 
-	if (params->freq_table) {
-		for (i = 0; i < params->freq_table_size; i++) {
-			if (rate == params->freq_table[i].output_rate) {
-				kvco = params->freq_table[i].kvco;
-				vcovnrg = params->freq_table[i].vcovnrg;
-				refd = params->freq_table[i].refd;
-				fbd = params->freq_table[i].fbd;
-				break;
-			}
-		}
-		BUG_ON(i == params->freq_table_size);
-	} else {
-		clk_vco_rate2rng(vco, rate, &kvco, &vcovnrg);
-		/*
-		 * According to vendor, refd needs to be calculated with some
-		 * sort of function rather than a number, but no such function
-		 * exists.
-		 */
-		refd = 3;
-		fbd = rate * refd / 104;
-	}
+	clk_vco_rate2rng(vco, rate, &kvco, &vcovnrg);
+	/*
+	 * According to vendor, refd needs to be calculated with some
+	 * sort of function rather than a number, but no such function
+	 * exists.
+	 */
+	refd = 3;
+	fbd = rate * refd / 104;
 
 	spin_lock_irqsave(vco->lock, flags);
 	swcr.v = pll_readl_swcr(vco);

@@ -32,14 +32,6 @@ struct ssc_params {
 	void __iomem *ssc_cfg;
 };
 
-struct mmp_vco_freq_table {
-	unsigned long output_rate;
-	u16 refd;
-	u16 fbd;
-	u8 kvco;
-	u8 vcovnrg;
-};
-
 struct mmp_vco_params {
 	unsigned long vco_min;
 	unsigned long vco_max;
@@ -48,9 +40,6 @@ struct mmp_vco_params {
 	void __iomem *lock_reg;
 	u32 lock_enable_bit;
 	unsigned long default_rate;
-
-	struct mmp_vco_freq_table *freq_table;
-	int freq_table_size;
 
 	bool ssc_enabled;
 	struct ssc_params *ssc_params;
