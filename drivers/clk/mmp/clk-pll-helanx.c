@@ -23,12 +23,12 @@
 #include "clk-pll-helanx.h"
 
 #define pll_readl(reg)				readl_relaxed(reg)
-#define pll_readl_cr(p)				pll_readl(p->params->cr)
-#define pll_readl_swcr(p)			pll_readl(p->params->swcr)
+#define pll_readl_cr(p)				pll_readl(p->mpmu_base + p->params->cr_offset)
+#define pll_readl_swcr(p)			pll_readl(p->apbs_base + p->params->swcr_offset)
 
 #define pll_writel(val, reg)			writel_relaxed(val, reg)
-#define pll_writel_cr(val, p)			pll_writel(val, p->params->cr)
-#define pll_writel_swcr(val, p)			pll_writel(val, p->params->swcr)
+#define pll_writel_cr(val, p)			pll_writel(val, p->mpmu_base + p->params->cr_offset)
+#define pll_writel_swcr(val, p)			pll_writel(val, p->apbs_base + p->params->swcr_offset)
 
 union pll_cr {
 	struct {
@@ -89,7 +89,7 @@ static long clk_vco_round_rate(struct clk_hw *hw, unsigned long rate,
 	struct clk_vco *vco = to_clk_vco(hw);
 	int fbd, refd = 3, div;
 	unsigned long max = 0;
-	struct mmp_vco_params *params = vco->params;
+	struct mmp_param_vco *params = vco->params;
 
 	if (rate > params->vco_max || rate < params->vco_min) {
 		pr_err("Rate %lu out of range!\n", rate);
@@ -156,7 +156,7 @@ static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
 	refd = 3;
 	fbd = rate * refd / 104;
 
-	spin_lock_irqsave(vco->lock, flags);
+	spin_lock_irqsave(vco->params->lock, flags);
 	swcr.v = pll_readl_swcr(vco);
 	swcr.b.kvco = kvco;
 	pll_writel_swcr(swcr.v, vco);
@@ -165,7 +165,7 @@ static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
 	cr.b.refdiv = refd;
 	cr.b.fbdiv = fbd;
 	pll_writel_cr(cr.v, vco);
-	spin_unlock_irqrestore(vco->lock, flags);
+	spin_unlock_irqrestore(vco->params->lock, flags);
 
 	return 0;
 }
@@ -175,20 +175,19 @@ static int clk_vco_enable(struct clk_hw *hw)
 	unsigned int delaytime = 14;
 	unsigned long flags;
 	struct clk_vco *vco = to_clk_vco(hw);
-	struct mmp_vco_params *params = vco->params;
 	union pll_cr cr;
 
 	if (clk_vco_is_enabled(hw))
 		return 0;
 
-	spin_lock_irqsave(vco->lock, flags);
+	spin_lock_irqsave(vco->params->lock, flags);
 	cr.v = pll_readl_cr(vco);
 	cr.b.pu = 1;
 	pll_writel_cr(cr.v, vco);
-	spin_unlock_irqrestore(vco->lock, flags);
+	spin_unlock_irqrestore(vco->params->lock, flags);
 
 	udelay(30);
-	while (!(readl_relaxed(params->lock_reg) & params->lock_enable_bit)
+	while (!(readl_relaxed(vco->mpmu_base + MPMU_POSR) & vco->params->lock_enable_bit)
 			&& delaytime) {
 		udelay(5);
 		delaytime--;
@@ -204,11 +203,11 @@ static void clk_vco_disable(struct clk_hw *hw)
 	struct clk_vco *vco = to_clk_vco(hw);
 	union pll_cr cr;
 
-	spin_lock_irqsave(vco->lock, flags);
+	spin_lock_irqsave(vco->params->lock, flags);
 	cr.v = pll_readl_cr(vco);
 	cr.b.pu = 0;
 	pll_writel_cr(cr.v, vco);
-	spin_unlock_irqrestore(vco->lock, flags);
+	spin_unlock_irqrestore(vco->params->lock, flags);
 }
 
 static int clk_vco_init(struct clk_hw *hw)
@@ -244,9 +243,8 @@ static struct clk_ops clk_vco_ops = {
 	.is_enabled = clk_vco_is_enabled,
 };
 
-struct clk *helanx_register_clk_vco(const char *name, const char *parent_name,
-		unsigned long flags, u32 vco_flags, spinlock_t *lock,
-		struct mmp_vco_params *params)
+struct clk *helanx_register_clk_vco(struct mmp_param_vco *params,
+		void __iomem *mpmu_base, void __iomem *apbs_base)
 {
 	struct clk_vco *vco;
 	struct clk *clk;
@@ -256,14 +254,12 @@ struct clk *helanx_register_clk_vco(const char *name, const char *parent_name,
 	if (!vco)
 		return NULL;
 
-	init.name = name;
+	init.name = params->name;
 	init.ops = &clk_vco_ops;
-	init.flags = flags | CLK_SET_RATE_GATE;
-	init.parent_names = (parent_name ? &parent_name : NULL);
-	init.num_parents = (parent_name ? 1 : 0);
+	init.flags = params->clk_flags | CLK_SET_RATE_GATE;
+	init.parent_names = (params->parent_name ? &params->parent_name : NULL);
+	init.num_parents = (params->parent_name ? 1 : 0);
 
-	vco->flags = vco_flags;
-	vco->lock = lock;
 	vco->hw.init = &init;
 	vco->params = params;
 

@@ -17,10 +17,6 @@
 #define MPMU_PLL2CR		0x34
 #define MPMU_PLL3CR		0x1c
 #define MPMU_PLL4CR		0x50
-#define MPMU_POSR		0x10
-#define MPMU_POSR_PLL2_LOCK	BIT(29)
-#define MPMU_POSR_PLL3_LOCK	BIT(30)
-#define MPMU_POSR_PLL4_LOCK	BIT(31)
 
 #define APB_SPARE_PLL2CR	0x104
 #define APB_SPARE_PLL3CR	0x108
@@ -88,42 +84,15 @@ static struct mmp_param_pll plls[] = {
 	{PXA1908_CLK_PLL4P, "pll4p", "pll4_vco", 0, HELANX_PLLOUTP, APB_SPARE_PLL4CR, &pll4_lock, 797 * HZ_PER_MHZ },
 };
 
-struct mmp_param_vco {
-	unsigned int id;
-	char *name;
-	unsigned long clk_flags;
-	u32 vco_flags;
-	unsigned int cr_offset;
-	unsigned int swcr_offset;
-	spinlock_t *lock;
-	struct mmp_vco_params params;
-};
-
 /* NOTE: the default rate is ONLY applicable for downstream ddr_mode=1 (533M). */
 static struct mmp_param_vco vcos[] = {
-	{PXA1908_CLK_PLL2VCO, "pll2_vco", 0, 0, MPMU_PLL2CR, APB_SPARE_PLL2CR, &pll2_lock,
-		{
-			.default_rate = 2115 * HZ_PER_MHZ,
-			.vco_min = 1200000000UL,
-			.vco_max = 3000000000UL,
-			.lock_enable_bit = MPMU_POSR_PLL2_LOCK
-		}
-	},
-	{PXA1908_CLK_PLL3VCO, "pll3_vco", 0, 0, MPMU_PLL3CR, APB_SPARE_PLL3CR, &pll3_lock,
-		{
-			.default_rate = 1526 * HZ_PER_MHZ,
-			.vco_min = 1200000000UL, .vco_max = 3000000000UL,
-			.lock_enable_bit = MPMU_POSR_PLL3_LOCK
-		}
-	},
-	{PXA1908_CLK_PLL4VCO, "pll4_vco", 0, HELANX_VCO_SKIP_DEF_RATE, MPMU_PLL4CR, APB_SPARE_PLL4CR, &pll4_lock,
-		{
-			.default_rate = 1595 * HZ_PER_MHZ,
-			.vco_min = 1200000000UL,
-			.vco_max = 3000000000UL,
-			.lock_enable_bit = MPMU_POSR_PLL4_LOCK
-		}
-	},
+	{PXA1908_CLK_PLL2VCO, "pll2_vco", 0, 0, 0, MPMU_PLL2CR, APB_SPARE_PLL2CR, &pll2_lock,
+		2115 * HZ_PER_MHZ, 1200000000UL, 3000000000UL, MPMU_POSR_PLL2_LOCK},
+	{PXA1908_CLK_PLL3VCO, "pll3_vco", 0, 0, 0, MPMU_PLL3CR, APB_SPARE_PLL3CR, &pll3_lock,
+		1526 * HZ_PER_MHZ, 1200000000UL, 3000000000UL, MPMU_POSR_PLL3_LOCK},
+	{PXA1908_CLK_PLL4VCO, "pll4_vco", 0, 0, HELANX_VCO_SKIP_DEF_RATE, MPMU_PLL4CR,
+		APB_SPARE_PLL4CR, &pll4_lock, 1595 * HZ_PER_MHZ, 1200000000UL, 3000000000UL,
+		MPMU_POSR_PLL4_LOCK},
 };
 
 static struct u32_fract uart_factor_tbl[] = {
@@ -174,13 +143,8 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 	for (int i = 0; i < ARRAY_SIZE(vcos); i++) {
 		vco = &vcos[i];
 
-		vco->params.cr = pxa_unit->base + vco->cr_offset;
-		vco->params.swcr = pxa_unit->apbs_base + vco->swcr_offset;
-		vco->params.lock_reg = pxa_unit->base + MPMU_POSR;
-
-		clk = helanx_register_clk_vco(vco->name, 0, vco->clk_flags,
-				vco->vco_flags, vco->lock, &vco->params);
-		clk_set_rate(clk, vco->params.default_rate);
+		clk = helanx_register_clk_vco(vco, pxa_unit->base, pxa_unit->apbs_base);
+		clk_set_rate(clk, vco->default_rate);
 		mmp_clk_add(unit, vco->id, clk);
 	}
 }

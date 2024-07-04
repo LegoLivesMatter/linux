@@ -1,6 +1,11 @@
 #ifndef __MACH_MMP_CLK_PLL_HELANX_H
 #define __MACH_MMP_CLK_PLL_HELANX_H
 
+#define MPMU_POSR		0x10
+#define MPMU_POSR_PLL2_LOCK	BIT(29)
+#define MPMU_POSR_PLL3_LOCK	BIT(30)
+#define MPMU_POSR_PLL4_LOCK	BIT(31)
+
 struct kvco_range {
 	int vco_min;
 	int vco_max;
@@ -17,21 +22,26 @@ struct intpi_range {
 	u8 value;
 };
 
-struct mmp_vco_params {
+struct mmp_param_vco {
+	unsigned int id;
+	char *name;
+	const char *parent_name;
+	unsigned long clk_flags;
+	u32 vco_flags;
+	unsigned int cr_offset; /* Control Register Offset */
+	unsigned int swcr_offset; /* Software Control Register Offset */
+	spinlock_t *lock;
+	unsigned long default_rate;
 	unsigned long vco_min;
 	unsigned long vco_max;
-	void __iomem *cr; /* Control Register */
-	void __iomem *swcr; /* Software Control Register */
-	void __iomem *lock_reg;
 	u32 lock_enable_bit;
-	unsigned long default_rate;
 };
 
 struct clk_vco {
 	struct clk_hw hw;
-	spinlock_t *lock;
-	u32 flags;
-	struct mmp_vco_params *params;
+	void __iomem *mpmu_base;
+	void __iomem *apbs_base;
+	struct mmp_param_vco *params;
 };
 
 struct clk_pll {
@@ -51,9 +61,8 @@ struct clk_pll {
 #define HELANX_VCO_28NM			BIT(2)
 #define HELANX_VCO_SKIP_DEF_RATE	BIT(3)
 
-extern struct clk *helanx_register_clk_vco(const char *name,
-		const char *parent_name, unsigned long flags, u32 vco_flags,
-		spinlock_t *lock, struct mmp_vco_params *params);
+extern struct clk *helanx_register_clk_vco(struct mmp_param_vco *params,
+		void __iomem *mpmu_base, void __iomem *apbs_base);
 
 /* PLL flags */
 #define HELANX_PLLOUT			BIT(0)
