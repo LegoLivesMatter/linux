@@ -92,7 +92,7 @@ union pll_ssc_cfg {
 	int v;
 };
 
-static int clk_pll_is_enabled(struct clk_hw *hw)
+static int clk_vco_is_enabled(struct clk_hw *hw)
 {
 	struct clk_vco *vco = to_clk_vco(hw);
 	union pll_cr cr;
@@ -106,7 +106,7 @@ static unsigned long clk_vco_get_rate(struct clk_hw *hw, unsigned long parent_ra
 	struct clk_vco *vco = to_clk_vco(hw);
 	union pll_cr cr;
 
-	if (!clk_pll_is_enabled(hw))
+	if (!clk_vco_is_enabled(hw))
 		return 0;
 
 	cr.v = pll_readl_cr(vco);
@@ -236,7 +236,7 @@ static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
 	union pll_swcr swcr;
 	union pll_cr cr;
 
-	if (clk_pll_is_enabled(hw)) {
+	if (clk_vco_is_enabled(hw)) {
 		pr_err("%s: clock is enabled, ignoring set_rate\n", __func__);
 		return 0;
 	}
@@ -307,7 +307,7 @@ static int clk_vco_enable(struct clk_hw *hw)
 	struct mmp_vco_params *params = vco->params;
 	union pll_cr cr;
 
-	if (clk_pll_is_enabled(hw))
+	if (clk_vco_is_enabled(hw))
 		return 0;
 
 	spin_lock_irqsave(vco->lock, flags);
@@ -377,7 +377,7 @@ static int clk_vco_init(struct clk_hw *hw)
 	unsigned long vco_rate;
 	struct mmp_vco_params *params = vco->params;
 
-	if (!clk_pll_is_enabled(hw)) {
+	if (!clk_vco_is_enabled(hw)) {
 		union pll_swcr swcr;
 		swcr.v = pll_readl_swcr(vco);
 		swcr.b.avvd1815_sel = 1;
@@ -410,7 +410,7 @@ static struct clk_ops clk_vco_ops = {
 	.set_rate = clk_vco_set_rate,
 	.recalc_rate = clk_vco_get_rate,
 	.round_rate = clk_vco_round_rate,
-	.is_enabled = clk_pll_is_enabled,
+	.is_enabled = clk_vco_is_enabled,
 };
 
 struct clk *helanx_register_clk_vco(const char *name, const char *parent_name,
@@ -505,6 +505,11 @@ static long clk_pll_round_rate(struct clk_hw *hw, unsigned long rate,
 static int clk_pll_init(struct clk_hw *hw)
 {
 	return 0;
+}
+
+static int clk_pll_is_enabled(struct clk_hw *hw)
+{
+	return clk_vco_is_enabled(clk_hw_get_parent(hw));
 }
 
 static struct clk_ops clk_pll_ops = {
