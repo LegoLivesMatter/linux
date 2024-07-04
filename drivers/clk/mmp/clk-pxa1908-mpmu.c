@@ -165,7 +165,7 @@ static void pxa1908_pll_init(struct pxa1908_clk_unit *pxa_unit)
 
 		clk = helanx_register_clk_pll(pll->name, pll->parent_name,
 				pll->clk_flags, pll->pll_flags, pll->lock,
-				pxa_unit->apbs_base);
+				pxa_unit->apbs_base + pll->swcr_offset);
 		clk_set_rate(clk, pll->default_rate);
 		mmp_clk_add(unit, pll->id, clk);
 	}
