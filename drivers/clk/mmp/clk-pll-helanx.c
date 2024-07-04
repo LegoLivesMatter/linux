@@ -30,11 +30,6 @@
 #define pll_writel_cr(val, p)			pll_writel(val, p->params->cr)
 #define pll_writel_swcr(val, p)			pll_writel(val, p->params->swcr)
 
-#define pll_readl_ssc_ctrl(ssc_params)		pll_readl(ssc_params->ssc_ctrl)
-#define pll_readl_ssc_cfg(ssc_params)		pll_readl(ssc_params->ssc_cfg)
-#define pll_writel_ssc_ctrl(val, ssc_params)	pll_writel(val, ssc_params->ssc_ctrl)
-#define pll_writel_ssc_cfg(val, ssc_params)		pll_writel(val, ssc_params->ssc_cfg)
-
 union pll_cr {
 	struct {
 		unsigned refdiv:5,
@@ -62,32 +57,6 @@ union pll_swcr {
 			 se_gating_en:1,
 			 fd:3,
 			 reserved:3;
-	} b;
-	int v;
-};
-
-union pll_ssc_ctrl {
-	struct {
-		unsigned pi_en:1,
-			 reset_pi:1,
-			 ssc_mode:1,
-			 ssc_clk_en:1,
-			 reset_ssc:1,
-			 pi_loop_mode:1,
-			 clk_det_en:1,
-			 reserved:9,
-			 intpi:4,
-			 intpr:3,
-			 reserved1:9;
-	} b;
-	int v;
-};
-
-union pll_ssc_cfg {
-	struct {
-		unsigned ssc_range:11,
-			 reserved:5,
-			 ssc_freq_div:16;
 	} b;
 	int v;
 };
@@ -136,28 +105,6 @@ static long clk_vco_round_rate(struct clk_hw *hw, unsigned long rate,
 	return max;
 }
 
-static struct intpi_range vco_intpi_tbl[] = {
-	{2500, 3000, 8},
-	{2000, 2500, 6},
-	{1500, 2000, 5},
-};
-
-static unsigned int clk_vco_freq2intpi(struct clk_vco *vco)
-{
-	unsigned int vco_freq = clk_vco_get_rate(&vco->hw, 0), intpi = 6, i;
-
-	for (i = 0; i < ARRAY_SIZE(vco_intpi_tbl); i++) {
-		if ((vco_freq >= vco_intpi_tbl[i].min) &&
-				(vco_freq <= vco_intpi_tbl[i].max)) {
-			intpi = vco_intpi_tbl[i].value;
-			break;
-		}
-	}
-	BUG_ON(i == ARRAY_SIZE(vco_intpi_tbl));
-
-	return intpi;
-}
-
 static struct kvco_range kvco_rng_table[] = {
 	{2600, 3000, 0xf, 0},
 	{2400, 2600, 0xe, 0},
@@ -182,49 +129,6 @@ static void clk_vco_rate2rng(struct clk_vco *vco, unsigned long rate,
 		}
 	}
 	BUG_ON(i == ARRAY_SIZE(kvco_rng_table));
-}
-
-static void clk_vco_get_ssc_divrng(enum ssc_mode mode, unsigned long rate,
-		unsigned int amplitude, unsigned int base, unsigned long vco,
-		unsigned int *div, unsigned int *rng)
-{
-	unsigned int vco_avg;
-
-	BUG_ON(amplitude > (50 * base / 1000));
-
-	switch (mode) {
-	case CENTER_SPREAD:
-		vco_avg = vco;
-		*div = (vco_avg / rate) >> 4;
-		break;
-	case DOWN_SPREAD:
-		vco_avg = vco - (vco >> 1) / base * amplitude;
-		*div = (vco_avg / rate) >> 3;
-		break;
-	default:
-		pr_err("Unsupported SSC mode!\n");
-		return;
-	}
-
-	if (*div == 0)
-		*div = 1;
-
-	*rng = BIT(26) / (*div * base / amplitude);
-}
-
-static void clk_vco_config_ssc(struct clk_vco *vco, unsigned long new_rate)
-{
-	struct ssc_params *params = vco->params->ssc_params;
-	unsigned int div = 0, rng = 0;
-	union pll_ssc_cfg cfg;
-
-	clk_vco_get_ssc_divrng(params->ssc_mode, params->desired_mod_freq,
-			params->amplitude, params->base, new_rate, &div, &rng);
-
-	cfg.v = pll_readl_ssc_cfg(params);
-	cfg.b.ssc_freq_div = div & 0xfff0;
-	cfg.b.ssc_range = rng;
-	pll_writel_ssc_cfg(cfg.v, params);
 }
 
 static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
@@ -263,40 +167,7 @@ static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
 	pll_writel_cr(cr.v, vco);
 	spin_unlock_irqrestore(vco->lock, flags);
 
-	if (vco->flags & HELANX_VCO_SSC_FEAT)
-		clk_vco_config_ssc(vco, rate);
 	return 0;
-}
-
-static void clk_vco_enable_ssc(struct clk_vco *vco)
-{
-	union pll_ssc_ctrl ctrl;
-	struct ssc_params *params = vco->params->ssc_params;;
-
-	ctrl.v = pll_readl_ssc_ctrl(params);
-	ctrl.b.intpi = clk_vco_freq2intpi(vco);
-	ctrl.b.intpr = 4;
-	ctrl.b.ssc_mode = params->ssc_mode;
-	ctrl.b.pi_en = 1;
-	ctrl.b.clk_det_en = 1;
-	ctrl.b.reset_pi = 1;
-	ctrl.b.reset_ssc = 1;
-	ctrl.b.pi_loop_mode = 0;
-	ctrl.b.ssc_clk_en = 0;
-	pll_writel_ssc_ctrl(ctrl.v, params);
-
-	udelay(2);
-	ctrl.b.reset_ssc = 0;
-	ctrl.b.reset_pi = 0;
-	pll_writel_ssc_ctrl(ctrl.v, params);
-
-	udelay(2);
-	ctrl.b.pi_loop_mode = 1;
-	pll_writel_ssc_ctrl(ctrl.v, params);
-
-	udelay(2);
-	ctrl.b.ssc_clk_en = 1;
-	pll_writel_ssc_ctrl(ctrl.v, params);
 }
 
 static int clk_vco_enable(struct clk_hw *hw)
@@ -324,32 +195,7 @@ static int clk_vco_enable(struct clk_hw *hw)
 	}
 	BUG_ON(!delaytime);
 
-	if (vco->flags & HELANX_VCO_SSC_FEAT)
-		if (((vco->flags & HELANX_VCO_SSC_AON) && !params->ssc_enabled)
-				|| !(vco->flags & HELANX_VCO_SSC_AON)) {
-			clk_vco_enable_ssc(vco);
-			params->ssc_enabled = true;
-		}
-
 	return 0;
-}
-
-static void clk_vco_disable_ssc(struct clk_vco *vco)
-{
-	struct ssc_params *params = vco->params->ssc_params;
-	union pll_ssc_ctrl ctrl;
-
-	ctrl.v = pll_readl_ssc_ctrl(params);
-	ctrl.b.ssc_clk_en = 0;
-	pll_writel_ssc_ctrl(ctrl.v, params);
-	udelay(100);
-
-	ctrl.b.pi_loop_mode = 0;
-	pll_writel_ssc_ctrl(ctrl.v, params);
-	udelay(2);
-
-	ctrl.b.pi_en = 0;
-	pll_writel_ssc_ctrl(ctrl.v, params);
 }
 
 static void clk_vco_disable(struct clk_hw *hw)
@@ -363,19 +209,11 @@ static void clk_vco_disable(struct clk_hw *hw)
 	cr.b.pu = 0;
 	pll_writel_cr(cr.v, vco);
 	spin_unlock_irqrestore(vco->lock, flags);
-
-	if ((vco->flags & HELANX_VCO_SSC_FEAT) &&
-			!(vco->flags & HELANX_VCO_SSC_AON)) {
-		clk_vco_disable_ssc(vco);
-		vco->params->ssc_enabled = false;
-	}
 }
 
 static int clk_vco_init(struct clk_hw *hw)
 {
 	struct clk_vco *vco = to_clk_vco(hw);
-	unsigned long vco_rate;
-	struct mmp_vco_params *params = vco->params;
 
 	if (!clk_vco_is_enabled(hw)) {
 		union pll_swcr swcr;
@@ -391,13 +229,6 @@ static int clk_vco_init(struct clk_hw *hw)
 		swcr.b.se_gating_en = 0;
 		swcr.b.fd = 4;
 		pll_writel_swcr(swcr.v, vco);
-	} else {
-		vco_rate = clk_vco_get_rate(hw, 0) / HZ_PER_MHZ;
-		if (vco->flags & HELANX_VCO_SSC_FEAT) {
-			clk_vco_config_ssc(vco, vco_rate);
-			clk_vco_enable_ssc(vco);
-			params->ssc_enabled = true;
-		}
 	}
 
 	return 0;

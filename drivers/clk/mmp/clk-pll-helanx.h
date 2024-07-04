@@ -17,21 +17,6 @@ struct intpi_range {
 	u8 value;
 };
 
-enum ssc_mode {
-	CENTER_SPREAD,
-	DOWN_SPREAD
-};
-
-struct ssc_params {
-	enum ssc_mode ssc_mode;
-	int base;
-	unsigned int amplitude;
-	int desired_mod_freq;
-
-	void __iomem *ssc_ctrl;
-	void __iomem *ssc_cfg;
-};
-
 struct mmp_vco_params {
 	unsigned long vco_min;
 	unsigned long vco_max;
@@ -40,9 +25,6 @@ struct mmp_vco_params {
 	void __iomem *lock_reg;
 	u32 lock_enable_bit;
 	unsigned long default_rate;
-
-	bool ssc_enabled;
-	struct ssc_params *ssc_params;
 };
 
 struct clk_vco {
