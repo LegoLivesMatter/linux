@@ -419,30 +419,26 @@ struct clk *helanx_register_clk_vco(const char *name, const char *parent_name,
 {
 	struct clk_vco *vco;
 	struct clk *clk;
-	struct clk_init_data *init;
+	struct clk_init_data init;
 
 	vco = kzalloc(sizeof(*vco), GFP_KERNEL);
 	if (!vco)
 		return NULL;
-	init = kzalloc(sizeof(*init), GFP_KERNEL);
-	if (!init)
-		return NULL;
 
-	init->name = name;
-	init->ops = &clk_vco_ops;
-	init->flags = flags | CLK_SET_RATE_GATE;
-	init->parent_names = (parent_name ? &parent_name : NULL);
-	init->num_parents = (parent_name ? 1 : 0);
+	init.name = name;
+	init.ops = &clk_vco_ops;
+	init.flags = flags | CLK_SET_RATE_GATE;
+	init.parent_names = (parent_name ? &parent_name : NULL);
+	init.num_parents = (parent_name ? 1 : 0);
 
 	vco->flags = vco_flags;
 	vco->lock = lock;
-	vco->hw.init = init;
+	vco->hw.init = &init;
 	vco->params = params;
 
 	clk = clk_register(NULL, &vco->hw);
 	if (IS_ERR(clk)) {
 		kfree(vco);
-		kfree(init);
 	}
 
 	return clk;
@@ -526,30 +522,26 @@ struct clk *helanx_register_clk_pll(const char *name, const char *parent_name,
 {
 	struct clk_pll *pll;
 	struct clk *clk;
-	struct clk_init_data *init;
+	struct clk_init_data init;
 
 	pll = kzalloc(sizeof(*pll), GFP_KERNEL);
 	if (!pll)
 		return NULL;
-	init = kzalloc(sizeof(*init), GFP_KERNEL);
-	if (!init)
-		return NULL;
 
-	init->name = name;
-	init->ops = &clk_pll_ops;
-	init->flags = flags | CLK_SET_RATE_GATE;
-	init->parent_names = (parent_name ? &parent_name : NULL);
-	init->num_parents = (parent_name ? 1 : 0);
+	init.name = name;
+	init.ops = &clk_pll_ops;
+	init.flags = flags | CLK_SET_RATE_GATE;
+	init.parent_names = (parent_name ? &parent_name : NULL);
+	init.num_parents = (parent_name ? 1 : 0);
 
 	pll->flags = pll_flags;
 	pll->lock = lock;
 	pll->swcr = swcr;
-	pll->hw.init = init;
+	pll->hw.init = &init;
 
 	clk = clk_register(NULL, &pll->hw);
 	if (IS_ERR(clk)) {
 		kfree(pll);
-		kfree(init);
 	}
 
 	return clk;
