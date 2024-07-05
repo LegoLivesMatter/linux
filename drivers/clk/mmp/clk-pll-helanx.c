@@ -126,6 +126,7 @@ static void clk_vco_rate2rng(struct clk_vco *vco, unsigned long rate,
 				rate <= kvco_rng_table[i].vco_max) {
 			*kvco = kvco_rng_table[i].kvco;
 			*vco_rng = kvco_rng_table[i].vrng;
+			return;
 		}
 	}
 	BUG_ON(i == ARRAY_SIZE(kvco_rng_table));
