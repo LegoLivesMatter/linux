@@ -132,45 +132,6 @@ static void clk_vco_rate2rng(struct clk_vco *vco, unsigned long rate,
 	BUG_ON(i == ARRAY_SIZE(kvco_rng_table));
 }
 
-static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
-		unsigned long parent_rate)
-{
-	unsigned int kvco = 0, vcovnrg, refd, fbd;
-	unsigned long flags;
-	struct clk_vco *vco = to_clk_vco(hw);
-	union pll_swcr swcr;
-	union pll_cr cr;
-
-	if (clk_vco_is_enabled(hw)) {
-		pr_err("%s: clock is enabled, ignoring set_rate\n", __func__);
-		return 0;
-	}
-
-	rate /= HZ_PER_MHZ;
-
-	clk_vco_rate2rng(vco, rate, &kvco, &vcovnrg);
-	/*
-	 * According to vendor, refd needs to be calculated with some
-	 * sort of function rather than a number, but no such function
-	 * exists.
-	 */
-	refd = 3;
-	fbd = rate * refd / 104;
-
-	spin_lock_irqsave(vco->lock, flags);
-	swcr.v = pll_readl_swcr(vco);
-	swcr.b.kvco = kvco;
-	pll_writel_swcr(swcr.v, vco);
-
-	cr.v = pll_readl_cr(vco);
-	cr.b.refdiv = refd;
-	cr.b.fbdiv = fbd;
-	pll_writel_cr(cr.v, vco);
-	spin_unlock_irqrestore(vco->lock, flags);
-
-	return 0;
-}
-
 static int clk_vco_enable(struct clk_hw *hw)
 {
 	unsigned int delaytime = 14;
@@ -210,6 +171,50 @@ static void clk_vco_disable(struct clk_hw *hw)
 	cr.b.pu = 0;
 	pll_writel_cr(cr.v, vco);
 	spin_unlock_irqrestore(vco->lock, flags);
+}
+
+static int clk_vco_set_rate(struct clk_hw *hw, unsigned long rate,
+		unsigned long parent_rate)
+{
+	unsigned int kvco = 0, vcovnrg, refd, fbd;
+	unsigned long flags;
+	struct clk_vco *vco = to_clk_vco(hw);
+	union pll_swcr swcr;
+	union pll_cr cr;
+	int reenable = 0;
+
+	if (clk_vco_is_enabled(hw)) {
+		pr_info("%s: %s is enabled, disabling\n", __func__, clk_hw_get_name(hw));
+		clk_vco_disable(hw);
+		reenable = 1;
+	}
+
+	rate /= HZ_PER_MHZ;
+
+	clk_vco_rate2rng(vco, rate, &kvco, &vcovnrg);
+	/*
+	 * According to vendor, refd needs to be calculated with some
+	 * sort of function rather than a number, but no such function
+	 * exists.
+	 */
+	refd = 3;
+	fbd = rate * refd / 104;
+
+	spin_lock_irqsave(vco->lock, flags);
+	swcr.v = pll_readl_swcr(vco);
+	swcr.b.kvco = kvco;
+	pll_writel_swcr(swcr.v, vco);
+
+	cr.v = pll_readl_cr(vco);
+	cr.b.refdiv = refd;
+	cr.b.fbdiv = fbd;
+	pll_writel_cr(cr.v, vco);
+	spin_unlock_irqrestore(vco->lock, flags);
+
+	if (reenable)
+		clk_vco_enable(hw);
+
+	return 0;
 }
 
 static int clk_vco_init(struct clk_hw *hw)
