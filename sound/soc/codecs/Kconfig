@@ -15,6 +15,7 @@ config SND_SOC_ALL_CODECS
 	tristate "Build all ASoC CODEC drivers"
 	depends on COMPILE_TEST
 	imply SND_SOC_88PM860X
+	imply SND_SOC_88PM860
 	imply SND_SOC_AB8500_CODEC
 	imply SND_SOC_AC97_CODEC
 	imply SND_SOC_AD1836
@@ -357,6 +358,14 @@ config SND_SOC_ALL_CODECS
 config SND_SOC_88PM860X
 	tristate
 	depends on MFD_88PM860X
+
+config SND_SOC_88PM860
+	tristate "88PM860 codec"
+	depends on MFD_88PM860
+
+config SND_SOC_MMP_MAP_FE_DAI
+	tristate "MAP FE DAIs"
+	depends on MFD_MAP
 
 config SND_SOC_ARIZONA
 	tristate

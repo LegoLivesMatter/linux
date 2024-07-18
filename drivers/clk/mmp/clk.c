@@ -22,6 +22,7 @@ void mmp_clk_init(struct device_node *np, struct mmp_clk_unit *unit,
 	unit->clk_data.clk_num = nr_clks;
 	of_clk_add_provider(np, of_clk_src_onecell_get, &unit->clk_data);
 }
+EXPORT_SYMBOL(mmp_clk_init);
 
 void mmp_register_fixed_rate_clks(struct mmp_clk_unit *unit,
 				struct mmp_param_fixed_rate_clk *clks,
@@ -190,3 +191,4 @@ void mmp_clk_add(struct mmp_clk_unit *unit, unsigned int id,
 
 	unit->clk_table[id] = clk;
 }
+EXPORT_SYMBOL(mmp_clk_add);

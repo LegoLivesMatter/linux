@@ -36,6 +36,19 @@ config SND_MMP_SOC_SSPA
 	  Say Y if you want to add support for codecs attached to
 	  the MMP SSPA interface.
 
+config SND_MMP_TDM
+	tristate "TDM MMP"
+	depends on ARCH_MMP
+	depends on MFD_MAP
+	help
+	  MMP TDM
+
+config SND_MMP_MAP_CARD
+	tristate "MMP MAP card"
+	depends on ARCH_MMP
+	help
+	  MMP MAP card
+
 config SND_PXA2XX_SOC_SPITZ
 	tristate "SoC Audio support for Sharp Zaurus SL-Cxx00"
 	depends on SND_PXA2XX_SOC && PXA_SHARP_Cxx00 && I2C

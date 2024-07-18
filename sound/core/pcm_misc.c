@@ -1,3 +1,4 @@
+#define DEBUG
 /*
  *  PCM Interface - misc routines
  *  Copyright (c) 1998 by Jaroslav Kysela <perex@perex.cz>

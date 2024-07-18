@@ -143,6 +143,10 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&vibrator_pin>;
 	};
+
+	sound {
+		compatible = "marvell,map-card";
+	};
 };
 
 &smmu {
@@ -443,6 +447,26 @@
 		pinctrl-single,low-power-mode = <0x288 0x388>;
 	};
 
+	sspa0-gpio {
+		pinctrl-single,pins = <0x0130 0 0x0134 0 0x0138 0 0x013c 0>;
+		pinctrl-single,drive-strength = <0x1000 0x1800>;
+		pinctrl-single,bias-pullup = <0 0xc000 0 0xc000>;
+		pinctrl-single,bias-pulldown = <0 0xa000 0 0xa000>;
+		pinctrl-single,input-schmitt = <0 0x30>;
+		pinctrl-single,input-schmitt-enable = <0x40 0 0x40 0x40>;
+		pinctrl-single,low-power-mode = <0x288 0x388>;
+	};
+
+	sspa0_func: sspa0-func {
+		pinctrl-single,pins = <0x0130 7 0x0134 7 0x0138 7 0x013c 7>;
+		pinctrl-single,drive-strength = <0x1000 0x1800>;
+		pinctrl-single,bias-pullup = <0 0xc000 0 0xc000>;
+		pinctrl-single,bias-pulldown = <0 0xa000 0 0xa000>;
+		pinctrl-single,input-schmitt = <0 0x30>;
+		pinctrl-single,input-schmitt-enable = <0x40 0 0x40 0x40>;
+		pinctrl-single,low-power-mode = <0 0x388>;
+	};
+
 	vibrator_pin: vibrator-pin {
 		pinctrl-single,pins = <0x12c 0>;
 		pinctrl-single,drive-strength = <0x1000 0x1800>;
@@ -498,6 +522,15 @@
 			ldo15: ldo15 {
 				regulator-always-on;
 			};
+		};
+	};
+
+	pmic@38 {
+		compatible = "marvell,88pm860";
+		reg = <0x38>;
+		pm860_codec: pm860_codec {
+			compatible = "marvell,88pm860-codec";
+			#dailink-cells = <1>;
 		};
 	};
 };
@@ -580,5 +613,36 @@
 			0x00 0x1c 0xfa 0x37 0xff 0xff 0xff 0xff 0x00 0x0d 0x7f 0x01
 			0xce 0xba 0x00 0x00 0x00 0x2d 0xc6 0xc0 0x00 0x00 0x00 0x00
 			0x00 0xf0 0x00 0x00>;
+	};
+};
+
+&sspa {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&sspa0_func>;
+	burst_size = <4>;
+	#dailink-cells = <1>;
+};
+
+&adma {
+	status = "okay";
+};
+
+&sram {
+	status = "okay";
+};
+
+&map {
+	status = "okay";
+	marvell,b0_fix;
+	marvell,apll = <1>;
+	mmp_map_codec: mmp_map_codec {
+		compatible = "marvell,mmp-map-codec";
+		#dailink-cells = <1>;
+	};
+	mmp_map_be_tdm: mmp_map_be_tdm {
+		compatible = "marvell,mmp-map-be-tdm";
+		marvell,single-out;
+		#dailink-cells = <1>;
 	};
 };

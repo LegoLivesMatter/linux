@@ -1,3 +1,4 @@
+#define DEBUG
 // SPDX-License-Identifier: GPL-2.0+
 //
 // soc-compress.c  --  ALSA SoC Compress

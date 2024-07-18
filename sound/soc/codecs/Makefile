@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
 snd-soc-88pm860x-y := 88pm860x-codec.o
+snd-soc-88pm860-y := 88pm860-codec.o
+snd-soc-mmp-map-fe-dai-y := mmp-map-fe-dai.o
 snd-soc-ab8500-codec-y := ab8500-codec.o
 snd-soc-ac97-y := ac97.o
 snd-soc-ad1836-y := ad1836.o
@@ -397,6 +399,8 @@ snd-soc-tas2780-y := tas2780.o
 snd-soc-simple-mux-y := simple-mux.o
 
 obj-$(CONFIG_SND_SOC_88PM860X)	+= snd-soc-88pm860x.o
+obj-$(CONFIG_SND_SOC_88PM860)	+= snd-soc-88pm860.o
+obj-$(CONFIG_SND_SOC_MMP_MAP_FE_DAI)	+= snd-soc-mmp-map-fe-dai.o
 obj-$(CONFIG_SND_SOC_AB8500_CODEC)	+= snd-soc-ab8500-codec.o
 obj-$(CONFIG_SND_SOC_AC97_CODEC)	+= snd-soc-ac97.o
 obj-$(CONFIG_SND_SOC_AD1836)	+= snd-soc-ad1836.o

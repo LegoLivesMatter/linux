@@ -2858,8 +2858,8 @@ int __sdhci_execute_tuning(struct sdhci_host *host, u32 opcode)
 
 	}
 
-	pr_info("%s: Tuning failed, falling back to fixed sampling clock\n",
-		mmc_hostname(host->mmc));
+	/*pr_info("%s: Tuning failed, falling back to fixed sampling clock\n",*/
+	/*	mmc_hostname(host->mmc));*/
 	sdhci_reset_tuning(host);
 	return -EAGAIN;
 }

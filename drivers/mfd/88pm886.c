@@ -10,6 +10,8 @@
 
 #include <linux/mfd/88pm886.h>
 
+struct regmap *companion_base_page;
+
 static const struct regmap_config pm886_regmap_config = {
 	.reg_bits = 8,
 	.val_bits = 8,
@@ -19,6 +21,12 @@ static const struct regmap_config pm886_regmap_config = {
 static struct regmap_irq pm886_regmap_irqs[] = {
 	REGMAP_IRQ_REG(PM886_IRQ_ONKEY, 0, PM886_INT_ENA1_ONKEY),
 };
+
+struct regmap *get_companion(void)
+{
+	return companion_base_page;
+}
+EXPORT_SYMBOL(get_companion);
 
 static struct regmap_irq_chip pm886_regmap_irq_chip = {
 	.name = "88pm886",
@@ -102,6 +110,7 @@ static int pm886_probe(struct i2c_client *client)
 	if (IS_ERR(regmap))
 		return dev_err_probe(dev, PTR_ERR(regmap), "Failed to initialize regmap\n");
 	chip->regmap = regmap;
+	companion_base_page = regmap;
 
 	err = regmap_read(regmap, PM886_REG_ID, &chip_id);
 	if (err)

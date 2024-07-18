@@ -3,6 +3,7 @@
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/clock/marvell,pxa1908.h>
+#include <dt-bindings/clock/marvell-audio-map.h>
 
 / {
 	model = "Marvell Armada PXA1908";
@@ -79,6 +80,53 @@
 			#iommu-cells = <1>;
 			interrupts = <GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>,
 				<GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>;
+			status = "disabled";
+		};
+
+		map: map@d1200000 {
+			compatible = "marvell,mmp-map";
+			marvell,map-lite;
+			reg = <0 0xd1230000 0 0x80
+			0 0xd1200000 0 0x8000>;
+			reg-names = "aux", "map";
+			pll_sel = <0>;
+			clocks = <&audio_map_clocks AUDIO_CLK_MAP>;
+			status = "disabled";
+		};
+
+		audio_map_clocks: clock-controller@d1230000 {
+			compatible = "marvell,audio-map-clock";
+			reg = <0 0xd1230000 0 0x100>;
+			reg-names = "dspaux";
+			#clock-cells = <1>;
+		};
+
+		sspa: audio-controller@d128dc00 {
+			compatible = "mrvl,mmp-sspa-dai";
+			reg = <0 0xd128dc00 0 0x100>;
+			dmas = <&adma 1>, <&adma 0>;
+			dma-names = "rx", "tx";
+			asram = <&sram>;
+			platform_driver_name = "tdma_platform";
+			clocks = <&audio_map_clocks AUDIO_CLK_SSPA0>;
+			status = "disabled";
+		};
+
+		sram: sram@d12a0000 {
+			compatible = "mmio-sram";
+			reg = <0 0xd12a0000 0 0x10000>;
+			ranges;
+			#address-cells = <2>;
+			#size-cells = <2>;
+			status = "disabled";
+		};
+
+		adma: dma-controller@d128d800 {
+			compatible = "marvell,adma-1.0";
+			reg = <0 0xd128d800 0 0x100>;
+			interrupts = <GIC_SPI 82 IRQ_TYPE_LEVEL_HIGH>;
+			#dma-cells = <1>;
+			asram = <&sram>;
 			status = "disabled";
 		};
 

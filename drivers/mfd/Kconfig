@@ -794,6 +794,21 @@ config MFD_88PM860X
 	  select individual components like voltage regulators, RTC and
 	  battery-charger under the corresponding menus.
 
+config MFD_88PM860
+	bool "Marvell 88PM860"
+	depends on I2C=y
+	select REGMAP_I2C
+	select MFD_CORE
+	help
+	  Audio component.
+
+config MFD_MAP
+	tristate "MMP MAP"
+	depends on OF
+	select MFD_CORE
+	help
+	  MMP MAP.
+
 config MFD_88PM886_PMIC
 	bool "Marvell 88PM886 PMIC"
 	depends on I2C=y

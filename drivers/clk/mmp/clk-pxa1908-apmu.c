@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include <linux/bits.h>
 #include <linux/clk-provider.h>
+#include <linux/io.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/spinlock.h>
@@ -99,6 +100,11 @@ static int pxa1908_apmu_probe(struct platform_device *pdev)
 	mmp_clk_init(pdev->dev.of_node, &pxa_unit->unit, APMU_NR_CLKS);
 
 	pxa1908_axi_periph_clk_init(pxa_unit);
+
+	/* Enable the audio power island. */
+	u32 val = readl_relaxed(pxa_unit->base + 0x80);
+	val |= 0x0d;
+	writel_relaxed(val, pxa_unit-> base + 0x80);
 
 	return 0;
 }

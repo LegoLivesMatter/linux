@@ -66,4 +66,5 @@ struct pm886_chip {
 	unsigned int chip_id;
 	struct regmap *regmap;
 };
+struct regmap *get_companion(void);
 #endif /* __MFD_88PM886_H */

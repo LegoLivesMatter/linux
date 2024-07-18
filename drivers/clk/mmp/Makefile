@@ -4,6 +4,7 @@
 #
 
 obj-y += clk-apbc.o clk-apmu.o clk-frac.o clk-mix.o clk-gate.o clk.o
+obj-m += clk-audio-map.o
 
 obj-$(CONFIG_RESET_CONTROLLER) += reset.o
 
